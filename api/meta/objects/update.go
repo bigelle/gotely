@@ -18,9 +18,9 @@ type Update struct {
 	ChatJoinRequest        *ChatJoinRequest             //TODO: implement it
 	MessageReaction        *MessageReactionUpdated      //TODO: implement it
 	MessageReactionCount   *MessageReactionCountUpdated //TODO: implement it
-	ChatBoost              *ChatBoostUpdated            //TODO: implement it
-	RemovedChatBoost       *ChatBoostRemoved            //TODO: implement it
-	BusinessConnection     *BusinessConnection          //TODO: implement it
+	ChatBoost              *ChatBoostUpdated
+	RemovedChatBoost       *ChatBoostRemoved
+	BusinessConnection     *BusinessConnection //TODO: implement it
 	BusinessMessage        *Message
 	EditedBusinessMessage  *Message
 	DeletedBusinessMessage *BusinessMessageDeleted //TODO: implement it

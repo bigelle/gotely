@@ -11,3 +11,6 @@ type Audio struct {
 	thumbnail    PhotoSize
 	fileName     string
 }
+
+
+
