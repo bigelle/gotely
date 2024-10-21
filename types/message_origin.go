@@ -1,0 +1,131 @@
+package types
+
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/bigelle/tele.go/interfaces"
+	"github.com/bigelle/tele.go/internal/assertions"
+)
+
+type MessageOrigin struct {
+	MessageOriginInterface
+}
+
+type MessageOriginInterface interface {
+	messageOriginContract()
+	interfaces.Validator
+}
+
+func (m *MessageOrigin) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		Type       string `json:"type"`
+		Attributes json.RawMessage
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	switch raw.Type {
+	case "user":
+		m.MessageOriginInterface = new(MessageOriginUser)
+	case "hidden_user":
+		m.MessageOriginInterface = new(MessageOriginHiddenUser)
+	case "chat":
+		m.MessageOriginInterface = new(MessageOriginChat)
+	case "channel":
+		m.MessageOriginInterface = new(MessageOriginChannel)
+	default:
+		return fmt.Errorf("Unrecognized type: %T", m.MessageOriginInterface)
+	}
+	return json.Unmarshal(raw.Attributes, m.MessageOriginInterface)
+}
+
+type MessageOriginChannel struct {
+	Type            string  `json:"type"`
+	Date            *int    `json:"date"`
+	Chat            *Chat   `json:"chat"`
+	MessageId       *int    `json:"message_id"`
+	AuthorSignature *string `json:"author_signature,omitempty"`
+}
+
+func (m MessageOriginChannel) messageOriginContract() {}
+
+func (m MessageOriginChannel) Validate() error {
+	if err := assertions.ParamNotEmpty(m.Type, "Type"); err != nil {
+		return err
+	}
+	if m.Date == nil {
+		return fmt.Errorf("Date parameter can't be empty")
+	}
+	if m.Chat == nil {
+		return fmt.Errorf("Chat parameter can't be empty")
+	}
+	if m.MessageId == nil {
+		return fmt.Errorf("MessageId parameter can't be empty")
+	}
+	return nil
+}
+
+type MessageOriginChat struct {
+	Type            string  `json:"type"`
+	Date            *int    `json:"date"`
+	SenderChat      *Chat   `json:"sender_chat"`
+	AuthorSignature *string `json:"author_signature,omitempty"`
+}
+
+func (m MessageOriginChat) messageOriginContract() {}
+
+func (m MessageOriginChat) Validate() error {
+	if err := assertions.ParamNotEmpty(m.Type, "Type"); err != nil {
+		return err
+	}
+	if m.Date == nil {
+		return fmt.Errorf("Date parameter can't be empty")
+	}
+	if m.SenderChat == nil {
+		return fmt.Errorf("Chat parameter can't be empty")
+	}
+	return nil
+}
+
+type MessageOriginHiddenUser struct {
+	Type           string `json:"type"`
+	Date           *int   `json:"date"`
+	SenderUsername string `json:"sender_username"`
+}
+
+func (m MessageOriginHiddenUser) messageOriginContract() {}
+
+func (m MessageOriginHiddenUser) Validate() error {
+	if err := assertions.ParamNotEmpty(m.Type, "Type"); err != nil {
+		return err
+	}
+	if m.Date == nil {
+		return fmt.Errorf("Date parameter can't be empty")
+	}
+	if err := assertions.ParamNotEmpty(m.SenderUsername, "SenderUsername"); err != nil {
+		return err
+	}
+	return nil
+}
+
+type MessageOriginUser struct {
+	Type       string `json:"type"`
+	Date       *int   `json:"date"`
+	SenderUser *User  `json:"sender_user"`
+}
+
+func (m MessageOriginUser) Validate() error {
+	if err := assertions.ParamNotEmpty(m.Type, "Type"); err != nil {
+		return err
+	}
+	if m.Date == nil {
+		return fmt.Errorf("Date parameter can't be empty")
+	}
+	if m.SenderUser == nil {
+		return fmt.Errorf("SenderUser parameter can't be empty")
+	}
+	return nil
+}
+
+func (m MessageOriginUser) messageOriginContract() {}
