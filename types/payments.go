@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/bigelle/tele.go/interfaces"
@@ -17,31 +18,46 @@ type PaidMedia struct {
 	PaidMediaInterface
 }
 
-// TODO: connect it with types
 type PaidMediaInterface interface {
 	paidMediaContract()
 	interfaces.Validator
 }
 
+func (p PaidMedia) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.PaidMediaInterface)
+}
+
 func (p *PaidMedia) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	switch raw.Type {
 	case "preview":
-		p.PaidMediaInterface = new(PaidMediaPreview)
+		tmp := PaidMediaPreview{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		p.PaidMediaInterface = tmp
 	case "photo":
-		p.PaidMediaInterface = new(PaidMediaPhoto)
+		tmp := PaidMediaPhoto{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		p.PaidMediaInterface = tmp
 	case "video":
-		p.PaidMediaInterface = new(PaidMediaVideo)
+		tmp := PaidMediaVideo{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		p.PaidMediaInterface = tmp
 	default:
-		return fmt.Errorf("Unrecognized type: %T", p.PaidMediaInterface)
+		return errors.New("type must be preview, photo, video")
 	}
-	return json.Unmarshal(raw.Attributes, &p.PaidMediaInterface)
+	return nil
 }
 
 type PaidMediaPhoto struct {
@@ -114,27 +130,47 @@ type TransactionPartnerInterface interface {
 	transactionPartnerContract()
 }
 
+func (t TransactionPartner) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.TransactionPartnerInterface)
+}
+
 func (t *TransactionPartner) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	switch raw.Type {
 	case "fragment":
-		t.TransactionPartnerInterface = new(TransactionPartnerFragment)
+		tmp := TransactionPartnerFragment{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		t.TransactionPartnerInterface = tmp
 	case "user":
-		t.TransactionPartnerInterface = new(TransactionPartnerUser)
+		tmp := TransactionPartnerUser{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		t.TransactionPartnerInterface = tmp
 	case "telegram_ads":
-		t.TransactionPartnerInterface = new(TransactionPartnerTelegramAds)
+		tmp := TransactionPartnerTelegramAds{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		t.TransactionPartnerInterface = tmp
 	case "other":
-		t.TransactionPartnerInterface = new(TransactionPartnerOther)
+		tmp := TransactionPartnerOther{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		t.TransactionPartnerInterface = tmp
 	default:
-		return fmt.Errorf("Unrecognized type: %T", t.TransactionPartnerInterface)
+		return errors.New("type must be fragment, user, telegram_ads or other")
 	}
-	return json.Unmarshal(raw.Attributes, &t.TransactionPartnerInterface)
+	return nil
 }
 
 type TransactionPartnerFragment struct {
@@ -174,25 +210,41 @@ type RevenueWithdrawalStateInterface interface {
 	revenueWithdrawalStateContract()
 }
 
+func (r RevenueWithdrawalState) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.RevenueWithdrawalStateInterface)
+}
+
 func (r *RevenueWithdrawalState) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	switch raw.Type {
 	case "pending":
-		r.RevenueWithdrawalStateInterface = new(RevenueWithdrawalStatePending)
+		tmp := RevenueWithdrawalStatePending{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		r.RevenueWithdrawalStateInterface = tmp
 	case "succeeded":
-		r.RevenueWithdrawalStateInterface = new(RevenueWithdrawalStateSucceeded)
+		tmp := RevenueWithdrawalStateSucceeded{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		r.RevenueWithdrawalStateInterface = tmp
 	case "failed":
-		r.RevenueWithdrawalStateInterface = new(RevenueWithdrawalStateFailed)
+		tmp := RevenueWithdrawalStateFailed{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		r.RevenueWithdrawalStateInterface = tmp
 	default:
-		return fmt.Errorf("Unrecognized type: %T", r.RevenueWithdrawalStateInterface)
+		return errors.New("type must be pending, succeeded or failed")
 	}
-	return json.Unmarshal(raw.Attributes, &r.RevenueWithdrawalStateInterface)
+	return nil
 }
 
 type RevenueWithdrawalStateFailed struct {

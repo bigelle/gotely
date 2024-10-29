@@ -2,20 +2,21 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/bigelle/tele.go/internal/assertions"
 )
 
 type MessageReactionCountUpdated struct {
-	Chat      Chat           `json:"chat"`
+	Chat      Chat            `json:"chat"`
 	MessageId int             `json:"message_id"`
 	Date      int             `json:"date"`
 	Reactions []ReactionCount `json:"reactions"`
 }
 
 type MessageReactionUpdated struct {
-	Chat        Chat          `json:"chat"`
+	Chat        Chat           `json:"chat"`
 	MessageId   int            `json:"message_id"`
 	Date        int            `json:"date"`
 	OldReaction []ReactionType `json:"old_reaction"`
@@ -38,25 +39,41 @@ type ReactionTypeInterface interface {
 	reactionTypeEmojiContract()
 }
 
+func (r ReactionType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.ReactionTypeInterface)
+}
+
 func (r *ReactionType) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	switch raw.Type {
 	case "emoji":
-		r.ReactionTypeInterface = new(ReactionTypeEmoji)
+		tmp := ReactionTypeEmoji{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		r.ReactionTypeInterface = tmp
 	case "custom_emoji":
-		r.ReactionTypeInterface = new(ReactionTypeCustomEmoji)
+		tmp := ReactionTypeCustomEmoji{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		r.ReactionTypeInterface = tmp
 	case "paid":
-		r.ReactionTypeInterface = new(ReactionTypePaid)
+		tmp := ReactionTypePaid{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		r.ReactionTypeInterface = tmp
 	default:
-		return fmt.Errorf("Unrecognized type: %t", r.ReactionTypeInterface)
+		return errors.New("type must be emoji, paid or custom_emoji")
 	}
-	return json.Unmarshal(raw.Attributes, &r.ReactionTypeInterface)
+	return nil
 }
 
 type ReactionTypeCustomEmoji struct {

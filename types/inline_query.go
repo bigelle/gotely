@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -35,10 +36,13 @@ type InlineQueryResultInterface interface {
 	inlineQueryResultContract() //NOTE: maybe should do something special
 }
 
+func (i InlineQueryResult) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.InlineQueryResultInterface)
+}
+
 func (i *InlineQueryResult) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
@@ -46,35 +50,83 @@ func (i *InlineQueryResult) UnmarshalJSON(data []byte) error {
 
 	switch raw.Type {
 	case "article":
-		i.InlineQueryResultInterface = new(InlineQueryResultArticle)
+		tmp := InlineQueryResultArticle{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "audio":
-		i.InlineQueryResultInterface = new(InlineQueryResultAudio)
+		tmp := InlineQueryResultAudio{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "contact":
-		i.InlineQueryResultInterface = new(InlineQueryResultContact)
+		tmp := InlineQueryResultContact{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "game":
-		i.InlineQueryResultInterface = new(InlineQueryResultGame)
+		tmp := InlineQueryResultGame{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "document":
-		i.InlineQueryResultInterface = new(InlineQueryResultDocument)
+		tmp := InlineQueryResultDocument{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "gif":
-		i.InlineQueryResultInterface = new(InlineQueryResultGif)
+		tmp := InlineQueryResultGif{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "location":
-		i.InlineQueryResultInterface = new(InlineQueryResultLocation)
+		tmp := InlineQueryResultLocation{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "mpeg4_gif":
-		i.InlineQueryResultInterface = new(InlineQueryResultMpeg4Gif)
+		tmp := InlineQueryResultMpeg4Gif{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "photo":
-		i.InlineQueryResultInterface = new(InlineQueryResultPhoto)
+		tmp := InlineQueryResultPhoto{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "venue":
-		i.InlineQueryResultInterface = new(InlineQueryResultVenue)
+		tmp := InlineQueryResultVenue{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "video":
-		i.InlineQueryResultInterface = new(InlineQueryResultVideo)
+		tmp := InlineQueryResultVideo{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	case "voice":
-		i.InlineQueryResultInterface = new(InlineQueryResultVoice)
+		tmp := InlineQueryResultVoice{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultInterface = tmp
 	default:
-		return fmt.Errorf(
-			"Type must be article, audio, contact, game, document, gif, location, mpeg4_gif, photo, venue, video or voice",
+		return errors.New(
+			"type must be article, audio, contact, game, document, gif, location, mpeg4_gif, photo, venue, video or voice",
 		)
 	}
-	return json.Unmarshal(raw.Attributes, i.InlineQueryResultInterface)
+	return nil
 }
 
 type InlineQueryResultArticle struct {
@@ -601,33 +653,69 @@ type InlineQueryResultCachedInterface interface {
 	inlineQueryResultCachedContract()
 }
 
+func (i InlineQueryResultCached) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.InlineQueryResultCachedInterface)
+}
+
 func (i *InlineQueryResultCached) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	switch raw.Type {
 	case "photo":
-		i.InlineQueryResultCachedInterface = new(InlineQueryResultCachedPhoto)
+		tmp := InlineQueryResultCachedPhoto{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultCachedInterface = tmp
 	case "gif":
-		i.InlineQueryResultCachedInterface = new(InlineQueryResultCachedGif)
+		tmp := InlineQueryResultCachedGif{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultCachedInterface = tmp
 	case "mpeg4_gif":
-		i.InlineQueryResultCachedInterface = new(InlineQueryResultCachedMpeg4Gif)
+		tmp := InlineQueryResultCachedMpeg4Gif{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultCachedInterface = tmp
 	case "sticker":
-		i.InlineQueryResultCachedInterface = new(InlineQueryResultCachedSticker)
+		tmp := InlineQueryResultCachedSticker{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultCachedInterface = tmp
 	case "document":
-		i.InlineQueryResultCachedInterface = new(InlineQueryResultCachedDocument)
+		tmp := InlineQueryResultCachedDocument{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultCachedInterface = tmp
 	case "video":
-		i.InlineQueryResultCachedInterface = new(InlineQueryResultCachedVideo)
+		tmp := InlineQueryResultCachedVideo{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultCachedInterface = tmp
 	case "voice":
-		i.InlineQueryResultCachedInterface = new(InlineQueryResultCachedVoice)
+		tmp := InlineQueryResultCachedVoice{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultCachedInterface = tmp
 	case "audio":
-		i.InlineQueryResultCachedInterface = new(InlineQueryResultCachedAudio)
+		tmp := InlineQueryResultCachedAudio{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InlineQueryResultCachedInterface = tmp
 	}
-	return json.Unmarshal(raw.Attributes, &i.InlineQueryResultCachedInterface)
+	return nil
 }
 
 type InlineQueryResultCachedPhoto struct {
@@ -937,32 +1025,56 @@ type InputMessageContentInterface interface {
 	inputMessageContentContract()
 }
 
+func (i InputMessageContent) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.InputMessageContentInterface)
+}
+
 func (i *InputMessageContent) UnmarshalJSON(data []byte) error {
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	if _, ok := raw["message_text"]; ok {
-		i.InputMessageContentInterface = new(InputTextMessageContent)
-		return json.Unmarshal(data, &i.InputMessageContentInterface)
+		tmp := InputTextMessageContent{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputMessageContentInterface = tmp
+		return nil
 	}
 	if _, ok := raw["address"]; ok {
-		i.InputMessageContentInterface = new(InputVenueMessageContent)
-		return json.Unmarshal(data, &i.InputMessageContentInterface)
+		tmp := InputVenueMessageContent{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputMessageContentInterface = tmp
+		return nil
 	}
 	if _, ok := raw["latitude"]; ok {
-		i.InputMessageContentInterface = new(InputLocationMessageContent)
-		return json.Unmarshal(data, &i.InputMessageContentInterface)
+		tmp := InputLocationMessageContent{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputMessageContentInterface = tmp
+		return nil
 	}
 	if _, ok := raw["phone_number"]; ok {
-		i.InputMessageContentInterface = new(InputContactMessageContent)
-		return json.Unmarshal(data, &i.InputMessageContentInterface)
+		tmp := InputContactMessageContent{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputMessageContentInterface = tmp
+		return nil
 	}
 	if _, ok := raw["provider_token"]; ok {
-		i.InputMessageContentInterface = new(InputInvoiceMessageContent)
-		return json.Unmarshal(data, &i.InputMessageContentInterface)
+		tmp := InputInvoiceMessageContent{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputMessageContentInterface = tmp
 	}
-	return fmt.Errorf("Unrecognized type: %T", i.InputMessageContentInterface)
+	return errors.New("unknown InputMessageContent type")
 }
 
 type InputContactMessageContent struct {

@@ -2,7 +2,7 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 )
 
 type ChatMember struct {
@@ -13,10 +13,13 @@ type ChatMemberInterface interface {
 	chatMemberContract()
 }
 
+func (c ChatMember) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.ChatMemberInterface)
+}
+
 func (c *ChatMember) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Status     string `json:"status"`
-		Attributes json.RawMessage
+		Status string `json:"status"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
@@ -24,26 +27,54 @@ func (c *ChatMember) UnmarshalJSON(data []byte) error {
 
 	switch raw.Status {
 	case "administrator":
-		c.ChatMemberInterface = new(ChatMemberAdministrator)
+		tmp := ChatMemberAdministrator{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		c.ChatMemberInterface = tmp
 	case "member":
-		c.ChatMemberInterface = new(ChatMemberMember)
+		tmp := ChatMemberMember{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		c.ChatMemberInterface = tmp
 	case "owner":
-		c.ChatMemberInterface = new(ChatMemberOwner)
+		tmp := ChatMemberOwner{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		c.ChatMemberInterface = tmp
 	case "restricted":
-		c.ChatMemberInterface = new(ChatMemberRestricted)
+		tmp := ChatMemberRestricted{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		c.ChatMemberInterface = tmp
 	case "banned":
-		c.ChatMemberInterface = new(ChatMemberBanned)
+		tmp := ChatMemberBanned{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		c.ChatMemberInterface = tmp
 	case "left":
-		c.ChatMemberInterface = new(ChatMemberLeft)
+		tmp := ChatMemberLeft{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		c.ChatMemberInterface = tmp
 	case "updated":
-		c.ChatMemberInterface = new(ChatMemberUpdated)
+		tmp := ChatMemberUpdated{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		c.ChatMemberInterface = tmp
 	default:
-		return fmt.Errorf(
-			"Status must be administrator, member, owner, restricted, banned, left or updated",
+		return errors.New(
+			"status must be administrator, member, owner, restricted, banned, left or updated",
 		)
 	}
 
-	return json.Unmarshal(raw.Attributes, c.ChatMemberInterface)
+	return nil
 }
 
 type ChatMemberAdministrator struct {

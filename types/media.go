@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -18,29 +19,53 @@ type InputMediaInterface interface {
 	interfaces.Validator
 }
 
+func (i InputMedia) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.InputMediaInterface)
+}
+
 func (i *InputMedia) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	switch raw.Type {
 	case "animation":
-		i.InputMediaInterface = new(InputMediaAnimation)
+		tmp := InputMediaAnimation{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputMediaInterface = &tmp
 	case "audio":
-		i.InputMediaInterface = new(InputMediaAudio)
+		tmp := InputMediaAudio{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputMediaInterface = &tmp
 	case "document":
-		i.InputMediaInterface = new(InputMediaDocument)
+		tmp := InputMediaDocument{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputMediaInterface = &tmp
 	case "photo":
-		i.InputMediaInterface = new(InputMediaPhoto)
+		tmp := InputMediaPhoto{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputMediaInterface = &tmp
 	case "video":
-		i.InputMediaInterface = new(InputMediaVideo)
+		tmp := InputMediaVideo{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputMediaInterface = &tmp
 	default:
-		return fmt.Errorf("Unrecognized type: %T", i.InputMediaInterface)
+		return errors.New("type must be animation, audio, document, video or photo")
 	}
-	return json.Unmarshal(raw.Attributes, &i.InputMediaInterface)
+	return nil
 }
 
 type InputMediaAnimation struct {
@@ -309,7 +334,6 @@ func (i InputMediaVideo) Validate() error {
 	return nil
 }
 
-// TODO: InputPaidMedia
 type InputPaidMedia struct {
 	InputPaidMediaInterface `json:"input_paid_media_interface"`
 }
@@ -319,23 +343,35 @@ type InputPaidMediaInterface interface {
 	interfaces.Validator
 }
 
+func (i InputPaidMedia) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.InputPaidMediaInterface)
+}
+
 func (i *InputPaidMedia) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string          `json:"type"`
-		Attributes json.RawMessage `json:"attributes"`
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	switch raw.Type {
 	case "photo":
-		i.InputPaidMediaInterface = new(InputPaidMediaPhoto)
+		tmp := InputPaidMediaPhoto{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputPaidMediaInterface = &tmp
 	case "video":
-		i.InputPaidMediaInterface = new(InputPaidMediaVideo)
+		tmp := InputPaidMediaVideo{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		i.InputPaidMediaInterface = &tmp
 	default:
-		return fmt.Errorf("Unrecognized type: %T", i.InputPaidMediaInterface)
+		return errors.New("type must be photo or video")
 	}
-	return json.Unmarshal(raw.Attributes, &i.InputPaidMediaInterface)
+	return nil
 }
 
 type InputPaidMediaPhoto struct {

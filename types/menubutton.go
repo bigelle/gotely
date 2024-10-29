@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/bigelle/tele.go/interfaces"
@@ -17,23 +18,41 @@ type MenuButtonInterface interface {
 	interfaces.Validator
 }
 
+func (m MenuButton) MarshalJSON() ([]byte, error) {
+	return json.Marshal(m.MenuButtonInterface)
+}
+
 func (m *MenuButton) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	switch raw.Type {
 	case "commands":
-		m.MenuButtonInterface = new(MenuButtonCommands)
-	case "default":
-		m.MenuButtonInterface = new(MenuButtonDefault)
+		tmp := MenuButtonCommands{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		m.MenuButtonInterface = tmp
 	case "web_app":
-		m.MenuButtonInterface = new(MenuButtonWebApp)
+		tmp := MenuButtonWebApp{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		m.MenuButtonInterface = tmp
+	case "default":
+		tmp := MenuButtonDefault{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		m.MenuButtonInterface = tmp
+	default:
+		return errors.New("unknow type " + raw.Type + ", type must be commands, web_app or default")
 	}
-	return json.Unmarshal(raw.Attributes, m.MenuButtonInterface)
+	return nil
 }
 
 type MenuButtonCommands struct {

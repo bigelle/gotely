@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/bigelle/utils.go/ensure"
@@ -85,34 +84,6 @@ type ReplyKeyboardInterface interface {
 
 type ReplyKeyboard struct {
 	ReplyKeyboardInterface
-}
-
-func (r *ReplyKeyboard) UnmarshalJSON(data []byte) error {
-	var ikm InlineKeyboardMarkup
-	if err := json.Unmarshal(data, &ikm); err == nil {
-		r.ReplyKeyboardInterface = ikm
-		return nil
-	}
-
-	var frk ForceReply
-	if err := json.Unmarshal(data, &frk); err == nil {
-		r.ReplyKeyboardInterface = frk
-		return nil
-	}
-
-	var rkm ReplyKeyboardMarkup
-	if err := json.Unmarshal(data, &rkm); err == nil {
-		r.ReplyKeyboardInterface = rkm
-		return nil
-	}
-
-	var rkr ReplyKeyboardRemove
-	if err := json.Unmarshal(data, &rkr); err == nil {
-		r.ReplyKeyboardInterface = rkr
-		return nil
-	}
-
-	return fmt.Errorf("Unrecognized type: %T", r.ReplyKeyboardInterface)
 }
 
 type ReplyKeyboardMarkup struct {

@@ -2,7 +2,7 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 )
 
 type BackgroundType struct {
@@ -13,10 +13,13 @@ type BackgroundTypeInterface interface {
 	backgroundTypeContract()
 }
 
+func (b BackgroundType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b.BackgroundTypeInterface)
+}
+
 func (b *BackgroundType) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
@@ -24,18 +27,34 @@ func (b *BackgroundType) UnmarshalJSON(data []byte) error {
 
 	switch raw.Type {
 	case "fill":
-		b.BackgroundTypeInterface = new(BackgroundTypeFill)
+		tmp := BackgroundTypeFill{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BackgroundTypeInterface = tmp
 	case "chat_theme":
-		b.BackgroundTypeInterface = new(BackgroundTypeChatTheme)
+		tmp := BackgroundTypeChatTheme{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BackgroundTypeInterface = tmp
 	case "pattern":
-		b.BackgroundTypeInterface = new(BackgroundTypePattern)
+		tmp := BackgroundTypePattern{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BackgroundTypeInterface = tmp
 	case "wallpaper":
-		b.BackgroundTypeInterface = new(BackgroundTypeWallpaper)
+		tmp := BackgroundTypeWallpaper{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BackgroundTypeInterface = tmp
 	default:
-		return fmt.Errorf("Type must be fill, chat_theme, pattern or wallpaper")
+		return errors.New("type must be fill, chat_theme, pattern or wallpaper")
 	}
 
-	return json.Unmarshal(raw.Attributes, b.BackgroundTypeInterface)
+	return nil
 }
 
 type BackgroundTypeFill struct {
@@ -82,25 +101,41 @@ type BackgroundFillInterface interface {
 	backgroundFillContract()
 }
 
+func (b BackgroundFill) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b.BackgroundFillInterface)
+}
+
 func (b *BackgroundFill) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	switch raw.Type {
 	case "freeform_gradient":
-		b.BackgroundFillInterface = new(BackgroundFillFreeformGradient)
+		tmp := BackgroundFillFreeformGradient{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BackgroundFillInterface = tmp
 	case "gradient":
-		b.BackgroundFillInterface = new(BackgroundFillGradient)
+		tmp := BackgroundFillGradient{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BackgroundFillInterface = tmp
 	case "solid":
-		b.BackgroundFillInterface = new(BackgroundFillSolid)
+		tmp := BackgroundFillSolid{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BackgroundFillInterface = tmp
 	default:
-		return fmt.Errorf("Type must be freeform_gradient, gradient or solid")
+		return errors.New("type must be freeform_gradient, gradient or solid")
 	}
-	return json.Unmarshal(raw.Attributes, b.BackgroundFillInterface)
+	return nil
 }
 
 type BackgroundFillFreeformGradient struct {

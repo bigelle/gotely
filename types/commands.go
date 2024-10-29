@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/bigelle/tele.go/internal/assertions"
@@ -30,10 +31,13 @@ type BotCommandScopeInterface interface {
 	botCommandScopeContract()
 }
 
-func (b BotCommandScope) UnmarshalJSON(data []byte) error {
+func (b BotCommandScope) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b.BotCommandScopeInterface)
+}
+
+func (b *BotCommandScope) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
@@ -41,26 +45,53 @@ func (b BotCommandScope) UnmarshalJSON(data []byte) error {
 
 	switch raw.Type {
 	case "all_chat_administrators":
-		b.BotCommandScopeInterface = new(BotCommandScopeAllChatAdministrators)
+		tmp := BotCommandScopeAllChatAdministrators{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BotCommandScopeInterface = tmp
 	case "all_group_chats":
-		b.BotCommandScopeInterface = new(BotCommandScopeAllGroupChats)
+		tmp := BotCommandScopeAllGroupChats{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BotCommandScopeInterface = tmp
 	case "all_private_chats":
-		b.BotCommandScopeInterface = new(BotCommandScopeAllPrivateChats)
+		tmp := BotCommandScopeAllPrivateChats{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BotCommandScopeInterface = tmp
 	case "chat":
-		b.BotCommandScopeInterface = new(BotCommandScopeChat)
+		tmp := BotCommandScopeChat{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BotCommandScopeInterface = tmp
 	case "chat_administrators":
-		b.BotCommandScopeInterface = new(BotCommandScopeChatAdministrators)
+		tmp := BotCommandScopeChatAdministrators{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BotCommandScopeInterface = tmp
 	case "chat_member":
-		b.BotCommandScopeInterface = new(BotCommandScopeChatMember)
+		tmp := BotCommandScopeChatMember{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BotCommandScopeInterface = tmp
 	case "default":
-		b.BotCommandScopeInterface = new(BotCommandScopeDefault)
+		tmp := BotCommandScopeDefault{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		b.BotCommandScopeInterface = tmp
 	default:
-		return fmt.Errorf(
-			"Type must be all_chat_administrators, all_group_chats, all_private_chats, chat, chat_administrators, chat_member or default",
+		return errors.New(
+			"type must be all_chat_administrators, all_group_chats, all_private_chats, chat, chat_administrators, chat_member or default",
 		)
 	}
-
-	return json.Unmarshal(raw.Attributes, b.BotCommandScopeInterface)
+	return nil
 }
 
 type BotCommandScopeAllChatAdministrators struct {

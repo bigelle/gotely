@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/bigelle/tele.go/interfaces"
@@ -17,27 +18,50 @@ type MessageOriginInterface interface {
 	interfaces.Validator
 }
 
+func (m MessageOrigin) MarshalJSON() ([]byte, error) {
+	return json.Marshal(m.MessageOriginInterface)
+}
+
 func (m *MessageOrigin) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type       string `json:"type"`
-		Attributes json.RawMessage
+		Type string
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
+
 	switch raw.Type {
 	case "user":
-		m.MessageOriginInterface = new(MessageOriginUser)
+		tmp := MessageOriginUser{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		m.MessageOriginInterface = tmp
+		return nil
 	case "hidden_user":
-		m.MessageOriginInterface = new(MessageOriginHiddenUser)
+		tmp := MessageOriginHiddenUser{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		m.MessageOriginInterface = tmp
+		return nil
 	case "chat":
-		m.MessageOriginInterface = new(MessageOriginChat)
+		tmp := MessageOriginChat{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		m.MessageOriginInterface = tmp
+		return nil
 	case "channel":
-		m.MessageOriginInterface = new(MessageOriginChannel)
+		tmp := MessageOriginChannel{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		m.MessageOriginInterface = tmp
+		return nil
 	default:
-		return fmt.Errorf("Unrecognized type: %T", m.MessageOriginInterface)
+		return errors.New("type must be user, hidden_user, chat or channel")
 	}
-	return json.Unmarshal(raw.Attributes, m.MessageOriginInterface)
 }
 
 type MessageOriginChannel struct {

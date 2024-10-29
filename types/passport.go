@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/bigelle/tele.go/internal/assertions"
@@ -46,10 +47,13 @@ type PassportElementErrorInterface interface {
 	passportElementErrorContract()
 }
 
-func (p PassportElementError) UnmarshalJSON(data []byte) error {
+func (p PassportElementError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.PassportElementErrorInterface)
+}
+
+func (p *PassportElementError) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Source     string          `json:"source"`
-		Attributes json.RawMessage `json:"attributes"`
+		Source string `json:"source"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
@@ -57,19 +61,39 @@ func (p PassportElementError) UnmarshalJSON(data []byte) error {
 
 	switch raw.Source {
 	case "data":
-		p.PassportElementErrorInterface = new(PassportElementErrorDataField)
+		tmp := PassportElementErrorDataField{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		p.PassportElementErrorInterface = tmp
 	case "file":
-		p.PassportElementErrorInterface = new(PassportElementErrorFile)
+		tmp := PassportElementErrorFile{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		p.PassportElementErrorInterface = tmp
 	case "files":
-		p.PassportElementErrorInterface = new(PassportElementErrorFiles)
+		tmp := PassportElementErrorFiles{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		p.PassportElementErrorInterface = tmp
 	case "front_side":
-		p.PassportElementErrorInterface = new(PassportElementErrorFrontSide)
+		tmp := PassportElementErrorFrontSide{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		p.PassportElementErrorInterface = tmp
 	case "reverse_side":
-		p.PassportElementErrorInterface = new(PassportElementErrorReverseSide)
+		tmp := PassportElementErrorReverseSide{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		p.PassportElementErrorInterface = tmp
 	default:
-		return fmt.Errorf("Unrecognized type: %T", p.PassportElementErrorInterface)
+		return errors.New("type must be data, file, files, front_side or reverse_side")
 	}
-	return json.Unmarshal(raw.Attributes, p.PassportElementErrorInterface)
+	return nil
 }
 
 type PassportElementErrorDataField struct {

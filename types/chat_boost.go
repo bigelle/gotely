@@ -1,6 +1,9 @@
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+)
 
 type ChatBoost struct {
 	BoostId        string          `json:"boost_id"`
@@ -33,10 +36,13 @@ type ChatBoostSourceInterface interface {
 	chatBoostSourceContract()
 }
 
+func (c ChatBoostSource) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.ChatBoostSourceInterface)
+}
+
 func (c *ChatBoostSource) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Source     string
-		Attributes json.RawMessage
+		Source string
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
@@ -44,13 +50,27 @@ func (c *ChatBoostSource) UnmarshalJSON(data []byte) error {
 
 	switch raw.Source {
 	case "gift_code":
-		c.ChatBoostSourceInterface = new(ChatBoostSourceGiftCode)
+		tmp := ChatBoostSourceGiftCode{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		c.ChatBoostSourceInterface = tmp
 	case "giveaway":
-		c.ChatBoostSourceInterface = new(ChatBoostSourceGiveaway)
+		tmp := ChatBoostSourceGiveaway{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		c.ChatBoostSourceInterface = tmp
 	case "premium":
-		c.ChatBoostSourceInterface = new(ChatBoostSourcePremium)
+		tmp := ChatBoostSourcePremium{}
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		c.ChatBoostSourceInterface = tmp
+	default:
+		return errors.New("source must be gift_code, giveaway or premium")
 	}
-	return json.Unmarshal(raw.Attributes, c.ChatBoostSourceInterface)
+	return nil
 }
 
 type ChatBoostSourceGiftCode struct {
