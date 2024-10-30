@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bigelle/tele.go/interfaces"
+	"github.com/bigelle/tele.go"
 	"github.com/bigelle/tele.go/internal/assertions"
 )
 
@@ -32,7 +32,7 @@ type InlineQueryResult struct {
 }
 
 type InlineQueryResultInterface interface {
-	interfaces.Validator
+	telego.Validator
 	inlineQueryResultContract() //NOTE: maybe should do something special
 }
 
@@ -649,7 +649,7 @@ type InlineQueryResultCached struct {
 }
 
 type InlineQueryResultCachedInterface interface {
-	interfaces.Validator
+	telego.Validator
 	inlineQueryResultCachedContract()
 }
 
@@ -1021,7 +1021,7 @@ type InputMessageContent struct {
 }
 
 type InputMessageContentInterface interface {
-	interfaces.Validator
+	telego.Validator
 	inputMessageContentContract()
 }
 

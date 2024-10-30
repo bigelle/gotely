@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bigelle/tele.go/interfaces"
+	"github.com/bigelle/tele.go"
 	"github.com/bigelle/tele.go/internal/assertions"
 )
 
@@ -15,7 +15,7 @@ type MenuButton struct {
 
 type MenuButtonInterface interface {
 	menuButtonContract()
-	interfaces.Validator
+	telego.Validator
 }
 
 func (m MenuButton) MarshalJSON() ([]byte, error) {

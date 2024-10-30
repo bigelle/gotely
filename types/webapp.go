@@ -1,9 +1,7 @@
 package types
 
 import (
-	"fmt"
-
-	"github.com/bigelle/utils.go/ensure"
+	"github.com/bigelle/tele.go/internal/assertions"
 )
 
 type WebAppInfo struct {
@@ -11,8 +9,8 @@ type WebAppInfo struct {
 }
 
 func (w WebAppInfo) Validate() error {
-	if !ensure.NotEmpty(w.Url) {
-		return fmt.Errorf("url can't be empty")
+	if err := assertions.ParamNotEmpty(w.Url, "Url"); err != nil {
+		return err
 	}
 	return nil
 }

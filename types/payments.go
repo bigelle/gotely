@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bigelle/tele.go/interfaces"
+	"github.com/bigelle/tele.go"
 	"github.com/bigelle/tele.go/internal/assertions"
 )
 
@@ -20,7 +20,7 @@ type PaidMedia struct {
 
 type PaidMediaInterface interface {
 	paidMediaContract()
-	interfaces.Validator
+	telego.Validator
 }
 
 func (p PaidMedia) MarshalJSON() ([]byte, error) {

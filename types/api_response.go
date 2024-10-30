@@ -1,13 +1,13 @@
-package types 
+package types
 
 import "github.com/bigelle/tele.go/internal/assertions"
 
 type ApiResponse[T any] struct {
-	Ok              bool               `json:"ok"`
-	ErrorCode       int                `json:"error_code"`
-	ErrorDesciption string             `json:"error_desciption"`
-	Parameters      ResponseParameters `json:"parameters"`
-	Result          T                  `json:"result"`
+	Ok          bool                `json:"ok"`
+	ErrorCode   int                 `json:"error_code"`
+	Description *string             `json:"description,omitempty"`
+	Parameters  *ResponseParameters `json:"parameters,omitempty"`
+	Result      T                   `json:"result"`
 }
 
 type ResponseParameters struct {

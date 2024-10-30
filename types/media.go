@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/bigelle/tele.go/interfaces"
+	"github.com/bigelle/tele.go"
 	"github.com/bigelle/tele.go/internal/assertions"
 )
 
@@ -16,7 +16,7 @@ type InputMedia struct {
 
 type InputMediaInterface interface {
 	SetInputMedia(media string, isNew bool)
-	interfaces.Validator
+	telego.Validator
 }
 
 func (i InputMedia) MarshalJSON() ([]byte, error) {
@@ -340,7 +340,7 @@ type InputPaidMedia struct {
 
 type InputPaidMediaInterface interface {
 	SetInputPaidMedia(media string, isNew bool)
-	interfaces.Validator
+	telego.Validator
 }
 
 func (i InputPaidMedia) MarshalJSON() ([]byte, error) {

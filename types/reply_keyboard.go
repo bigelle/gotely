@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	"github.com/bigelle/utils.go/ensure"
-
 	"github.com/bigelle/tele.go/internal/assertions"
 )
 
@@ -48,25 +46,19 @@ type InlineKeyboardButton struct {
 }
 
 func (b InlineKeyboardButton) Validate() error {
-	if !ensure.NotEmpty(b.Text) {
-		return fmt.Errorf("text parameter can't be empty")
+	if err := assertions.ParamNotEmpty(b.Text, "Text"); err != nil {
+		return err
 	}
-	if !ensure.NotNil(b.LoginUrl) {
+	if b.LoginUrl != nil {
 		if err := (*b.LoginUrl).Validate(); err != nil {
 			return err
 		}
 	}
-	if !ensure.NotNil(b.WebApp) {
+	if b.WebApp != nil {
 		if err := (*b.WebApp).Validate(); err != nil {
 			return err
 		}
 	}
-	//	if !ensure.NotNil(b.CallbackGame) {
-	//		if err := (*b.CallbackGame).Validate(); err != nil {
-	//			return err
-	//		}
-	//	}
-
 	return nil
 }
 

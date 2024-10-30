@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bigelle/tele.go/interfaces"
+	telego "github.com/bigelle/tele.go"
 	"github.com/bigelle/tele.go/internal/assertions"
 )
 
@@ -15,7 +15,7 @@ type MessageOrigin struct {
 
 type MessageOriginInterface interface {
 	messageOriginContract()
-	interfaces.Validator
+	telego.Validator
 }
 
 func (m MessageOrigin) MarshalJSON() ([]byte, error) {
