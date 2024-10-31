@@ -1,12 +1,8 @@
 package methods
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
 
 	telego "github.com/bigelle/tele.go"
 	"github.com/bigelle/tele.go/internal/assertions"
@@ -14,18 +10,18 @@ import (
 )
 
 type SendMessage[T int | string] struct {
-	ChatId               T
-	Text                 string
-	BusinessConnectionId *string
-	MessageThreadId      *int
-	ParseMode            *string
-	Entities             *[]types.MessageEntity
-	LinkPreviewOptions   *types.LinkPreviewOptions
-	DisableNotification  *bool
-	ProtectContent       *bool
-	MessageEffectId      *string
-	ReplyParameters      *types.ReplyParameters
-	ReplyMarkup          *types.ReplyKeyboard
+	ChatId               T                         `json:"chat_id"`
+	Text                 string                    `json:"text"`
+	BusinessConnectionId *string                   `json:"business_connection_id,omitempty"`
+	MessageThreadId      *int                      `json:"message_thread_id,omitempty"`
+	ParseMode            *string                   `json:"parse_mode,omitempty"`
+	Entities             *[]types.MessageEntity    `json:"entities,omitempty"`
+	LinkPreviewOptions   *types.LinkPreviewOptions `json:"link_preview_options,omitempty"`
+	DisableNotification  *bool                     `json:"disable_notification,omitempty"`
+	ProtectContent       *bool                     `json:"protect_content,omitempty"`
+	MessageEffectId      *string                   `json:"message_effect_id,omitempty"`
+	ReplyParameters      *types.ReplyParameters    `json:"reply_parameters,omitempty"`
+	ReplyMarkup          *types.ReplyKeyboard      `json:"reply_markup,omitempty"`
 }
 
 func (s SendMessage[T]) New(chatId T, text string) *SendMessage[T] {
@@ -103,42 +99,33 @@ func (s SendMessage[T]) Validate() error {
 }
 
 func (s SendMessage[T]) Execute() (*types.Message, error) {
+	bot := telego.GetBot()
+	//TODO: proper error handling (logging, custom error types)
+
+	// validating before preparing request payload
 	if err := s.Validate(); err != nil {
 		return nil, err
 	}
 
+	// request payload
 	data, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
 	}
 
-	bot := telego.GetBot()
-	if bot.Token == "" {
-		return nil, errors.New("API token can't be empty")
-	}
-
-	reqUrl := fmt.Sprintf("%s%s%s", bot.ApiUrl, bot.Token, "/sendMessage")
-	resp, err := http.Post(reqUrl, "application/json", bytes.NewReader(data))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error %d: %s", resp.StatusCode, resp.Status)
-	}
-
-	b, err := io.ReadAll(resp.Body)
+	// sending request and getting response bytes
+	b, err := bot.MakePostRequest("sendMessage", data)
 	if err != nil {
 		return nil, err
 	}
 
+	// parsing response
 	var apiresp types.ApiResponse[types.Message]
 	if err := json.Unmarshal(b, &apiresp); err != nil {
 		return nil, err
 	}
-	if !apiresp.Ok{
-		return nil, fmt.Errorf("failed request: %s", *apiresp.Description)
+	if !apiresp.Ok {
+		return nil, fmt.Errorf("%d: %s", apiresp.ErrorCode, *apiresp.Description)
 	}
 	return &apiresp.Result, nil
 }
