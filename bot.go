@@ -1,77 +1,102 @@
 package telego
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"sync"
+	"slices"
+
+	"github.com/bigelle/tele.go/internal/assertions"
+	"github.com/bigelle/tele.go/types"
 )
 
 type Bot struct {
-	Token  string
-	ApiUrl string
+	// API access token
+	Token string
+	// a function to process incoming updates
+	OnUpdate func(types.Update) error
+	// Optional: enable or disable logger
+	// Enabled by default
+	enableLogger bool
+	// Optional: a logger for printing information about any
+	// incoming errors, warnings, info, etc.
+	// if no logger provided, will be used default one
+	logger ILogger
+	//Optional: a minimal logging level.
+	//Anything below than this level will be ignored.
+	//Allowed: "INFO", "WARN", "ERROR", "FATAL"
+	level string
 }
 
-var (
-	bot  Bot
-	once sync.Once
-)
-
-const defaultApiUrl = "https://api.telegram.org/bot"
-
-func GetBot() *Bot {
-	once.Do(func() {
-		bot = Bot{
-			ApiUrl: defaultApiUrl,
-		}
-	})
-	return &bot
+func (b Bot) Validate() error {
+	if err := assertions.ParamNotEmpty(b.Token, "Token"); err != nil {
+		return err
+	}
+	if b.OnUpdate == nil {
+		return errors.New("function OnUpdate can't be nil")
+	}
+	if !slices.Contains([]string{"INFO", "WARN", "ERROR", "FATAL"}, b.level) {
+		return errors.New("logging level should be INFO, WARN, ERROR or FATAL")
+	}
+	return nil
 }
 
-func (b *Bot) SetToken(t string) *Bot {
-	b.Token = t
+type ILogger interface {
+	Info(...fmt.Stringer)
+	Warn(...fmt.Stringer)
+	Error(...fmt.Stringer)
+	Fatal(...fmt.Stringer)
+}
+
+type defaultLoggerImpl struct {
+	// FIXME: there's nothing currently
+}
+
+func (d defaultLoggerImpl) Info(s ...fmt.Stringer) {
+	fmt.Println(s)
+}
+
+func (d defaultLoggerImpl) Warn(s ...fmt.Stringer) {
+	fmt.Println(s)
+}
+
+func (d defaultLoggerImpl) Error(s ...fmt.Stringer) {
+	fmt.Println(s)
+}
+
+func (d defaultLoggerImpl) Fatal(s ...fmt.Stringer) {
+	fmt.Println(s)
+}
+
+type BotOption func(*Bot)
+
+func NewBot(t string, u func(types.Update) error, opts ...BotOption) Bot {
+	b := Bot{
+		Token:        t,
+		OnUpdate:     u,
+		enableLogger: true,
+		logger:       defaultLoggerImpl{},
+		level:        "INFO",
+	}
+	for _, opt := range opts {
+		opt(&b)
+	}
 	return b
 }
 
-func (b *Bot) SetApiUrl(url string) *Bot {
-	b.ApiUrl = url
-	return b
+func WithEnableLogger(b bool) BotOption {
+	return func(bot *Bot) {
+		bot.enableLogger = b
+	}
 }
 
-func (b Bot) MakeRequest(reqMethod string, apiMethod string, body []byte) ([]byte, error){
-	// TODO: probably bot validating method
-	if b.Token == "" {
-		return nil, errors.New("API token can't be empty")
+func WithLogger(l ILogger) BotOption {
+	return func(b *Bot) {
+		b.logger = l
 	}
-	url := fmt.Sprintf("%s%s/%s", bot.ApiUrl, bot.Token, apiMethod)
-	req, err := http.NewRequest(reqMethod, url, bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	// sending request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// reading response
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return respBytes, nil
 }
 
-func (b Bot) MakePostRequest(method string, body []byte) ([]byte, error) {
-	return b.MakeRequest("POST", method, body)
-}
-
-func (b Bot) MakeGetRequest(method string, body []byte)([]byte, error){
-	return b.MakeRequest("GET", method, body)
+func WithLoggingLevel(lvl string) BotOption {
+	return func(b *Bot) {
+		b.level = lvl
+	}
 }

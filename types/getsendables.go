@@ -3,7 +3,33 @@ package types
 import (
 	"encoding/json"
 	"errors"
+
+	"github.com/bigelle/tele.go/internal/assertions"
 )
+
+type Animation struct {
+	FileId       string     `json:"file_id"`
+	FileUniqueId string     `json:"file_unique_id"`
+	Width        int        `json:"width"`
+	Height       int        `json:"height"`
+	Duration     int        `json:"duration"`
+	Thumbnail    *PhotoSize `json:"thumbnail,omitempty"`
+	FileName     *string    `json:"file_name,omitempty"`
+	MimeType     *string    `json:"mime_type,omitempty"`
+	FileSize     *int64     `json:"file_size,omitempty"`
+}
+
+type Audio struct {
+	FileId       string     `json:"file_id"`
+	FileUniqueId string     `json:"file_unique_id"`
+	Duration     int        `json:"duration"`
+	MimeType     *string    `json:"mime_type,omitempty"`
+	FileSize     *int64     `json:"file_size,omitempty"`
+	Title        *string    `json:"title,omitempty"`
+	Performer    *string    `json:"performer,omitempty"`
+	Thumbnail    *PhotoSize `json:"thumbnail,omitempty"`
+	FileName     *string    `json:"file_name,omitempty"`
+}
 
 type BackgroundType struct {
 	BackgroundTypeInterface
@@ -160,3 +186,20 @@ type BackgroundFillSolid struct {
 }
 
 func (b BackgroundFillSolid) backgroundFillContract() {}
+
+type ReplyParameters struct {
+	MessageId                int              `json:"message_id"`
+	ChatId                   *string          `json:"chat_id,omitempty"`
+	AllowSendingWithoutReply *bool            `json:"allow_sending_without_reply,omitempty"`
+	Quote                    *string          `json:"quote,omitempty"`
+	QuoteParseMode           *string          `json:"quote_parse_mode,omitempty"`
+	QuoteEntities            *[]MessageEntity `json:"quote_entities,omitempty"`
+	QuotePosition            *int             `json:"quote_position,omitempty"`
+}
+
+func (r ReplyParameters) Validate() error {
+	if err := assertions.ParamNotEmpty(*r.ChatId, "ChatId"); err != nil {
+		return err
+	}
+	return nil
+}

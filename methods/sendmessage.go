@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	telego "github.com/bigelle/tele.go"
+	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/internal/assertions"
+	"github.com/bigelle/tele.go/longpolling"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -99,7 +100,6 @@ func (s SendMessage[T]) Validate() error {
 }
 
 func (s SendMessage[T]) Execute() (*types.Message, error) {
-	bot := telego.GetBot()
 	//TODO: proper error handling (logging, custom error types)
 
 	// validating before preparing request payload
@@ -114,7 +114,11 @@ func (s SendMessage[T]) Execute() (*types.Message, error) {
 	}
 
 	// sending request and getting response bytes
-	b, err := bot.MakePostRequest("sendMessage", data)
+	// FIXME: should have better way to get token because
+	// its not always doing requests using longpolling bot
+	// maybe should create a chan HERE, pass it to MakePostRequest and
+	// get a response from this channel
+	b, err := internal.MakePostRequest(longpolling.GetToken(), "sendMessage", data)
 	if err != nil {
 		return nil, err
 	}

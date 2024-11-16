@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bigelle/tele.go"
+	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/internal/assertions"
 )
 
@@ -32,7 +32,7 @@ type InlineQueryResult struct {
 }
 
 type InlineQueryResultInterface interface {
-	telego.Validator
+	internal.Validator
 	inlineQueryResultContract() //NOTE: maybe should do something special
 }
 
@@ -191,10 +191,10 @@ func (i InlineQueryResultAudio) Validate() error {
 		return err
 	}
 	if *i.ParseMode != "" && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("Parse mode can't be enabled if Entities are provided")
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.InputMessageContent != nil {
-		if err := (*i.InputMessageContent).Validate(); err != nil {
+		if err := i.InputMessageContent.Validate(); err != nil {
 			return err
 		}
 	}
@@ -278,7 +278,7 @@ func (i InlineQueryResultDocument) Validate() error {
 		return err
 	}
 	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("Parse mode can't be enabled if Entities are provided")
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.InputMessageContent != nil {
 		if err := (*i.InputMessageContent).Validate(); err != nil {
@@ -649,7 +649,7 @@ type InlineQueryResultCached struct {
 }
 
 type InlineQueryResultCachedInterface interface {
-	telego.Validator
+	internal.Validator
 	inlineQueryResultCachedContract()
 }
 
@@ -1021,7 +1021,7 @@ type InputMessageContent struct {
 }
 
 type InputMessageContentInterface interface {
-	telego.Validator
+	internal.Validator
 	inputMessageContentContract()
 }
 
