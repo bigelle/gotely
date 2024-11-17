@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	telego "github.com/bigelle/tele.go"
 	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/internal/assertions"
-	"github.com/bigelle/tele.go/longpolling"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -118,7 +118,7 @@ func (s SendMessage[T]) Execute() (*types.Message, error) {
 	// its not always doing requests using longpolling bot
 	// maybe should create a chan HERE, pass it to MakePostRequest and
 	// get a response from this channel
-	b, err := internal.MakePostRequest(longpolling.GetToken(), "sendMessage", data)
+	b, err := internal.MakePostRequest(telego.GetToken(), "sendMessage", data)
 	if err != nil {
 		return nil, err
 	}

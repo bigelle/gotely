@@ -69,7 +69,9 @@ func (d defaultLoggerImpl) Fatal(s ...fmt.Stringer) {
 
 type BotOption func(*Bot)
 
-func NewBot(t string, u func(types.Update) error, opts ...BotOption) Bot {
+var bot Bot
+
+func NewBot(t string, u func(types.Update) error, opts ...BotOption) (Bot, error) {
 	b := Bot{
 		Token:        t,
 		OnUpdate:     u,
@@ -80,7 +82,15 @@ func NewBot(t string, u func(types.Update) error, opts ...BotOption) Bot {
 	for _, opt := range opts {
 		opt(&b)
 	}
-	return b
+	if err := b.Validate(); err != nil {
+		return Bot{}, err
+	}
+	bot = b
+	return b, nil
+}
+
+func GetToken() string {
+	return bot.Token
 }
 
 func WithEnableLogger(b bool) BotOption {

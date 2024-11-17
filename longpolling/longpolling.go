@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	telego "github.com/bigelle/tele.go"
 	"github.com/bigelle/tele.go/internal"
@@ -15,10 +16,14 @@ import (
 var longPollingBotInstance LongPollingBot
 
 type LongPollingBot struct {
-	Bot telego.Bot
+	OnUpdate func(types.Update) error
 	// a channel that will store all of the updates that are
 	// waiting to be processed
 	updates chan types.Update
+	// a context channel for stopping bot
+	stopChan chan struct{}
+	// a waiting group to sync getUpdates and handleUpdates
+	waitgroup *sync.WaitGroup
 	// Optional: Identifier of the first update to ben returned.
 	// Must be greater by one than the highest among the identifiers of
 	// previously received updates.
@@ -47,13 +52,9 @@ type LongPollingBot struct {
 	allowedUpdates *[]string
 }
 
-func GetToken() string {
-	return longPollingBotInstance.Bot.Token
-}
-
 func (l LongPollingBot) Validate() error {
-	if err := l.Bot.Validate(); err != nil {
-		return err
+	if l.OnUpdate == nil {
+		return errors.New("function OnUpdate can't be nil")
 	}
 	if *l.limit < 1 || *l.limit > 100 {
 		return errors.New("limit parameter should be between 1 and 100")
@@ -89,8 +90,10 @@ func (l LongPollingBot) Validate() error {
 		}
 		return true
 	}
-	if !containsAll(*l.allowedUpdates, allowed) {
-		return fmt.Errorf("unknown allowed_updates parameter: %v", *l.allowedUpdates)
+	if l.allowedUpdates != nil {
+		if !containsAll(*l.allowedUpdates, allowed) {
+			return fmt.Errorf("unknown allowed_updates parameter: %v", *l.allowedUpdates)
+		}
 	}
 	return nil
 }
@@ -106,8 +109,10 @@ var (
 func Connect(b telego.Bot, opts ...LongPollingOption) error {
 	// creating an instance
 	lpb := LongPollingBot{
-		Bot:            b,
+		OnUpdate:       b.OnUpdate,
 		updates:        make(chan types.Update),
+		stopChan:       make(chan struct{}),
+		waitgroup:      &sync.WaitGroup{},
 		offset:         &default_offset,
 		limit:          &default_limit,
 		timeout:        &default_timeout,
@@ -127,12 +132,20 @@ func Connect(b telego.Bot, opts ...LongPollingOption) error {
 	longPollingBotInstance = lpb
 
 	// launching goroutines
-	// TODO: getUpdates loop, handleUpdates
+	longPollingBotInstance.waitgroup.Add(2)
+	go getUpdates()
+	go handleUpdates()
 	return nil
 }
 
+func Disconnect() {
+	longPollingBotInstance.stopChan <- struct{}{}
+	close(longPollingBotInstance.stopChan)
+	longPollingBotInstance.waitgroup.Wait()
+}
+
 func getMe() (types.User, error) {
-	url := fmt.Sprintf("https://api.telegram.org/bot%s/getMe", longPollingBotInstance.Bot.Token)
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/getMe", telego.GetToken())
 	resp, err := http.Get(url)
 	if err != nil {
 		return types.User{}, err
@@ -150,6 +163,32 @@ func getMe() (types.User, error) {
 	}
 
 	return respObj.Result, nil
+}
+
+func getUpdates() {
+	gu := GetUpdates{
+		AllowedUpdates: longPollingBotInstance.allowedUpdates,
+		Limit:          longPollingBotInstance.limit,
+		Timeout:        longPollingBotInstance.timeout,
+		Offset:         longPollingBotInstance.offset,
+	}
+	for {
+		select {
+		case <-longPollingBotInstance.stopChan:
+			return
+		default:
+			upds, err := gu.Execute()
+			if err != nil {
+				// logging error
+				// if error is critical, panic
+				// TODO: error types
+				continue
+			}
+			for _, upd := range upds {
+				longPollingBotInstance.updates <- upd
+			}
+		}
+	}
 }
 
 type GetUpdates struct {
@@ -185,7 +224,7 @@ func (g GetUpdates) Execute() ([]types.Update, error) {
 		return nil, err
 	}
 
-	b, err := internal.MakeGetRequest(longPollingBotInstance.Bot.Token, "getUpdates", data)
+	b, err := internal.MakeGetRequest(telego.GetToken(), "getUpdates", data)
 	if err != nil {
 		return nil, err
 	}
@@ -198,4 +237,13 @@ func (g GetUpdates) Execute() ([]types.Update, error) {
 		return nil, fmt.Errorf("%d: %s", resp.ErrorCode, *resp.Description)
 	}
 	return resp.Result, nil
+}
+
+func handleUpdates() {
+	for upd := range longPollingBotInstance.updates {
+		err := longPollingBotInstance.OnUpdate(upd)
+		if err != nil {
+			// logging and panic if an error is critical
+		}
+	}
 }
