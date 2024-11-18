@@ -30,7 +30,6 @@ type ReactionCount struct {
 	TotalCount int          `json:"total_count"`
 }
 
-// TODO: refactor and add marshal/demarshal funcs
 type ReactionType struct {
 	ReactionTypeInterface
 }

@@ -100,8 +100,6 @@ func (s SendMessage[T]) Validate() error {
 }
 
 func (s SendMessage[T]) Execute() (*types.Message, error) {
-	//TODO: proper error handling (logging, custom error types)
-
 	// validating before preparing request payload
 	if err := s.Validate(); err != nil {
 		return nil, err
@@ -114,10 +112,6 @@ func (s SendMessage[T]) Execute() (*types.Message, error) {
 	}
 
 	// sending request and getting response bytes
-	// FIXME: should have better way to get token because
-	// its not always doing requests using longpolling bot
-	// maybe should create a chan HERE, pass it to MakePostRequest and
-	// get a response from this channel
 	b, err := internal.MakePostRequest(telego.GetToken(), "sendMessage", data)
 	if err != nil {
 		return nil, err
