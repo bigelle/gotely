@@ -2,8 +2,6 @@ package types
 
 import (
 	"fmt"
-
-	"github.com/bigelle/tele.go/internal/assertions"
 )
 
 type Poll struct {
@@ -43,10 +41,10 @@ type InputPollOption struct {
 }
 
 func (i InputPollOption) Validate() error {
-	if assertions.IsStringEmpty(i.Text) || len(i.Text) > 100 {
+	if len(i.Text) < 1 || len(i.Text) > 100 {
 		return fmt.Errorf("text must be between 1 and 100 characters")
 	}
-	if len(*i.TextEntities) != 0 && !assertions.IsStringEmpty(*i.TextParseMode) {
+	if len(*i.TextEntities) != 0 && len(*i.TextParseMode) != 0 {
 		return fmt.Errorf("parse mode and entities can't be used together")
 	}
 	return nil

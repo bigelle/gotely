@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/bigelle/tele.go/assertions"
 	"github.com/bigelle/tele.go/internal"
-	"github.com/bigelle/tele.go/internal/assertions"
 )
 
 type InputMedia struct {

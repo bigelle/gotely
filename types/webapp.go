@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/bigelle/tele.go/internal/assertions"
+	"github.com/bigelle/tele.go/assertions"
 )
 
 type WebAppInfo struct {

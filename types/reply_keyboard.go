@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/bigelle/tele.go/internal/assertions"
+	"github.com/bigelle/tele.go/assertions"
 )
 
 type InlineKeyboardMarkup struct {

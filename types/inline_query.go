@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bigelle/tele.go/assertions"
 	"github.com/bigelle/tele.go/internal"
-	"github.com/bigelle/tele.go/internal/assertions"
 )
 
 type InlineQuery struct {
@@ -277,7 +277,7 @@ func (i InlineQueryResultDocument) Validate() error {
 	if err := assertions.ParamNotEmpty(i.DocumentUrl, "DocumentUrl"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.InputMessageContent != nil {
@@ -347,8 +347,8 @@ func (i InlineQueryResultGif) Validate() error {
 	if err := assertions.ParamNotEmpty(i.ThumbnailUrl, "ThumbnailUrl"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.InputMessageContent != nil {
 		if err := i.InputMessageContent.Validate(); err != nil {
@@ -438,8 +438,8 @@ func (i InlineQueryResultMpeg4Gif) Validate() error {
 	if err := assertions.ParamNotEmpty(i.ThumbnailUrl, "ThumbnailUrl"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be used if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.InputMessageContent != nil {
 		if err := i.InputMessageContent.Validate(); err != nil {
@@ -483,8 +483,8 @@ func (i InlineQueryResultPhoto) Validate() error {
 	if err := assertions.ParamNotEmpty(i.ThumbnailUrl, "ThumbnailUrl"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -586,8 +586,8 @@ func (i InlineQueryResultVideo) Validate() error {
 	if err := assertions.ParamNotEmpty(i.Title, "Title"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -628,9 +628,11 @@ func (i InlineQueryResultVoice) Validate() error {
 	if err := assertions.ParamNotEmpty(i.Title, "Title"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
+
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
 			return err
@@ -741,8 +743,8 @@ func (i InlineQueryResultCachedPhoto) Validate() error {
 	if err := assertions.ParamNotEmpty(i.PhotoFileId, "PhotoUrl"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -779,8 +781,8 @@ func (i InlineQueryResultCachedGif) Validate() error {
 	if err := assertions.ParamNotEmpty(i.GifFileId, "GifFileId"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -817,8 +819,8 @@ func (i InlineQueryResultCachedMpeg4Gif) Validate() error {
 	if err := assertions.ParamNotEmpty(i.Mpeg4FileId, "Mpeg4FileId"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -886,8 +888,8 @@ func (i InlineQueryResultCachedVideo) Validate() error {
 	if err := assertions.ParamNotEmpty(i.VideoFileId, "VideoFileId"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -924,8 +926,8 @@ func (i InlineQueryResultCachedVoice) Validate() error {
 	if err := assertions.ParamNotEmpty(i.VoiceFileId, "VoiceFileId"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -962,8 +964,8 @@ func (i InlineQueryResultCachedAudio) Validate() error {
 	if err := assertions.ParamNotEmpty(i.AudioFileId, "AudioFileId"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -1000,8 +1002,8 @@ func (i InlineQueryResultCachedDocument) Validate() error {
 	if err := assertions.ParamNotEmpty(i.DocumentFileId, "DocumentFileId"); err != nil {
 		return err
 	}
-	if !assertions.IsStringEmpty(*i.ParseMode) && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("ParseMode can't be enabled if Entities are provided")
+	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {

@@ -3,10 +3,9 @@ package types
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
+	"github.com/bigelle/tele.go/assertions"
 	"github.com/bigelle/tele.go/internal"
-	"github.com/bigelle/tele.go/internal/assertions"
 )
 
 type MenuButton struct {
@@ -87,8 +86,8 @@ func (m MenuButtonWebApp) Validate() error {
 	if err := assertions.ParamNotEmpty(m.Type, "Type"); err != nil {
 		return err
 	}
-	if assertions.IsStringEmpty(m.Text) {
-		return fmt.Errorf("text parameter can't be empty")
+	if err := assertions.ParamNotEmpty(m.Text, "text"); err != nil {
+		return err
 	}
 	if err := m.WebAppInfo.Validate(); err != nil {
 		return err

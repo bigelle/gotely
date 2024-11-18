@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/bigelle/tele.go/internal/assertions"
+	"github.com/bigelle/tele.go/assertions"
 	"github.com/bigelle/tele.go/types"
 )
 

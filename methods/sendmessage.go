@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	telego "github.com/bigelle/tele.go"
+	"github.com/bigelle/tele.go/assertions"
 	"github.com/bigelle/tele.go/internal"
-	"github.com/bigelle/tele.go/internal/assertions"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -88,7 +88,7 @@ func (s SendMessage[T]) Validate() error {
 	}
 	if c, ok := any(s.ChatId).(int); ok {
 		if c == 0 {
-			return assertions.ErrorEmptyParam{Param: "Id"}
+			return assertions.ErrorEmptyParam("Id")
 		}
 	}
 	if c, ok := any(s.ChatId).(string); ok {

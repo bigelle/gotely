@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/bigelle/tele.go/assertions"
 	"github.com/bigelle/tele.go/internal"
-	"github.com/bigelle/tele.go/internal/assertions"
 )
 
 type PaidMediaInfo struct {
@@ -71,8 +71,8 @@ func (p PaidMediaPhoto) Validate() error {
 	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
 		return err
 	}
-	if assertions.IsSliceEmpty(p.Photo) {
-		return fmt.Errorf("Photo parameter can't be empty")
+	if len(p.Photo) == 0 {
+		return assertions.ErrorEmptyParam("photo")
 	}
 	return nil
 }
@@ -105,7 +105,7 @@ func (p PaidMediaVideo) Validate() error {
 		return err
 	}
 	if p.Video == nil {
-		return fmt.Errorf("Photo parameter can't be empty")
+		return fmt.Errorf("video parameter can't be empty")
 	}
 	return nil
 }
@@ -282,8 +282,8 @@ type LabeledPrice struct {
 }
 
 func (l LabeledPrice) Validate() error {
-	if assertions.IsStringEmpty(l.Label) {
-		return fmt.Errorf("label parameter can't be empty")
+	if err := assertions.ParamNotEmpty(l.Label, "label"); err != nil {
+		return err
 	}
 	if l.Amount < 0 {
 		return fmt.Errorf("Amount can't be less than zero")

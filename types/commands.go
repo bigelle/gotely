@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bigelle/tele.go/internal/assertions"
+	"github.com/bigelle/tele.go/assertions"
 )
 
 type BotCommand struct {
@@ -14,11 +14,11 @@ type BotCommand struct {
 }
 
 func (b BotCommand) Validate() error {
-	if assertions.IsStringEmpty(b.Command) {
-		return fmt.Errorf("command parameter can't be empty")
+	if err := assertions.ParamNotEmpty(b.Command, "command"); err != nil {
+		return err
 	}
-	if assertions.IsStringEmpty(b.Description) {
-		return fmt.Errorf("description parameter can't be empty")
+	if err := assertions.ParamNotEmpty(b.Description, "description"); err != nil {
+		return err
 	}
 	return nil
 }
@@ -120,8 +120,8 @@ type BotCommandScopeChat struct {
 func (b BotCommandScopeChat) botCommandScopeContract() {}
 
 func (b BotCommandScopeChat) Validate() error {
-	if assertions.IsStringEmpty(b.ChatId) {
-		return fmt.Errorf("ChatId parameter can't be empty")
+	if err := assertions.ParamNotEmpty(b.ChatId, "chat_id"); err != nil {
+		return err
 	}
 	return nil
 }
@@ -134,8 +134,8 @@ type BotCommandScopeChatAdministrators struct {
 func (b BotCommandScopeChatAdministrators) botCommandScopeContract() {}
 
 func (b BotCommandScopeChatAdministrators) Validate() error {
-	if assertions.IsStringEmpty(b.ChatId) {
-		return fmt.Errorf("ChatId parameter can't be empty")
+	if err := assertions.ParamNotEmpty(b.ChatId, "chat_id"); err != nil {
+		return err
 	}
 	return nil
 }
@@ -149,8 +149,8 @@ type BotCommandScopeChatMember struct {
 func (b BotCommandScopeChatMember) botCommandScopeContract() {}
 
 func (b BotCommandScopeChatMember) Validate() error {
-	if assertions.IsStringEmpty(b.ChatId) {
-		return fmt.Errorf("ChatId parameter can't be empty")
+	if err := assertions.ParamNotEmpty(b.ChatId, "chat_id"); err != nil {
+		return err
 	}
 	if b.UserId == 0 {
 		return fmt.Errorf("UserId parameter can't be empty")

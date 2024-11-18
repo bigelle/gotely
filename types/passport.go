@@ -3,9 +3,8 @@ package types
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
-	"github.com/bigelle/tele.go/internal/assertions"
+	"github.com/bigelle/tele.go/assertions"
 )
 
 type PassportData struct {
@@ -107,17 +106,17 @@ type PassportElementErrorDataField struct {
 func (p PassportElementErrorDataField) passportElementErrorContract() {}
 
 func (p PassportElementErrorDataField) Validate() error {
-	if assertions.IsStringEmpty(p.FieldName) {
-		return fmt.Errorf("FieldName parameter can't be empty")
+	if err := assertions.ParamNotEmpty(p.FieldName, "field_name"); err != nil {
+		return err
 	}
-	if assertions.IsStringEmpty(p.DataHash) {
-		return fmt.Errorf("DataHash parameter can't be empty")
+	if err := assertions.ParamNotEmpty(p.DataHash, "data_hash"); err != nil {
+		return err
 	}
-	if assertions.IsStringEmpty(p.Message) {
-		return fmt.Errorf("Message parameter can't be empty")
+	if err := assertions.ParamNotEmpty(p.Message, "message"); err != nil {
+		return err
 	}
-	if assertions.IsStringEmpty(p.Type) {
-		return fmt.Errorf("Type parameter can't be empty")
+	if err := assertions.ParamNotEmpty(p.Type, "type"); err != nil {
+		return err
 	}
 	return nil
 }
@@ -154,8 +153,8 @@ type PassportElementErrorFiles struct {
 func (p PassportElementErrorFiles) passportElementErrorContract() {}
 
 func (p PassportElementErrorFiles) Validate() error {
-	if assertions.IsSliceEmpty(p.FileHashes) {
-		return fmt.Errorf("FileHashes parameter can't be empty")
+	if err := assertions.ParamNotEmpty(p.FileHashes, "type"); err != nil {
+		return err
 	}
 	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
 		return err
@@ -267,8 +266,8 @@ func (p PassportElementErrorTranslationFiles) Validate() error {
 	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
 		return err
 	}
-	if assertions.IsSliceEmpty(p.FileHashes) {
-		return fmt.Errorf("FileHashes parameter can't be empty")
+	if err := assertions.ParamNotEmpty(p.FileHashes, "file_hashes"); err != nil {
+		return err
 	}
 	if err := assertions.ParamNotEmpty(p.Message, "Message"); err != nil {
 		return err

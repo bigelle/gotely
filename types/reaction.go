@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bigelle/tele.go/internal/assertions"
+	"github.com/bigelle/tele.go/assertions"
 )
 
 type MessageReactionCountUpdated struct {
@@ -83,8 +83,8 @@ type ReactionTypeCustomEmoji struct {
 func (r ReactionTypeCustomEmoji) reactionTypeEmojiContract() {}
 
 func (r ReactionTypeCustomEmoji) Vaidate() error {
-	if assertions.IsStringEmpty(r.CustomEmojiId) {
-		return fmt.Errorf("CustomEmojiId parameter cant' be empty")
+	if err := assertions.ParamNotEmpty(r.CustomEmojiId, "custom_emoji_id"); err != nil {
+		return err
 	}
 	if r.Type != "custom_emoji" {
 		return fmt.Errorf("Type must be \"custom_emoji\"")
@@ -100,8 +100,8 @@ type ReactionTypeEmoji struct {
 func (r ReactionTypeEmoji) reactionTypeEmojiContract() {}
 
 func (r ReactionTypeEmoji) Validate() error {
-	if assertions.IsStringEmpty(r.Emoji) {
-		return fmt.Errorf("Emoji parameter can't be empty")
+	if err := assertions.ParamNotEmpty(r.Emoji, "emoji"); err != nil {
+		return err
 	}
 	if r.Type != "emoji" {
 		return fmt.Errorf("Type must be \"emoji\"")

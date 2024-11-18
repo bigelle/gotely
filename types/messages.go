@@ -2,8 +2,6 @@ package types
 
 import (
 	"reflect"
-
-	"github.com/bigelle/tele.go/internal/assertions"
 )
 
 type MaybeInaccessibleMessage interface {
@@ -133,7 +131,7 @@ func (m Message) GetNewChatMembers() []User {
 }
 
 func (m Message) IsCommand() bool {
-	if !assertions.IsStringEmpty(*m.Text) && m.Entities != nil {
+	if len(*m.Text) != 0 && m.Entities != nil {
 		for _, en := range *m.Entities {
 			if !reflect.DeepEqual(en, MessageEntity{}) && en.Offset == 0 &&
 				en.Type == "bt_command" {
