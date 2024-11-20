@@ -12,9 +12,9 @@ import (
 	"github.com/bigelle/tele.go/types"
 )
 
-var longPollingBotInstance longPollingBot
+var longPollingBotInstance LongPollingBot
 
-type longPollingBot struct {
+type LongPollingBot struct {
 	OnUpdate func(types.Update) error
 	// Optional: Identifier of the first update to ben returned.
 	// Must be greater by one than the highest among the identifiers of
@@ -53,7 +53,7 @@ type longPollingBot struct {
 	writer io.Writer
 }
 
-func (l longPollingBot) Validate() error {
+func (l LongPollingBot) Validate() error {
 	if l.OnUpdate == nil {
 		return errors.New("function OnUpdate can't be nil")
 	}

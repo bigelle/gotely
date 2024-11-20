@@ -4,17 +4,14 @@ import (
 	"fmt"
 )
 
-type CanEmpty interface {
-	string | map[string]string | []string | []struct{}
+type ErrInvalidParam string
+
+func (e ErrInvalidParam) Error() string {
+	return string(e)
 }
 
-type ErrorEmptyParam string
-
-func (e ErrorEmptyParam) Error() string {
-	return fmt.Sprintf("%s parameter can't be empty", string(e))
-}
-
-func ParamNotEmpty[T CanEmpty](val T, par string) error {
+// currently used only for strings and []string
+func ParamNotEmpty[T string | []string](val T, par string) error {
 	isEmpty := false
 	switch v := any(val).(type) {
 	case string:
@@ -25,7 +22,7 @@ func ParamNotEmpty[T CanEmpty](val T, par string) error {
 		isEmpty = (len(v) == 0)
 	}
 	if isEmpty {
-		return ErrorEmptyParam(par)
+		return ErrInvalidParam(fmt.Sprintf("%s parameter can't be empty", par))
 	}
 	return nil
 }

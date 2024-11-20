@@ -3,112 +3,9 @@ package types
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/bigelle/tele.go/assertions"
-	"github.com/bigelle/tele.go/internal"
 )
-
-type PaidMediaInfo struct {
-	StarCount string      `json:"star_count"`
-	PaidMedia []PaidMedia `json:"paid_media"`
-}
-
-type PaidMedia struct {
-	PaidMediaInterface
-}
-
-type PaidMediaInterface interface {
-	paidMediaContract()
-	internal.Validator
-}
-
-func (p PaidMedia) MarshalJSON() ([]byte, error) {
-	return json.Marshal(p.PaidMediaInterface)
-}
-
-func (p *PaidMedia) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Type string `json:"type"`
-	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
-
-	switch raw.Type {
-	case "preview":
-		tmp := PaidMediaPreview{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		p.PaidMediaInterface = tmp
-	case "photo":
-		tmp := PaidMediaPhoto{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		p.PaidMediaInterface = tmp
-	case "video":
-		tmp := PaidMediaVideo{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		p.PaidMediaInterface = tmp
-	default:
-		return errors.New("type must be preview, photo, video")
-	}
-	return nil
-}
-
-type PaidMediaPhoto struct {
-	Type  string      `json:"type"`
-	Photo []PhotoSize `json:"photo"`
-}
-
-func (p PaidMediaPhoto) paidMediaContract() {}
-
-func (p PaidMediaPhoto) Validate() error {
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
-	}
-	if len(p.Photo) == 0 {
-		return assertions.ErrorEmptyParam("photo")
-	}
-	return nil
-}
-
-type PaidMediaPreview struct {
-	Type     string `json:"type"`
-	Width    *int   `json:"width,omitempty"`
-	Height   *int   `json:"height,omitempty"`
-	Duration *int   `json:"duration,omitempty"`
-}
-
-func (p PaidMediaPreview) paidMediaContract() {}
-
-func (p PaidMediaPreview) Validate() error {
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
-	}
-	return nil
-}
-
-type PaidMediaVideo struct {
-	Type  string `json:"type"`
-	Video *Video `json:"video"`
-}
-
-func (p PaidMediaVideo) paidMediaContract() {}
-
-func (p PaidMediaVideo) Validate() error {
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
-	}
-	if p.Video == nil {
-		return fmt.Errorf("video parameter can't be empty")
-	}
-	return nil
-}
 
 type StarTransaction struct {
 	Id       string              `json:"id"`
@@ -286,7 +183,7 @@ func (l LabeledPrice) Validate() error {
 		return err
 	}
 	if l.Amount < 0 {
-		return fmt.Errorf("Amount can't be less than zero")
+		return assertions.ErrInvalidParam("amount can't be less than zero")
 	}
 	return nil
 }

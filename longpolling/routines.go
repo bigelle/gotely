@@ -10,7 +10,7 @@ import (
 )
 
 func pollUpdates() {
-	gu := getUpdates{
+	gu := GetUpdates{
 		AllowedUpdates: longPollingBotInstance.allowedUpdates,
 		Limit:          longPollingBotInstance.limit,
 		Timeout:        longPollingBotInstance.timeout,
@@ -35,14 +35,14 @@ func pollUpdates() {
 	}
 }
 
-type getUpdates struct {
+type GetUpdates struct {
 	Offset         *int      `json:"offset,omitempty"`
 	Limit          *int      `json:"limit,omitempty"`
 	Timeout        *int      `json:"timeout,omitempty"`
 	AllowedUpdates *[]string `json:"allowed_updates,omitempty"`
 }
 
-func (g getUpdates) Execute() ([]types.Update, error) {
+func (g GetUpdates) Execute() ([]types.Update, error) {
 	data, err := json.Marshal(g)
 	if err != nil {
 		return nil, err

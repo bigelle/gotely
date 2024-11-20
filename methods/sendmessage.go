@@ -88,7 +88,7 @@ func (s SendMessage[T]) Validate() error {
 	}
 	if c, ok := any(s.ChatId).(int); ok {
 		if c == 0 {
-			return assertions.ErrorEmptyParam("Id")
+			return assertions.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(s.ChatId).(string); ok {

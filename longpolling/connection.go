@@ -7,7 +7,7 @@ import (
 	"github.com/bigelle/tele.go/types"
 )
 
-type LongPollingOption func(*longPollingBot)
+type LongPollingOption func(*LongPollingBot)
 
 var (
 	default_offset  = 0
@@ -17,7 +17,7 @@ var (
 
 func Connect(b telego.Bot, opts ...LongPollingOption) error {
 	// creating an instance
-	lpb := longPollingBot{
+	lpb := LongPollingBot{
 		OnUpdate:       b.OnUpdate,
 		offset:         &default_offset,
 		limit:          &default_limit,
@@ -26,7 +26,7 @@ func Connect(b telego.Bot, opts ...LongPollingOption) error {
 		updates:        make(chan types.Update),
 		stopChan:       make(chan struct{}),
 		waitgroup:      &sync.WaitGroup{},
-		writer:         b.Logger,
+		writer:         b.Writer,
 	}
 	for _, opt := range opts {
 		opt(&lpb)

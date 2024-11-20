@@ -19,14 +19,6 @@ type InlineQuery struct {
 	Location *Location `json:"location,omitempty"`
 }
 
-type ChosenInlineResult struct {
-	ResultId        string    `json:"result_id"`
-	From            User      `json:"from"`
-	Query           string    `json:"query"`
-	Location        *Location `json:"location,omitempty"`
-	InlineMessageId *string   `json:"inline_message_id,omitempty"`
-}
-
 type InlineQueryResult struct {
 	InlineQueryResultInterface
 }
@@ -387,12 +379,12 @@ func (i InlineQueryResultLocation) Validate() error {
 		return err
 	}
 	if i.Latitude == nil {
-		return fmt.Errorf("Latitude parameter can't be nil")
+		return assertions.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if i.Longtitude == nil {
-		return fmt.Errorf("Longtitude parameter can't be nil")
+		return assertions.ErrInvalidParam("longtitude parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Title, "Title"); err != nil {
+	if err := assertions.ParamNotEmpty(i.Title, "title"); err != nil {
 		return err
 	}
 	if i.InputMessageContent != nil {
@@ -530,10 +522,10 @@ func (i InlineQueryResultVenue) Validate() error {
 		return err
 	}
 	if i.Latitude == nil {
-		return fmt.Errorf("Latitude parameter can't be nil")
+		return assertions.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if i.Longtitude == nil {
-		return fmt.Errorf("Longtitude parameter can't be nil")
+		return assertions.ErrInvalidParam("longtitude parameter can't be empty")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -1124,19 +1116,19 @@ func (i InputInvoiceMessageContent) inputMessageContentContract() {}
 
 func (i InputInvoiceMessageContent) Validate() error {
 	if i.Title == "" || strings.TrimSpace(i.Title) == "" || len(i.Title) > 32 {
-		return fmt.Errorf("title parameter must be between 1 and 32 characters")
+		return assertions.ErrInvalidParam("title parameter must be between 1 and 32 characters")
 	}
 	if i.Description == "" || strings.TrimSpace(i.Description) == "" || len(i.Description) > 255 {
-		return fmt.Errorf("Description parameter must be between 1 and 255 characters")
+		return assertions.ErrInvalidParam("description parameter must be between 1 and 255 characters")
 	}
-	if i.Payload == "" || strings.TrimSpace(i.Payload) == "" || len(i.Payload) > 128 {
-		return fmt.Errorf("payload parameter must be between 1 and 128 characters")
+	if len([]byte(i.Payload)) < 1 || len([]byte(i.Payload)) > 128 {
+		return assertions.ErrInvalidParam("payload parameter must be between 1 and 128 bytes")
 	}
-	if i.Currency == "" {
-		return fmt.Errorf("currency parameter can't be empty")
+	if err := assertions.ParamNotEmpty(i.Currency, "currency"); err != nil {
+		return err
 	}
 	if len(i.Prices) == 0 {
-		return fmt.Errorf("prices parameter can't be empty")
+		return assertions.ErrInvalidParam("prices parameter can't be empty")
 	}
 	for _, label := range i.Prices {
 		if err := label.Validate(); err != nil {
@@ -1163,24 +1155,22 @@ func (i InputLocationMessageContent) inputMessageContentContract() {}
 func (i InputLocationMessageContent) Validate() error {
 	if i.LivePeriod != nil {
 		if (*i.LivePeriod < 60 || *i.LivePeriod > 86400) && *i.LivePeriod != 0x7FFFFFFF {
-			return fmt.Errorf("LivePeriod parameter must be between 60 and 86400 or be 0x7FFFFFFF")
+			return assertions.ErrInvalidParam("live_period parameter must be between 60 and 86400 or equal to 0x7FFFFFFF")
 		}
 	}
 	if i.HorizontalAccuracy != nil {
 		if *i.HorizontalAccuracy < 0 || *i.HorizontalAccuracy > 1500 {
-			return fmt.Errorf("Horizontal accuracy must be between 0 and 1500")
+			return assertions.ErrInvalidParam("horizontal_accuracy parameter must be between 0 and 1500 meters")
 		}
 	}
 	if i.Heading != nil {
 		if *i.Heading < 1 || *i.Heading > 360 {
-			return fmt.Errorf("Heading Accuracy must be between 1 and 360")
+			return assertions.ErrInvalidParam("heading parameter must be between 0 and 1500")
 		}
 	}
 	if i.ProximityAlertRaidius != nil {
 		if *i.ProximityAlertRaidius < 1 || *i.ProximityAlertRaidius > 100000 {
-			return fmt.Errorf(
-				"Approaching Notification distance parameter must be between 1 and 100000",
-			)
+			return assertions.ErrInvalidParam("proximity_alert_radius must be between 1 and 100000 meters")
 		}
 	}
 	return nil
@@ -1196,8 +1186,8 @@ type InputTextMessageContent struct {
 func (i InputTextMessageContent) inputMessageContentContract() {}
 
 func (i InputTextMessageContent) Validate() error {
-	if i.MessageText == "" || strings.TrimSpace(i.MessageText) == "" {
-		return fmt.Errorf("MessageText parameter can't be empty")
+	if strings.TrimSpace(i.MessageText) == "" {
+		return assertions.ErrInvalidParam("message_text")
 	}
 	if *i.ParseMode != "" && len(*i.Entities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if entities are provided")
@@ -1231,4 +1221,16 @@ func (i InputVenueMessageContent) Validate() error {
 		return fmt.Errorf("address parameter can't be empty")
 	}
 	return nil
+}
+
+type ChosenInlineResult struct {
+	ResultId        string    `json:"result_id"`
+	From            User      `json:"from"`
+	Query           string    `json:"query"`
+	Location        *Location `json:"location,omitempty"`
+	InlineMessageId *string   `json:"inline_message_id,omitempty"`
+}
+
+type SentWebAppMessage struct {
+	InlineMessageId *string `json:"inline_message_id,omitempty"`
 }

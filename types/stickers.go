@@ -3,7 +3,19 @@ package types
 import (
 	"fmt"
 	"slices"
+
+	"github.com/bigelle/tele.go/assertions"
 )
+
+type Gift struct {
+	Id             string
+	Sticker        Sticker
+	StarCount      int
+	TotalCount     int
+	RemainingCount int
+}
+
+type Gifts []Gift
 
 type Sticker struct {
 	FileId           string        `json:"file_id"`
@@ -32,7 +44,6 @@ type StickerSet struct {
 	IsVideo     bool       `json:"is_video"`
 	Thumbnail   *PhotoSize `json:"thumbnail,omitempty"`
 }
-
 type InputSticker struct {
 	Sticker      InputFile     `json:"sticker"`
 	EmojiList    []string      `json:"emoji_list"`
@@ -43,13 +54,13 @@ type InputSticker struct {
 
 func (i InputSticker) Validate() error {
 	if len(i.EmojiList) < 1 || len(i.EmojiList) > 20 {
-		return fmt.Errorf("EmojiList parameter must be between 1 and 20")
+		return assertions.ErrInvalidParam("emojiList parameter must be between 1 and 20")
 	}
 	if len(*i.Keywords) < 1 || len(*i.Keywords) > 20 {
-		return fmt.Errorf("Keyword parameter must be between 1 and 20")
+		return assertions.ErrInvalidParam("keyword parameter must be between 1 and 20")
 	}
 	if !slices.Contains([]string{"static", "animated", "video"}, i.Format) {
-		return fmt.Errorf("Format must be 'static', 'animated' or 'video'")
+		return assertions.ErrInvalidParam("format must be 'static', 'animated' or 'video'")
 	}
 	if i.MaskPosition != nil {
 		if err := i.MaskPosition.Validate(); err != nil {

@@ -1,10 +1,10 @@
 package types
 
 type WebHookInfo struct {
-	Url                          string   `json:"url"`
-	HasCustomCertificate         bool     `json:"has_custom_certificate"`
-	PendingUpdatesCount          int      `json:"pending_updates_count"`
-	IpAddress                    string   `json:"ip_address"`
+	Url                          string    `json:"url"`
+	HasCustomCertificate         bool      `json:"has_custom_certificate"`
+	PendingUpdatesCount          int       `json:"pending_updates_count"`
+	IpAddress                    string    `json:"ip_address"`
 	LastErrorDate                *int      `json:"last_error_date,omitempty"`
 	LastErrorMessage             *string   `json:"last_error_message,omitempty"`
 	LastSynchronizationErrorDate *int      `json:"last_synchronization_error_date,omitempty"`

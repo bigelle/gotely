@@ -1,5 +1,8 @@
 package types
 
+type CallbackGame struct {
+}
+
 type Game struct {
 	Title        string           `json:"title"`
 	Description  string           `json:"description"`
@@ -8,11 +11,6 @@ type Game struct {
 	TextEntities *[]MessageEntity `json:"text_entities,omitempty"`
 	Animation    *Animation       `json:"animation,omitempty"`
 }
-
-// placeholder
-type CallbackGame struct {
-}
-
 type GameHighScore struct {
 	Position int   `json:"position"`
 	User     *User `json:"user"`
