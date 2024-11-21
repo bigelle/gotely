@@ -1,6 +1,7 @@
 package longpolling
 
 import (
+	"fmt"
 	"sync"
 
 	telego "github.com/bigelle/tele.go"
@@ -42,14 +43,32 @@ func Connect(b telego.Bot, opts ...LongPollingOption) error {
 	longPollingBotInstance = lpb
 
 	// launching goroutines
+	longPollingBotInstance.writer.WriteString("INFO: bot is now online!\n")
 	longPollingBotInstance.waitgroup.Add(2)
-	go pollUpdates()
-	go handleUpdates()
+	go func() {
+		defer longPollingBotInstance.waitgroup.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recovered from panic: %v\n", r)
+			}
+		}()
+		pollUpdates()
+	}()
+	go func() {
+		defer longPollingBotInstance.waitgroup.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recovered from panic: %v\n", r)
+			}
+		}()
+		handleUpdates()
+	}()
+	longPollingBotInstance.waitgroup.Wait()
+
 	return nil
 }
 
 func Disconnect() {
 	longPollingBotInstance.stopChan <- struct{}{}
 	close(longPollingBotInstance.stopChan)
-	longPollingBotInstance.waitgroup.Wait()
 }

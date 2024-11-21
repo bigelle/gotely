@@ -50,7 +50,7 @@ type LongPollingBot struct {
 	// a waiting group to sync getUpdates and handleUpdates
 	waitgroup *sync.WaitGroup
 	// used to displaying messages about any warnings, errors, etc
-	writer io.Writer
+	writer io.StringWriter
 }
 
 func (l LongPollingBot) Validate() error {

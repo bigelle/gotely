@@ -23,13 +23,17 @@ func pollUpdates() {
 		default:
 			upds, err := gu.Execute()
 			if err != nil {
-				longPollingBotInstance.writer.Write([]byte(err.Error()))
+				longPollingBotInstance.writer.WriteString(err.Error())
 				// if error is critical, panic
 				// TODO: error types
 				continue
 			}
-			for _, upd := range upds {
-				longPollingBotInstance.updates <- upd
+			if len(upds) > 0 {
+				for _, upd := range upds {
+					longPollingBotInstance.updates <- upd
+				}
+				lastUpdate := upds[len(upds)-1]
+				*longPollingBotInstance.offset = lastUpdate.UpdateId + 1
 			}
 		}
 	}
@@ -64,10 +68,16 @@ func (g GetUpdates) Execute() ([]types.Update, error) {
 }
 
 func handleUpdates() {
-	for upd := range longPollingBotInstance.updates {
-		err := longPollingBotInstance.OnUpdate(upd)
-		if err != nil {
-			// logging and panic if an error is critical
+	for {
+		select {
+		case upd := <-longPollingBotInstance.updates:
+			err := longPollingBotInstance.OnUpdate(upd)
+			if err != nil {
+				// logging and panic if an error is critical
+			}
+		case <-longPollingBotInstance.stopChan:
+			return
 		}
 	}
+
 }

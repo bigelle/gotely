@@ -10,7 +10,7 @@ import (
 type Bot struct {
 	Token    string
 	OnUpdate func(types.Update) error
-	Writer   io.Writer
+	Writer   io.StringWriter
 }
 
 var bot Bot
@@ -30,7 +30,7 @@ func NewBot(t string, onupd func(types.Update) error, opts ...BotOption) (Bot, e
 
 type BotOption func(*Bot)
 
-func WithWriter(w io.Writer) BotOption {
+func WithWriter(w io.StringWriter) BotOption {
 	return func(b *Bot) {
 		b.Writer = w
 	}

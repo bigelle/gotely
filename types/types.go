@@ -308,7 +308,7 @@ type MessageOrigin struct {
 
 type MessageOriginInterface interface {
 	messageOriginContract()
-	internal.Validator
+	internal.Validable
 }
 
 func (m MessageOrigin) MarshalJSON() ([]byte, error) {
@@ -534,7 +534,7 @@ type PaidMedia struct {
 
 type PaidMediaInterface interface {
 	paidMediaContract()
-	internal.Validator
+	internal.Validable
 }
 
 func (p PaidMedia) MarshalJSON() ([]byte, error) {
@@ -1369,7 +1369,7 @@ func (c *ChatMember) UnmarshalJSON(data []byte) error {
 			return err
 		}
 		c.ChatMemberInterface = tmp
-	case "banned":
+	case "kicked":
 		tmp := ChatMemberBanned{}
 		if err := json.Unmarshal(data, &tmp); err != nil {
 			return err
@@ -1382,6 +1382,7 @@ func (c *ChatMember) UnmarshalJSON(data []byte) error {
 		}
 		c.ChatMemberInterface = tmp
 	default:
+		fmt.Println(raw.Status)
 		return errors.New(
 			"status must be administrator, member, owner, restricted, banned or left",
 		)
@@ -1795,7 +1796,7 @@ type MenuButton struct {
 
 type MenuButtonInterface interface {
 	menuButtonContract()
-	internal.Validator
+	internal.Validable
 }
 
 func (m MenuButton) MarshalJSON() ([]byte, error) {
@@ -1998,7 +1999,7 @@ type InputMedia struct {
 
 type InputMediaInterface interface {
 	SetInputMedia(media string, isNew bool)
-	internal.Validator
+	internal.Validable
 }
 
 func (i InputMedia) MarshalJSON() ([]byte, error) {
@@ -2339,7 +2340,7 @@ type InputPaidMedia struct {
 
 type InputPaidMediaInterface interface {
 	SetInputPaidMedia(media string, isNew bool)
-	internal.Validator
+	internal.Validable
 }
 
 func (i InputPaidMedia) MarshalJSON() ([]byte, error) {

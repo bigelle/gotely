@@ -24,7 +24,7 @@ type InlineQueryResult struct {
 }
 
 type InlineQueryResultInterface interface {
-	internal.Validator
+	internal.Validable
 	inlineQueryResultContract() //NOTE: maybe should do something special
 }
 
@@ -643,7 +643,7 @@ type InlineQueryResultCached struct {
 }
 
 type InlineQueryResultCachedInterface interface {
-	internal.Validator
+	internal.Validable
 	inlineQueryResultCachedContract()
 }
 
@@ -1015,7 +1015,7 @@ type InputMessageContent struct {
 }
 
 type InputMessageContentInterface interface {
-	internal.Validator
+	internal.Validable
 	inputMessageContentContract()
 }
 
