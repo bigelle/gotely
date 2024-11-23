@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/bigelle/tele.go/assertions"
-	"github.com/bigelle/tele.go/internal"
 )
 
 type Update struct {
@@ -308,7 +307,7 @@ type MessageOrigin struct {
 
 type MessageOriginInterface interface {
 	messageOriginContract()
-	internal.Validable
+	Validate() error
 }
 
 func (m MessageOrigin) MarshalJSON() ([]byte, error) {
@@ -534,7 +533,7 @@ type PaidMedia struct {
 
 type PaidMediaInterface interface {
 	paidMediaContract()
-	internal.Validable
+	Validate() error
 }
 
 func (p PaidMedia) MarshalJSON() ([]byte, error) {
@@ -1796,7 +1795,7 @@ type MenuButton struct {
 
 type MenuButtonInterface interface {
 	menuButtonContract()
-	internal.Validable
+	Validate() error
 }
 
 func (m MenuButton) MarshalJSON() ([]byte, error) {
@@ -1999,7 +1998,7 @@ type InputMedia struct {
 
 type InputMediaInterface interface {
 	SetInputMedia(media string, isNew bool)
-	internal.Validable
+	Validate() error
 }
 
 func (i InputMedia) MarshalJSON() ([]byte, error) {
@@ -2340,7 +2339,7 @@ type InputPaidMedia struct {
 
 type InputPaidMediaInterface interface {
 	SetInputPaidMedia(media string, isNew bool)
-	internal.Validable
+	Validate() error
 }
 
 func (i InputPaidMedia) MarshalJSON() ([]byte, error) {

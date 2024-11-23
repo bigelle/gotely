@@ -49,7 +49,7 @@ func Connect(b telego.Bot, opts ...LongPollingOption) error {
 		defer longPollingBotInstance.waitgroup.Done()
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Printf("Recovered from panic: %v\n", r)
+				fmt.Printf("Recovered from panic while polling updates: %v\n", r)
 			}
 		}()
 		pollUpdates()
@@ -58,7 +58,7 @@ func Connect(b telego.Bot, opts ...LongPollingOption) error {
 		defer longPollingBotInstance.waitgroup.Done()
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Printf("Recovered from panic: %v\n", r)
+				fmt.Printf("Recovered from panic while handling updates: %v\n", r)
 			}
 		}()
 		handleUpdates()

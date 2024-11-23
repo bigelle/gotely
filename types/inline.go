@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/bigelle/tele.go/assertions"
-	"github.com/bigelle/tele.go/internal"
 )
 
 type InlineQuery struct {
@@ -24,7 +23,7 @@ type InlineQueryResult struct {
 }
 
 type InlineQueryResultInterface interface {
-	internal.Validable
+	Validate() error
 	inlineQueryResultContract() //NOTE: maybe should do something special
 }
 
@@ -643,7 +642,7 @@ type InlineQueryResultCached struct {
 }
 
 type InlineQueryResultCachedInterface interface {
-	internal.Validable
+	Validate() error
 	inlineQueryResultCachedContract()
 }
 
@@ -1015,7 +1014,7 @@ type InputMessageContent struct {
 }
 
 type InputMessageContentInterface interface {
-	internal.Validable
+	Validate() error
 	inputMessageContentContract()
 }
 

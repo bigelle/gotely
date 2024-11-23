@@ -3,8 +3,11 @@ package longpolling
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
+	"strings"
 
 	telego "github.com/bigelle/tele.go"
+	"github.com/bigelle/tele.go/assertions"
 	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
@@ -24,15 +27,14 @@ func pollUpdates() {
 			upds, err := gu.Execute()
 			if err != nil {
 				longPollingBotInstance.writer.WriteString(err.Error())
-				// if error is critical, panic
-				// TODO: error types
 				continue
 			}
-			if len(upds) > 0 {
-				for _, upd := range upds {
+			updsUnpacked := *upds
+			if len(*upds) > 0 {
+				for _, upd := range updsUnpacked {
 					longPollingBotInstance.updates <- upd
 				}
-				lastUpdate := upds[len(upds)-1]
+				lastUpdate := updsUnpacked[len(updsUnpacked)-1]
 				*longPollingBotInstance.offset = lastUpdate.UpdateId + 1
 			}
 		}
@@ -46,25 +48,50 @@ type GetUpdates struct {
 	AllowedUpdates *[]string `json:"allowed_updates,omitempty"`
 }
 
-func (g GetUpdates) Execute() ([]types.Update, error) {
-	data, err := json.Marshal(g)
-	if err != nil {
-		return nil, err
-	}
+func (g GetUpdates) MarshalJSON() ([]byte, error) {
+	type alias GetUpdates
+	return json.Marshal(alias(g))
+}
 
-	b, err := internal.MakeGetRequest(telego.GetToken(), "getUpdates", data)
-	if err != nil {
-		return nil, err
+func (g GetUpdates) Validate() error {
+	if g.Limit != nil {
+		if *g.Limit < 1 || *g.Limit > 100 {
+			return assertions.ErrInvalidParam("limit parameter must be between 1 and 100")
+		}
 	}
+	if g.Timeout != nil {
+		if *g.Timeout < 0 {
+			return assertions.ErrInvalidParam("timeout parameter must be positive")
+		}
+	}
+	if g.AllowedUpdates != nil && len(*g.AllowedUpdates) > 0 {
+		allowedUpdates := []string{
+			"message",
+			"edited_message",
+			"channel_post",
+			"edited_channel_post",
+			"inline_query",
+			"chosen_inline_result",
+			"callback_query",
+			"shipping_query",
+			"pre_checkout_query",
+			"poll",
+			"poll_answer",
+			"my_chat_member",
+			"chat_member",
+			"chat_join_request",
+		}
+		for _, p := range *g.AllowedUpdates {
+			if !slices.Contains(allowedUpdates, p) {
+				return assertions.ErrInvalidParam(fmt.Sprintf("invalid param: %s. allowed parameters: %s", p, strings.Join(allowedUpdates, ", ")))
+			}
+		}
+	}
+	return nil
+}
 
-	var resp types.ApiResponse[[]types.Update]
-	if err := json.Unmarshal(b, &resp); err != nil {
-		return nil, err
-	}
-	if !resp.Ok {
-		return nil, fmt.Errorf("%d: %s", resp.ErrorCode, *resp.Description)
-	}
-	return resp.Result, nil
+func (g GetUpdates) Execute() (*[]types.Update, error) {
+	return internal.MakeGetRequest[[]types.Update](telego.GetToken(), "getUpdates", g)
 }
 
 func handleUpdates() {

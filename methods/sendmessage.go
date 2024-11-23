@@ -2,7 +2,6 @@ package methods
 
 import (
 	"encoding/json"
-	"fmt"
 
 	telego "github.com/bigelle/tele.go"
 	"github.com/bigelle/tele.go/assertions"
@@ -25,63 +24,6 @@ type SendMessage[T int | string] struct {
 	ReplyMarkup          *types.ReplyKeyboard      `json:"reply_markup,omitempty"`
 }
 
-func (s SendMessage[T]) New(chatId T, text string) *SendMessage[T] {
-	return &SendMessage[T]{
-		ChatId: chatId,
-		Text:   text,
-	}
-}
-
-func (s *SendMessage[T]) SetBusinessConnectionId(id string) *SendMessage[T] {
-	s.BusinessConnectionId = &id
-	return s
-}
-
-func (s *SendMessage[T]) SetMessageThreadId(id int) *SendMessage[T] {
-	s.MessageThreadId = &id
-	return s
-}
-
-func (s *SendMessage[T]) SetParseMode(m string) *SendMessage[T] {
-	s.ParseMode = &m
-	return s
-}
-
-func (s *SendMessage[T]) SetEntities(en []types.MessageEntity) *SendMessage[T] {
-	s.Entities = &en
-	return s
-}
-
-func (s *SendMessage[T]) SetLinkPreviewOptions(opt types.LinkPreviewOptions) *SendMessage[T] {
-	s.LinkPreviewOptions = &opt
-	return s
-}
-
-func (s *SendMessage[T]) SetDisableNotifications(b bool) *SendMessage[T] {
-	s.DisableNotification = &b
-	return s
-}
-
-func (s *SendMessage[T]) SetProtectContent(b bool) *SendMessage[T] {
-	s.ProtectContent = &b
-	return s
-}
-
-func (s *SendMessage[T]) SetMessageEffectId(id string) *SendMessage[T] {
-	s.MessageEffectId = &id
-	return s
-}
-
-func (s *SendMessage[T]) SetReplyParameters(rp types.ReplyParameters) *SendMessage[T] {
-	s.ReplyParameters = &rp
-	return s
-}
-
-func (s *SendMessage[T]) SetReplyMarkup(rm types.ReplyKeyboard) *SendMessage[T] {
-	s.ReplyMarkup = &rm
-	return s
-}
-
 func (s SendMessage[T]) Validate() error {
 	if err := assertions.ParamNotEmpty(s.Text, "Text"); err != nil {
 		return err
@@ -99,31 +41,11 @@ func (s SendMessage[T]) Validate() error {
 	return nil
 }
 
+func (s SendMessage[T]) MarshalJSON() ([]byte, error) {
+	type alias SendMessage[T]
+	return json.Marshal(alias(s))
+}
+
 func (s SendMessage[T]) Execute() (*types.Message, error) {
-	// validating before preparing request payload
-	if err := s.Validate(); err != nil {
-		return nil, err
-	}
-
-	// request payload
-	data, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-
-	// sending request and getting response bytes
-	b, err := internal.MakePostRequest(telego.GetToken(), "sendMessage", data)
-	if err != nil {
-		return nil, err
-	}
-
-	// parsing response
-	var apiresp types.ApiResponse[types.Message]
-	if err := json.Unmarshal(b, &apiresp); err != nil {
-		return nil, err
-	}
-	if !apiresp.Ok {
-		return nil, fmt.Errorf("%d: %s", apiresp.ErrorCode, *apiresp.Description)
-	}
-	return &apiresp.Result, nil
+	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendMessage", s)
 }
