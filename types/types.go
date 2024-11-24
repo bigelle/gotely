@@ -1032,11 +1032,11 @@ func (w WebAppInfo) Validate() error {
 	return nil
 }
 
-type ReplyKeyboard struct {
-	ReplyKeyboardInterface
+type ReplyMarkup struct {
+	ReplyMarkupInterface
 }
 
-type ReplyKeyboardInterface interface {
+type ReplyMarkupInterface interface {
 	replyKeyboardContract()
 }
 
