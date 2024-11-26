@@ -3,10 +3,10 @@ package assertions
 import "fmt"
 
 type ErrFailedRequest struct {
-	code    int
-	message string
+	Code    int
+	Message string
 }
 
 func (e ErrFailedRequest) Error() string {
-	return fmt.Sprintf("error %d: %s", e.code, e.message)
+	return fmt.Sprintf("error %d: %s", e.Code, e.Message)
 }
