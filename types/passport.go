@@ -3,8 +3,9 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
-	"github.com/bigelle/tele.go/assertions"
+	errors1 "github.com/bigelle/tele.go/errors"
 )
 
 type PassportData struct {
@@ -106,17 +107,17 @@ type PassportElementErrorDataField struct {
 func (p PassportElementErrorDataField) passportElementErrorContract() {}
 
 func (p PassportElementErrorDataField) Validate() error {
-	if err := assertions.ParamNotEmpty(p.FieldName, "field_name"); err != nil {
-		return err
+	if strings.TrimSpace(p.Type) == "" {
+		return errors1.ErrInvalidParam("type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.DataHash, "data_hash"); err != nil {
-		return err
+	if strings.TrimSpace(p.DataHash) == "" {
+		return errors1.ErrInvalidParam("data_hash parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Message, "message"); err != nil {
-		return err
+	if strings.TrimSpace(p.Message) == "" {
+		return errors1.ErrInvalidParam("message parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Type, "type"); err != nil {
-		return err
+	if strings.TrimSpace(p.FieldName) == "" {
+		return errors1.ErrInvalidParam("field_name parameter can't be empty")
 	}
 	return nil
 }
@@ -131,14 +132,14 @@ type PassportElementErrorFile struct {
 func (p PassportElementErrorFile) passportElementErrorContract() {}
 
 func (p PassportElementErrorFile) Validate() error {
-	if err := assertions.ParamNotEmpty(p.FileHash, "FileHash"); err != nil {
-		return err
+	if strings.TrimSpace(p.Type) == "" {
+		return errors1.ErrInvalidParam("type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
+	if strings.TrimSpace(p.FileHash) == "" {
+		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Message, "Message"); err != nil {
-		return err
+	if strings.TrimSpace(p.Message) == "" {
+		return errors1.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -153,14 +154,14 @@ type PassportElementErrorFiles struct {
 func (p PassportElementErrorFiles) passportElementErrorContract() {}
 
 func (p PassportElementErrorFiles) Validate() error {
-	if err := assertions.ParamNotEmpty(p.FileHashes, "type"); err != nil {
-		return err
+	if strings.TrimSpace(p.Type) == "" {
+		return errors1.ErrInvalidParam("type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
+	if len(p.FileHashes) == 0 {
+		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Message, "Message"); err != nil {
-		return err
+	if strings.TrimSpace(p.Message) == "" {
+		return errors1.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -175,14 +176,14 @@ type PassportElementErrorFrontSide struct {
 func (p PassportElementErrorFrontSide) passportElementErrorContract() {}
 
 func (p PassportElementErrorFrontSide) Validate() error {
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
+	if strings.TrimSpace(p.Type) == "" {
+		return errors1.ErrInvalidParam("type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.FileHash, "FileHash"); err != nil {
-		return err
+	if strings.TrimSpace(p.FileHash) == "" {
+		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Message, "Message"); err != nil {
-		return err
+	if strings.TrimSpace(p.Message) == "" {
+		return errors1.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -197,14 +198,14 @@ type PassportElementErrorReverseSide struct {
 func (p PassportElementErrorReverseSide) passportElementErrorContract() {}
 
 func (p PassportElementErrorReverseSide) Validate() error {
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
+	if strings.TrimSpace(p.Type) == "" {
+		return errors1.ErrInvalidParam("type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.FileHash, "FileHash"); err != nil {
-		return err
+	if strings.TrimSpace(p.FileHash) == "" {
+		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Message, "Message"); err != nil {
-		return err
+	if strings.TrimSpace(p.Message) == "" {
+		return errors1.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -219,14 +220,14 @@ type PassportElementErrorSelfie struct {
 func (p PassportElementErrorSelfie) passportElementErrorContract() {}
 
 func (p PassportElementErrorSelfie) Validate() error {
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
+	if strings.TrimSpace(p.Type) == "" {
+		return errors1.ErrInvalidParam("type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.FileHash, "FileHash"); err != nil {
-		return err
+	if strings.TrimSpace(p.FileHash) == "" {
+		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Message, "Message"); err != nil {
-		return err
+	if strings.TrimSpace(p.Message) == "" {
+		return errors1.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -241,14 +242,14 @@ type PassportElementErrorTranslationFile struct {
 func (p PassportElementErrorTranslationFile) passportElementErrorContract() {}
 
 func (p PassportElementErrorTranslationFile) Validate() error {
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
+	if strings.TrimSpace(p.Type) == "" {
+		return errors1.ErrInvalidParam("type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.FileHash, "FileHash"); err != nil {
-		return err
+	if strings.TrimSpace(p.FileHash) == "" {
+		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Message, "Message"); err != nil {
-		return err
+	if strings.TrimSpace(p.Message) == "" {
+		return errors1.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -263,14 +264,14 @@ type PassportElementErrorTranslationFiles struct {
 func (p PassportElementErrorTranslationFiles) passportElementErrorContract() {}
 
 func (p PassportElementErrorTranslationFiles) Validate() error {
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
+	if strings.TrimSpace(p.Type) == "" {
+		return errors1.ErrInvalidParam("type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.FileHashes, "file_hashes"); err != nil {
-		return err
+	if len(p.FileHashes) == 0 {
+		return errors1.ErrInvalidParam("file_hashes parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Message, "Message"); err != nil {
-		return err
+	if strings.TrimSpace(p.Message) == "" {
+		return errors1.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -285,14 +286,14 @@ type PassportElementErrorUnspecified struct {
 func (p PassportElementErrorUnspecified) passportElementErrorContract() {}
 
 func (p PassportElementErrorUnspecified) Validate() error {
-	if err := assertions.ParamNotEmpty(p.Type, "Type"); err != nil {
-		return err
+	if strings.TrimSpace(p.Type) == "" {
+		return errors1.ErrInvalidParam("type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.ElementHash, "ElementHash"); err != nil {
-		return err
+	if strings.TrimSpace(p.ElementHash) == "" {
+		return errors1.ErrInvalidParam("element_hashe parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(p.Message, "Message"); err != nil {
-		return err
+	if strings.TrimSpace(p.Message) == "" {
+		return errors1.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }

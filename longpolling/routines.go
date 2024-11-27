@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/assertions"
+	"github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
@@ -56,12 +56,12 @@ func (g GetUpdates) MarshalJSON() ([]byte, error) {
 func (g GetUpdates) Validate() error {
 	if g.Limit != nil {
 		if *g.Limit < 1 || *g.Limit > 100 {
-			return assertions.ErrInvalidParam("limit parameter must be between 1 and 100")
+			return errors.ErrInvalidParam("limit parameter must be between 1 and 100")
 		}
 	}
 	if g.Timeout != nil {
 		if *g.Timeout < 0 {
-			return assertions.ErrInvalidParam("timeout parameter must be positive")
+			return errors.ErrInvalidParam("timeout parameter must be positive")
 		}
 	}
 	if g.AllowedUpdates != nil && len(*g.AllowedUpdates) > 0 {
@@ -83,7 +83,7 @@ func (g GetUpdates) Validate() error {
 		}
 		for _, p := range *g.AllowedUpdates {
 			if !slices.Contains(allowedUpdates, p) {
-				return assertions.ErrInvalidParam(fmt.Sprintf("invalid param: %s. allowed parameters: %s", p, strings.Join(allowedUpdates, ", ")))
+				return errors.ErrInvalidParam(fmt.Sprintf("invalid param: %s. allowed parameters: %s", p, strings.Join(allowedUpdates, ", ")))
 			}
 		}
 	}

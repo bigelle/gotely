@@ -3,8 +3,9 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
-	"github.com/bigelle/tele.go/assertions"
+	errors1 "github.com/bigelle/tele.go/errors"
 )
 
 type StarTransaction struct {
@@ -179,11 +180,11 @@ type LabeledPrice struct {
 }
 
 func (l LabeledPrice) Validate() error {
-	if err := assertions.ParamNotEmpty(l.Label, "label"); err != nil {
-		return err
+	if strings.TrimSpace(l.Label) == "" {
+		return errors1.ErrInvalidParam("label parameter can't be empty")
 	}
 	if l.Amount < 0 {
-		return assertions.ErrInvalidParam("amount can't be less than zero")
+		return errors1.ErrInvalidParam("amount can't be less than zero")
 	}
 	return nil
 }

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/assertions"
+	"github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
@@ -18,11 +18,11 @@ type GetUserProfilePhotos struct {
 
 func (g GetUserProfilePhotos) Validate() error {
 	if g.UserId < 1 {
-		return assertions.ErrInvalidParam("user_id parameter can't be empty")
+		return errors.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if g.Limit != nil {
 		if *g.Limit < 1 || *g.Limit > 100 {
-			return assertions.ErrInvalidParam("limit parameter must be between 1 and 100")
+			return errors.ErrInvalidParam("limit parameter must be between 1 and 100")
 		}
 	}
 	return nil
@@ -43,7 +43,7 @@ type GetFile struct {
 
 func (g GetFile) Validate() error {
 	if strings.TrimSpace(g.FileId) == "" {
-		return assertions.ErrInvalidParam("file_id parameter can't be empty")
+		return errors.ErrInvalidParam("file_id parameter can't be empty")
 	}
 	return nil
 }

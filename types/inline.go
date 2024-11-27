@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bigelle/tele.go/assertions"
+	"github.com/bigelle/tele.go/errors"
 )
 
 type InlineQuery struct {
@@ -47,11 +47,11 @@ type InlineQueryResultArticle struct {
 func (i InlineQueryResultArticle) inlineQueryResultContract() {}
 
 func (i InlineQueryResultArticle) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Title, "Title"); err != nil {
-		return err
+	if strings.TrimSpace(i.Title) == "" {
+		return errors.ErrInvalidParam("title parameter can't be empty")
 	}
 	if err := i.InputMessageContent.Validate(); err != nil {
 		return err
@@ -82,14 +82,14 @@ type InlineQueryResultAudio struct {
 func (i InlineQueryResultAudio) inlineQueryResultContract() {}
 
 func (i InlineQueryResultAudio) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.AudioUrl, "AudioUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.Title) == "" {
+		return errors.ErrInvalidParam("title parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Title, "Title"); err != nil {
-		return err
+	if strings.TrimSpace(i.AudioUrl) == "" {
+		return errors.ErrInvalidParam("audio_url parameter can't be empty")
 	}
 	if *i.ParseMode != "" && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -124,14 +124,14 @@ type InlineQueryResultContact struct {
 func (i InlineQueryResultContact) inlineQueryResultContract() {}
 
 func (i InlineQueryResultContact) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.PhoneNumber, "PhoneNumber"); err != nil {
-		return err
+	if strings.TrimSpace(i.PhoneNumber) == "" {
+		return errors.ErrInvalidParam("phone_number parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.FirstName, "FirstName"); err != nil {
-		return err
+	if strings.TrimSpace(i.FirstName) == "" {
+		return errors.ErrInvalidParam("first_name parameter can't be empty")
 	}
 	if i.InputMessageContent != nil {
 		if err := (*i.InputMessageContent).Validate(); err != nil {
@@ -166,17 +166,17 @@ type InlineQueryResultDocument struct {
 func (i InlineQueryResultDocument) inlineQueryResultContract() {}
 
 func (i InlineQueryResultDocument) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Title, "Title"); err != nil {
-		return err
+	if strings.TrimSpace(i.Title) == "" {
+		return errors.ErrInvalidParam("title parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.MimeType, "MimeType"); err != nil {
-		return err
+	if strings.TrimSpace(i.MimeType) == "" {
+		return errors.ErrInvalidParam("mime_type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.DocumentUrl, "DocumentUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.DocumentUrl) == "" {
+		return errors.ErrInvalidParam("document_url parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -204,11 +204,11 @@ type InlineQueryResultGame struct {
 func (i InlineQueryResultGame) inlineQueryResultContract() {}
 
 func (i InlineQueryResultGame) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.GameShortName, "GameShortName"); err != nil {
-		return err
+	if strings.TrimSpace(i.GameShortName) == "" {
+		return errors.ErrInvalidParam("game_short_name parameter can't be empty")
 	}
 	if i.ReplyMarkup != nil {
 		if err := (*i.ReplyMarkup).Validate(); err != nil {
@@ -239,14 +239,14 @@ type InlineQueryResultGif struct {
 func (i InlineQueryResultGif) inlineQueryResultContract() {}
 
 func (i InlineQueryResultGif) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.GifUrl, "GifUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.GifUrl) == "" {
+		return errors.ErrInvalidParam("gif_url parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.ThumbnailUrl, "ThumbnailUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.ThumbnailUrl) == "" {
+		return errors.ErrInvalidParam("thumbnail_url parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -284,17 +284,17 @@ type InlineQueryResultLocation struct {
 func (i InlineQueryResultLocation) inlineQueryResultContract() {}
 
 func (i InlineQueryResultLocation) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
 	if i.Latitude == nil {
-		return assertions.ErrInvalidParam("latitude parameter can't be empty")
+		return errors.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if i.Longtitude == nil {
-		return assertions.ErrInvalidParam("longtitude parameter can't be empty")
+		return errors.ErrInvalidParam("longtitude parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Title, "title"); err != nil {
-		return err
+	if strings.TrimSpace(i.Title) == "" {
+		return errors.ErrInvalidParam("title parameter can't be empty")
 	}
 	if i.InputMessageContent != nil {
 		if err := i.InputMessageContent.Validate(); err != nil {
@@ -330,14 +330,14 @@ type InlineQueryResultMpeg4Gif struct {
 func (i InlineQueryResultMpeg4Gif) inlineQueryResultContract() {}
 
 func (i InlineQueryResultMpeg4Gif) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Mpeg4Url, "Mpeg4Url"); err != nil {
-		return err
+	if strings.TrimSpace(i.Mpeg4Url) == "" {
+		return errors.ErrInvalidParam("mpeg4_url parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.ThumbnailUrl, "ThumbnailUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.ThumbnailUrl) == "" {
+		return errors.ErrInvalidParam("thumbnail_url parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -375,14 +375,14 @@ type InlineQueryResultPhoto struct {
 func (i InlineQueryResultPhoto) inlineQueryResultContract() {}
 
 func (i InlineQueryResultPhoto) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.PhotoUrl, "PhotoUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.PhotoUrl) == "" {
+		return errors.ErrInvalidParam("photo_url parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.ThumbnailUrl, "ThumbnailUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.ThumbnailUrl) == "" {
+		return errors.ErrInvalidParam("thumbnail_url parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -421,20 +421,20 @@ type InlineQueryResultVenue struct {
 func (i InlineQueryResultVenue) inlineQueryResultContract() {}
 
 func (i InlineQueryResultVenue) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Title, "Title"); err != nil {
-		return err
+	if strings.TrimSpace(i.Title) == "" {
+		return errors.ErrInvalidParam("title parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Address, "Address"); err != nil {
-		return err
+	if strings.TrimSpace(i.Address) == "" {
+		return errors.ErrInvalidParam("address parameter can't be empty")
 	}
 	if i.Latitude == nil {
-		return assertions.ErrInvalidParam("latitude parameter can't be empty")
+		return errors.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if i.Longtitude == nil {
-		return assertions.ErrInvalidParam("longtitude parameter can't be empty")
+		return errors.ErrInvalidParam("longtitude parameter can't be empty")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -472,20 +472,20 @@ type InlineQueryResultVideo struct {
 func (i InlineQueryResultVideo) inlineQueryResultContract() {}
 
 func (i InlineQueryResultVideo) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.VideoUrl, "VideoUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.VideoUrl) == "" {
+		return errors.ErrInvalidParam("video_url parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.MimeType, "MimeType"); err != nil {
-		return err
+	if strings.TrimSpace(i.MimeType) == "" {
+		return errors.ErrInvalidParam("mime_type parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.ThumbnailUrl, "ThumbnailUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.ThumbnailUrl) == "" {
+		return errors.ErrInvalidParam("thumbnail_url parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Title, "Title"); err != nil {
-		return err
+	if strings.TrimSpace(i.Title) == "" {
+		return errors.ErrInvalidParam("title parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -520,16 +520,15 @@ type InlineQueryResultVoice struct {
 func (i InlineQueryResultVoice) inlineQueryResultContract() {}
 
 func (i InlineQueryResultVoice) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.VoiceUrl, "VoiceUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.VoiceUrl) == "" {
+		return errors.ErrInvalidParam("voice_url parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Title, "Title"); err != nil {
-		return err
+	if strings.TrimSpace(i.Title) == "" {
+		return errors.ErrInvalidParam("title parameter can't be empty")
 	}
-
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
@@ -577,11 +576,11 @@ type InlineQueryResultCachedPhoto struct {
 func (i InlineQueryResultCachedPhoto) inlineQueryResultCachedContract() {}
 
 func (i InlineQueryResultCachedPhoto) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.PhotoFileId, "PhotoUrl"); err != nil {
-		return err
+	if strings.TrimSpace(i.PhotoFileId) == "" {
+		return errors.ErrInvalidParam("photo_file_id parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -615,11 +614,11 @@ type InlineQueryResultCachedGif struct {
 func (i InlineQueryResultCachedGif) inlineQueryResultCachedContract() {}
 
 func (i InlineQueryResultCachedGif) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.GifFileId, "GifFileId"); err != nil {
-		return err
+	if strings.TrimSpace(i.GifFileId) == "" {
+		return errors.ErrInvalidParam("gif_file_id parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -653,11 +652,11 @@ type InlineQueryResultCachedMpeg4Gif struct {
 func (i InlineQueryResultCachedMpeg4Gif) inlineQueryResultCachedContract() {}
 
 func (i InlineQueryResultCachedMpeg4Gif) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.Mpeg4FileId, "Mpeg4FileId"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -686,11 +685,11 @@ type InlineQueryResultCachedSticker struct {
 func (i InlineQueryResultCachedSticker) inlineQueryResultCachedContract() {}
 
 func (i InlineQueryResultCachedSticker) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.StickerFileId, "StickerFileId"); err != nil {
-		return err
+	if strings.TrimSpace(i.StickerFileId) == "" {
+		return errors.ErrInvalidParam("sticker_file_id parameter can't be empty")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -722,11 +721,11 @@ type InlineQueryResultCachedVideo struct {
 func (i InlineQueryResultCachedVideo) inlineQueryResultCachedContract() {}
 
 func (i InlineQueryResultCachedVideo) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.VideoFileId, "VideoFileId"); err != nil {
-		return err
+	if strings.TrimSpace(i.VideoFileId) == "" {
+		return errors.ErrInvalidParam("video_file_id parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -760,11 +759,11 @@ type InlineQueryResultCachedVoice struct {
 func (i InlineQueryResultCachedVoice) inlineQueryResultCachedContract() {}
 
 func (i InlineQueryResultCachedVoice) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.VoiceFileId, "VoiceFileId"); err != nil {
-		return err
+	if strings.TrimSpace(i.VoiceFileId) == "" {
+		return errors.ErrInvalidParam("voice_file_id parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -798,11 +797,11 @@ type InlineQueryResultCachedAudio struct {
 func (i InlineQueryResultCachedAudio) inlineQueryResultCachedContract() {}
 
 func (i InlineQueryResultCachedAudio) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.AudioFileId, "AudioFileId"); err != nil {
-		return err
+	if strings.TrimSpace(i.AudioFileId) == "" {
+		return errors.ErrInvalidParam("audio_file_id parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -836,11 +835,11 @@ type InlineQueryResultCachedDocument struct {
 func (i InlineQueryResultCachedDocument) inlineQueryResultCachedContract() {}
 
 func (i InlineQueryResultCachedDocument) Validate() error {
-	if err := assertions.ParamNotEmpty(i.Id, "Id"); err != nil {
-		return err
+	if strings.TrimSpace(i.Id) == "" {
+		return errors.ErrInvalidParam("id parameter can't be empty")
 	}
-	if err := assertions.ParamNotEmpty(i.DocumentFileId, "DocumentFileId"); err != nil {
-		return err
+	if strings.TrimSpace(i.DocumentFileId) == "" {
+		return errors.ErrInvalidParam("document_file_id parameter can't be empty")
 	}
 	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -916,19 +915,19 @@ func (i InputInvoiceMessageContent) inputMessageContentContract() {}
 
 func (i InputInvoiceMessageContent) Validate() error {
 	if i.Title == "" || strings.TrimSpace(i.Title) == "" || len(i.Title) > 32 {
-		return assertions.ErrInvalidParam("title parameter must be between 1 and 32 characters")
+		return errors.ErrInvalidParam("title parameter must be between 1 and 32 characters")
 	}
 	if i.Description == "" || strings.TrimSpace(i.Description) == "" || len(i.Description) > 255 {
-		return assertions.ErrInvalidParam("description parameter must be between 1 and 255 characters")
+		return errors.ErrInvalidParam("description parameter must be between 1 and 255 characters")
 	}
 	if len([]byte(i.Payload)) < 1 || len([]byte(i.Payload)) > 128 {
-		return assertions.ErrInvalidParam("payload parameter must be between 1 and 128 bytes")
+		return errors.ErrInvalidParam("payload parameter must be between 1 and 128 bytes")
 	}
-	if err := assertions.ParamNotEmpty(i.Currency, "currency"); err != nil {
-		return err
+	if strings.TrimSpace(i.Currency) == "" {
+		return errors.ErrInvalidParam("currency parameter can't be empty")
 	}
 	if len(i.Prices) == 0 {
-		return assertions.ErrInvalidParam("prices parameter can't be empty")
+		return errors.ErrInvalidParam("prices parameter can't be empty")
 	}
 	for _, label := range i.Prices {
 		if err := label.Validate(); err != nil {
@@ -955,22 +954,22 @@ func (i InputLocationMessageContent) inputMessageContentContract() {}
 func (i InputLocationMessageContent) Validate() error {
 	if i.LivePeriod != nil {
 		if (*i.LivePeriod < 60 || *i.LivePeriod > 86400) && *i.LivePeriod != 0x7FFFFFFF {
-			return assertions.ErrInvalidParam("live_period parameter must be between 60 and 86400 or equal to 0x7FFFFFFF")
+			return errors.ErrInvalidParam("live_period parameter must be between 60 and 86400 or equal to 0x7FFFFFFF")
 		}
 	}
 	if i.HorizontalAccuracy != nil {
 		if *i.HorizontalAccuracy < 0 || *i.HorizontalAccuracy > 1500 {
-			return assertions.ErrInvalidParam("horizontal_accuracy parameter must be between 0 and 1500 meters")
+			return errors.ErrInvalidParam("horizontal_accuracy parameter must be between 0 and 1500 meters")
 		}
 	}
 	if i.Heading != nil {
 		if *i.Heading < 1 || *i.Heading > 360 {
-			return assertions.ErrInvalidParam("heading parameter must be between 0 and 1500")
+			return errors.ErrInvalidParam("heading parameter must be between 0 and 1500")
 		}
 	}
 	if i.ProximityAlertRaidius != nil {
 		if *i.ProximityAlertRaidius < 1 || *i.ProximityAlertRaidius > 100000 {
-			return assertions.ErrInvalidParam("proximity_alert_radius must be between 1 and 100000 meters")
+			return errors.ErrInvalidParam("proximity_alert_radius must be between 1 and 100000 meters")
 		}
 	}
 	return nil
@@ -987,7 +986,7 @@ func (i InputTextMessageContent) inputMessageContentContract() {}
 
 func (i InputTextMessageContent) Validate() error {
 	if strings.TrimSpace(i.MessageText) == "" {
-		return assertions.ErrInvalidParam("message_text")
+		return errors.ErrInvalidParam("message_text")
 	}
 	if *i.ParseMode != "" && len(*i.Entities) != 0 {
 		return fmt.Errorf("parse mode can't be enabled if entities are provided")

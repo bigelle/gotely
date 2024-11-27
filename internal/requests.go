@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/bigelle/tele.go/assertions"
+	"github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -15,7 +15,7 @@ const api_url = "https://api.telegram.org/bot%s/%s"
 
 func MakeRequest[T any](httpMethod, token, endpoint string, body Executable) (*T, error) {
 	if token == "" {
-		return nil, assertions.ErrInvalidParam("token can't be empty. did you connect the bot?")
+		return nil, errors.ErrInvalidParam("token can't be empty. did you connect the bot?")
 	}
 
 	if err := body.Validate(); err != nil {
