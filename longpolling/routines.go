@@ -14,10 +14,10 @@ import (
 
 func pollUpdates() {
 	gu := GetUpdates{
-		AllowedUpdates: longPollingBotInstance.allowedUpdates,
-		Limit:          longPollingBotInstance.limit,
-		Timeout:        longPollingBotInstance.timeout,
-		Offset:         longPollingBotInstance.offset,
+		AllowedUpdates: longPollingBotInstance.AllowedUpdates,
+		Limit:          longPollingBotInstance.Limit,
+		Timeout:        longPollingBotInstance.Timeout,
+		Offset:         longPollingBotInstance.Offset,
 	}
 	for {
 		select {
@@ -35,7 +35,7 @@ func pollUpdates() {
 					longPollingBotInstance.updates <- upd
 				}
 				lastUpdate := updsUnpacked[len(updsUnpacked)-1]
-				*longPollingBotInstance.offset = lastUpdate.UpdateId + 1
+				*longPollingBotInstance.Offset = lastUpdate.UpdateId + 1
 			}
 		}
 	}

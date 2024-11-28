@@ -38,7 +38,10 @@ func MakeRequest[T any](httpMethod, token, endpoint string, body Executable) (*T
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("can't send request: %w", err)
+		return nil, errors.ErrFailedRequest{
+			Code:    resp.StatusCode,
+			Message: err.Error(),
+		}
 	}
 	defer resp.Body.Close()
 
@@ -52,7 +55,10 @@ func MakeRequest[T any](httpMethod, token, endpoint string, body Executable) (*T
 		return nil, fmt.Errorf("can't unmarshal response body: %w", err)
 	}
 	if !apiResp.Ok {
-		return nil, fmt.Errorf("request failed with code %d: %s", apiResp.ErrorCode, *apiResp.Description)
+		return nil, errors.ErrFailedRequest{
+			Code:    apiResp.ErrorCode,
+			Message: *apiResp.Description,
+		}
 	}
 	return &apiResp.Result, nil
 }

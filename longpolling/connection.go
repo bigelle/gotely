@@ -1,7 +1,10 @@
 package longpolling
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"sync"
 
 	telego "github.com/bigelle/tele.go"
@@ -11,19 +14,20 @@ import (
 type LongPollingOption func(*LongPollingBot)
 
 var (
-	default_offset  = 0
-	default_limit   = 100
-	default_timeout = 30
+	default_offset          = 0
+	default_limit           = 100
+	default_timeout         = 30
+	default_allowed_updates = []string{}
 )
 
 func Connect(b telego.Bot, opts ...LongPollingOption) error {
 	// creating an instance
 	lpb := LongPollingBot{
 		OnUpdate:       b.OnUpdate,
-		offset:         &default_offset,
-		limit:          &default_limit,
-		timeout:        &default_timeout,
-		allowedUpdates: nil,
+		Offset:         &default_offset,
+		Limit:          &default_limit,
+		Timeout:        &default_timeout,
+		AllowedUpdates: &default_allowed_updates,
 		updates:        make(chan types.Update),
 		stopChan:       make(chan struct{}),
 		waitgroup:      &sync.WaitGroup{},
@@ -71,4 +75,25 @@ func Connect(b telego.Bot, opts ...LongPollingOption) error {
 func Disconnect() {
 	longPollingBotInstance.stopChan <- struct{}{}
 	close(longPollingBotInstance.stopChan)
+}
+
+func getMe() (types.User, error) {
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/getMe", telego.GetToken())
+	resp, err := http.Get(url)
+	if err != nil {
+		return types.User{}, err
+	}
+	defer resp.Body.Close()
+
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return types.User{}, err
+	}
+
+	var respObj types.ApiResponse[types.User]
+	if err := json.Unmarshal(b, &respObj); err != nil {
+		return types.User{}, err
+	}
+
+	return respObj.Result, nil
 }

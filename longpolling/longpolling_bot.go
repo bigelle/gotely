@@ -1,14 +1,14 @@
 package longpolling
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
+	"slices"
+	"strings"
 	"sync"
 
-	telego "github.com/bigelle/tele.go"
+	errs "github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -25,14 +25,14 @@ type LongPollingBot struct {
 	// The negative offset can be specified to retrieve
 	// updates starting from -offset update from the end of the updates queue.
 	// All previous updates will be forgotten.
-	offset *int
+	Offset *int
 	// Optional: Limits the number of updates to be retrieved.
 	// Values between 1-100 are accepted. Defaults to 100.
-	limit *int
+	Limit *int
 	// Optional: Timeout in seconds for long polling.
 	//Defaults to 30. Should be positive,
 	//short polling should be used for testing purposes only.
-	timeout *int
+	Timeout *int
 	// Optional: list of the update types you want your bot to
 	// receive. For example, specify "message",
 	// "edited_channel_post", "callback_query" to only receive
@@ -41,7 +41,7 @@ type LongPollingBot struct {
 	// except chat_member, message_reaction, and
 	// message_reaction_count (default). If not specified, the
 	// previous setting will be used.
-	allowedUpdates *[]string
+	AllowedUpdates *[]string
 	// a channel that will store all of the updates that are
 	// waiting to be processed
 	updates chan types.Update
@@ -57,14 +57,14 @@ func (l LongPollingBot) Validate() error {
 	if l.OnUpdate == nil {
 		return errors.New("function OnUpdate can't be nil")
 	}
-	if *l.limit < 1 || *l.limit > 100 {
+	if *l.Limit < 1 || *l.Limit > 100 {
 		return errors.New("limit parameter should be between 1 and 100")
 	}
-	if *l.timeout < 0 {
+	if *l.Timeout < 0 {
 		return errors.New("timeout parameter should be positive")
 	}
-	if l.allowedUpdates != nil {
-		allowed := []string{
+	if l.AllowedUpdates != nil && len(*l.AllowedUpdates) > 0 {
+		allowedUpdates := []string{
 			"message",
 			"edited_message",
 			"channel_post",
@@ -80,42 +80,11 @@ func (l LongPollingBot) Validate() error {
 			"chat_member",
 			"chat_join_request",
 		}
-		containsAll := func(slice1, slice2 []string) bool {
-			elements := make(map[string]struct{})
-			for _, item := range slice2 {
-				elements[item] = struct{}{}
+		for _, p := range *l.AllowedUpdates {
+			if !slices.Contains(allowedUpdates, p) {
+				return errs.ErrInvalidParam(fmt.Sprintf("invalid param: %s. allowed parameters: %s", p, strings.Join(allowedUpdates, ", ")))
 			}
-			for _, item := range slice1 {
-				if _, exists := elements[item]; !exists {
-					return false
-				}
-			}
-			return true
-		}
-		if !containsAll(*l.allowedUpdates, allowed) {
-			return fmt.Errorf("unknown allowed_updates parameter: %v", *l.allowedUpdates)
 		}
 	}
 	return nil
-}
-
-func getMe() (types.User, error) {
-	url := fmt.Sprintf("https://api.telegram.org/bot%s/getMe", telego.GetToken())
-	resp, err := http.Get(url)
-	if err != nil {
-		return types.User{}, err
-	}
-	defer resp.Body.Close()
-
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return types.User{}, err
-	}
-
-	var respObj types.ApiResponse[types.User]
-	if err := json.Unmarshal(b, &respObj); err != nil {
-		return types.User{}, err
-	}
-
-	return respObj.Result, nil
 }

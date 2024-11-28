@@ -8,7 +8,7 @@ type ErrFailedRequest struct {
 }
 
 func (e ErrFailedRequest) Error() string {
-	return fmt.Sprintf("error %d: %s", e.Code, e.Message)
+	return fmt.Sprintf("request failed with code %d: %s", e.Code, e.Message)
 }
 
 type ErrInvalidParam string
