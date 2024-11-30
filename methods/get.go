@@ -365,6 +365,6 @@ func (s GetMyDefaultAdministratorRights) MarshalJSON() ([]byte, error) {
 	return json.Marshal(alias(s))
 }
 
-func (s GetMyDefaultAdministratorRights) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "getMyDefaultAdministratorRights", s)
+func (s GetMyDefaultAdministratorRights) Execute() (*types.ChatAdministratorRights, error) {
+	return internal.MakePostRequest[types.ChatAdministratorRights](telego.GetToken(), "getMyDefaultAdministratorRights", s)
 }
