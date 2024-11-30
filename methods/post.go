@@ -10,6 +10,7 @@ import (
 	"github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
+	iso6391 "github.com/emvi/iso-639-1"
 )
 
 type ChatId interface {
@@ -1104,4 +1105,1386 @@ func (b UnbanChatMember[T]) MarshalJSON() ([]byte, error) {
 
 func (b UnbanChatMember[T]) Execute() (*bool, error) {
 	return internal.MakeGetRequest[bool](telego.GetToken(), "unbanChatMember", b)
+}
+
+type RestrictChatMember[T ChatId] struct {
+	ChatId                         T
+	UserId                         int
+	Permissions                    types.ChatPermissions
+	UserIndependentChatPermissions *bool
+	UntilDate                      *int
+}
+
+func (r RestrictChatMember[T]) Validate() error {
+	if c, ok := any(r.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(r.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if r.UserId < 1 {
+		return errors.ErrInvalidParam("user_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (r RestrictChatMember[T]) MarshalJSON() ([]byte, error) {
+	type alias RestrictChatMember[T]
+	return json.Marshal(alias(r))
+}
+
+func (r RestrictChatMember[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "restrictChatMember", r)
+}
+
+type PromoteChatMember[T ChatId] struct {
+	ChatId              T
+	UserId              int
+	IsAnonymous         *bool
+	CanManageChat       *bool
+	CanDeleteMessages   *bool
+	CanManageVideoChats *bool
+	CanRestrictMembers  *bool
+	CanPromoteMembers   *bool
+	CanChangeInfo       *bool
+	CanInviteUsers      *bool
+	CanPostStories      *bool
+	CanEditStories      *bool
+	CanDeleteStories    *bool
+	CanPostMessages     *bool
+	CanEditMessages     *bool
+	CanPinMessages      *bool
+	CanManageTopics     *bool
+}
+
+func (p PromoteChatMember[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if p.UserId < 1 {
+		return errors.ErrInvalidParam("user_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (p PromoteChatMember[T]) MarshalJSON() ([]byte, error) {
+	type alias PromoteChatMember[T]
+	return json.Marshal(alias(p))
+}
+
+func (p PromoteChatMember[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "promoteChatMember", p)
+}
+
+type SetChatAdministratorCustomTitle[T ChatId] struct {
+	ChatId      T
+	UserId      int
+	CustomTitle string
+}
+
+func (s SetChatAdministratorCustomTitle[T]) Validate() error {
+	if c, ok := any(s.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(s.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if s.UserId < 1 {
+		return errors.ErrInvalidParam("user_id parameter can't be empty")
+	}
+	if len(s.CustomTitle) > 16 {
+		return errors.ErrInvalidParam("custom_title parameter must be not longer than 16 characters")
+	}
+	for _, r := range s.CustomTitle {
+		if (r >= 0x1F600 && r <= 0x1F64F) || // Emoticons
+			(r >= 0x1F300 && r <= 0x1F5FF) || // Miscellaneous Symbols and Pictographs
+			(r >= 0x1F680 && r <= 0x1F6FF) || // Transport and Map Symbols
+			(r >= 0x1F700 && r <= 0x1F77F) { // Alchemical Symbols
+			return errors.ErrInvalidParam("invalid custom_title parameter: emojis are not allowed")
+		}
+	}
+	return nil
+}
+
+func (s SetChatAdministratorCustomTitle[T]) MarshalJSON() ([]byte, error) {
+	type alias SetChatAdministratorCustomTitle[T]
+	return json.Marshal(alias(s))
+}
+
+func (s SetChatAdministratorCustomTitle[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setChatAdministratorCustomTitle", s)
+}
+
+type BanChatSenderChat[T ChatId] struct {
+	ChatId       T
+	SenderChatId int
+}
+
+func (b BanChatSenderChat[T]) Validate() error {
+	if c, ok := any(b.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(b.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if b.SenderChatId < 1 {
+		return errors.ErrInvalidParam("sender_chat_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (b BanChatSenderChat[T]) MarshalJSON() ([]byte, error) {
+	type alias BanChatSenderChat[T]
+	return json.Marshal(alias(b))
+}
+
+func (b BanChatSenderChat[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "banChatSenderChat", b)
+}
+
+type UnbanChatSenderChat[T ChatId] struct {
+	ChatId       T
+	SenderChatId int
+}
+
+func (b UnbanChatSenderChat[T]) Validate() error {
+	if c, ok := any(b.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(b.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if b.SenderChatId < 1 {
+		return errors.ErrInvalidParam("sender_chat_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (b UnbanChatSenderChat[T]) MarshalJSON() ([]byte, error) {
+	type alias UnbanChatSenderChat[T]
+	return json.Marshal(alias(b))
+}
+
+func (b UnbanChatSenderChat[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "unbanChatSenderChat", b)
+}
+
+type SetChatPermissions[T ChatId] struct {
+	ChatId                         T
+	Permissions                    types.ChatPermissions
+	UserIndependentChatPermissions *bool
+}
+
+func (s SetChatPermissions[T]) Validate() error {
+	if c, ok := any(s.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(s.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (s SetChatPermissions[T]) MarshalJSON() ([]byte, error) {
+	type alias SetChatPermissions[T]
+	return json.Marshal(alias(s))
+}
+
+func (s SetChatPermissions[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setChatPermissions", s)
+}
+
+type ExportChatInviteLink[T ChatId] struct {
+	ChatId T
+}
+
+func (e ExportChatInviteLink[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (e ExportChatInviteLink[T]) MarshalJSON() ([]byte, error) {
+	type alias ExportChatInviteLink[T]
+	return json.Marshal(alias(e))
+}
+
+func (e ExportChatInviteLink[T]) Execute() (*string, error) {
+	return internal.MakePostRequest[string](telego.GetToken(), "exportChatInviteLink", e)
+}
+
+type CreateInviteLink[T ChatId] struct {
+	ChatId             T
+	Name               *string
+	ExpireDate         *int
+	MemberLimit        *int
+	CreatesJoinRequest *bool
+}
+
+func (c CreateInviteLink[T]) Validate() error {
+	if c, ok := any(c.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(c.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c.Name != nil {
+		if len(*c.Name) > 32 {
+			return errors.ErrInvalidParam("name parameter must not be longer than 32 characters")
+		}
+	}
+	if c.MemberLimit != nil {
+		if *c.MemberLimit < 1 || *c.MemberLimit > 99999 {
+			return errors.ErrInvalidParam("member limit parameter must be between 1 and 99999")
+		}
+	}
+	return nil
+}
+
+func (c CreateInviteLink[T]) MarshalJSON() ([]byte, error) {
+	type alias CreateInviteLink[T]
+	return json.Marshal(alias(c))
+}
+
+func (c CreateInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
+	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "createInviteLink", c)
+}
+
+type EditInviteLink[T ChatId] struct {
+	ChatId             T
+	InviteLink         string
+	Name               *string
+	ExpireDate         *int
+	MemberLimit        *int
+	CreatesJoinRequest *bool
+}
+
+func (c EditInviteLink[T]) Validate() error {
+	if c, ok := any(c.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(c.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c.Name != nil {
+		if len(*c.Name) > 32 {
+			return errors.ErrInvalidParam("name parameter must not be longer than 32 characters")
+		}
+	}
+	if c.MemberLimit != nil {
+		if *c.MemberLimit < 1 || *c.MemberLimit > 99999 {
+			return errors.ErrInvalidParam("member limit parameter must be between 1 and 99999")
+		}
+	}
+	return nil
+}
+
+func (c EditInviteLink[T]) MarshalJSON() ([]byte, error) {
+	type alias EditInviteLink[T]
+	return json.Marshal(alias(c))
+}
+
+func (c EditInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
+	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "editInviteLink", c)
+}
+
+type CreateChatSubscriptionInviteLink[T ChatId] struct {
+	ChatId             T
+	SubscriptionPeriod int
+	SubscriptionPrice  int
+	Name               *string
+}
+
+func (c CreateChatSubscriptionInviteLink[T]) Validate() error {
+	if c, ok := any(c.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(c.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c.SubscriptionPeriod != 2592000 {
+		return errors.ErrInvalidParam("subscription_period currently must always be 2592000 seconds (30 days)")
+	}
+	if c.SubscriptionPrice < 1 || c.SubscriptionPrice > 2500 {
+		return errors.ErrInvalidParam("subscription_price must be between 1 and 2500")
+	}
+	if c.Name != nil {
+		if len(*c.Name) > 32 {
+			return errors.ErrInvalidParam("name parameter must not be longer than 32 characters")
+		}
+	}
+	return nil
+}
+
+func (c CreateChatSubscriptionInviteLink[T]) MarshalJSON() ([]byte, error) {
+	type alias CreateChatSubscriptionInviteLink[T]
+	return json.Marshal(alias(c))
+}
+
+func (c CreateChatSubscriptionInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
+	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "createChatSubscriptionInviteLink", c)
+}
+
+type EditChatSubscriptionInviteLink[T ChatId] struct {
+	ChatId     T
+	InviteLink string
+	Name       *string
+}
+
+func (c EditChatSubscriptionInviteLink[T]) Validate() error {
+	if c, ok := any(c.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(c.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if strings.TrimSpace(c.InviteLink) == "" {
+		return errors.ErrInvalidParam("invite_link parameter can't be empty")
+	}
+	if c.Name != nil {
+		if len(*c.Name) > 32 {
+			return errors.ErrInvalidParam("name parameter must not be longer than 32 characters")
+		}
+	}
+	return nil
+}
+
+func (c EditChatSubscriptionInviteLink[T]) MarshalJSON() ([]byte, error) {
+	type alias EditChatSubscriptionInviteLink[T]
+	return json.Marshal(alias(c))
+}
+
+func (c EditChatSubscriptionInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
+	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "editChatSubscriptionInviteLink", c)
+}
+
+type RevokeInviteLink[T ChatId] struct {
+	ChatId     T
+	InviteLink string
+	Name       *string
+}
+
+func (c RevokeInviteLink[T]) Validate() error {
+	if c, ok := any(c.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(c.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c.Name != nil {
+		if len(*c.Name) > 32 {
+			return errors.ErrInvalidParam("name parameter must not be longer than 32 characters")
+		}
+	}
+	return nil
+}
+
+func (c RevokeInviteLink[T]) MarshalJSON() ([]byte, error) {
+	type alias RevokeInviteLink[T]
+	return json.Marshal(alias(c))
+}
+
+func (c RevokeInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
+	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "revokeInviteLink", c)
+}
+
+type ApproveChatJoinRequest[T ChatId] struct {
+	ChatId T
+	UserId int
+}
+
+func (s ApproveChatJoinRequest[T]) Validate() error {
+	if c, ok := any(s.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(s.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if s.UserId < 1 {
+		return errors.ErrInvalidParam("user_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (s ApproveChatJoinRequest[T]) MarshalJSON() ([]byte, error) {
+	type alias ApproveChatJoinRequest[T]
+	return json.Marshal(alias(s))
+}
+
+func (s ApproveChatJoinRequest[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "approveChatJoinRequest", s)
+}
+
+type DeclineChatJoinRequest[T ChatId] struct {
+	ChatId T
+	UserId int
+}
+
+func (s DeclineChatJoinRequest[T]) Validate() error {
+	if c, ok := any(s.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(s.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if s.UserId < 1 {
+		return errors.ErrInvalidParam("user_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (s DeclineChatJoinRequest[T]) MarshalJSON() ([]byte, error) {
+	type alias DeclineChatJoinRequest[T]
+	return json.Marshal(alias(s))
+}
+
+func (s DeclineChatJoinRequest[T]) Execute() (*bool, error) {
+	// NOTE: maybe there's a better way to get token?
+	return internal.MakePostRequest[bool](telego.GetToken(), "declineChatJoinRequest", s)
+}
+
+type SetChatPhoto[T ChatId] struct {
+	ChatId T
+	Photo  types.InputFile
+}
+
+func (s SetChatPhoto[T]) Validate() error {
+	if c, ok := any(s.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(s.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if err := s.Photo.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s SetChatPhoto[T]) MarshalJSON() ([]byte, error) {
+	type alias SetChatPhoto[T]
+	return json.Marshal(alias(s))
+}
+
+func (s SetChatPhoto[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setChatPhoto", s)
+}
+
+type DeleteChatPhoto[T ChatId] struct {
+	ChatId T
+}
+
+func (d DeleteChatPhoto[T]) Validate() error {
+	if c, ok := any(d.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(d.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (d DeleteChatPhoto[T]) MarshalJSON() ([]byte, error) {
+	type alias DeleteChatPhoto[T]
+	return json.Marshal(alias(d))
+}
+
+func (d DeleteChatPhoto[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "deleteChatPhoto", d)
+}
+
+type SetChatTitle[T ChatId] struct {
+	ChatId T
+	Title  string
+}
+
+func (s SetChatTitle[T]) Validate() error {
+	if c, ok := any(s.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(s.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if len(s.Title) < 1 || len(s.Title) > 128 {
+		return errors.ErrInvalidParam("title parameter must be between 1 and 128 characters long")
+	}
+	return nil
+}
+
+func (s SetChatTitle[T]) MarshalJSON() ([]byte, error) {
+	type alias SetChatTitle[T]
+	return json.Marshal(alias(s))
+}
+
+func (s SetChatTitle[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setChatTitle", s)
+}
+
+type SetChatDescription[T ChatId] struct {
+	ChatId      T
+	Description string
+}
+
+func (s SetChatDescription[T]) Validate() error {
+	if c, ok := any(s.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(s.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if len(s.Description) > 255 {
+		return errors.ErrInvalidParam("description parameter must not be longer than 255 characters")
+	}
+	return nil
+}
+
+func (s SetChatDescription[T]) MarshalJSON() ([]byte, error) {
+	type alias SetChatDescription[T]
+	return json.Marshal(alias(s))
+}
+
+func (s SetChatDescription[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setChatTitle", s)
+}
+
+type PinChatMessage[T ChatId] struct {
+	ChatId               T
+	MessageId            int
+	BusinessConnectionId *string
+	DisableNotification  *bool
+}
+
+func (p PinChatMessage[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if p.MessageId < 1 {
+		return errors.ErrInvalidParam("message_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (p PinChatMessage[T]) MarshalJSON() ([]byte, error) {
+	type alias PinChatMessage[T]
+	return json.Marshal(alias(p))
+}
+
+func (p PinChatMessage[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "pinChatMessage", p)
+}
+
+type UnpinChatMessage[T ChatId] struct {
+	ChatId               T
+	MessageId            int
+	BusinessConnectionId *string
+}
+
+func (p UnpinChatMessage[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if p.MessageId < 1 {
+		return errors.ErrInvalidParam("message_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (p UnpinChatMessage[T]) MarshalJSON() ([]byte, error) {
+	type alias UnpinChatMessage[T]
+	return json.Marshal(alias(p))
+}
+
+func (p UnpinChatMessage[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "unpinChatMessage", p)
+}
+
+type UnpinAllChatMessages[T ChatId] struct {
+	ChatId T
+}
+
+func (p UnpinAllChatMessages[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (p UnpinAllChatMessages[T]) MarshalJSON() ([]byte, error) {
+	type alias UnpinAllChatMessages[T]
+	return json.Marshal(alias(p))
+}
+
+func (p UnpinAllChatMessages[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "unpinAllChatMessages", p)
+}
+
+type LeaveChat[T ChatId] struct {
+	ChatId T
+}
+
+func (p LeaveChat[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (p LeaveChat[T]) MarshalJSON() ([]byte, error) {
+	type alias LeaveChat[T]
+	return json.Marshal(alias(p))
+}
+
+func (p LeaveChat[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "leaveChat", p)
+}
+
+type SetChatStickerSet[T ChatId] struct {
+	ChatId         T
+	StickerSetName string
+}
+
+func (p SetChatStickerSet[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if strings.TrimSpace(p.StickerSetName) == "" {
+		return errors.ErrInvalidParam("sticker_set_name parameter can't be empty")
+	}
+	return nil
+}
+
+func (p SetChatStickerSet[T]) MarshalJSON() ([]byte, error) {
+	type alias SetChatStickerSet[T]
+	return json.Marshal(alias(p))
+}
+
+func (p SetChatStickerSet[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setChatStickerSet", p)
+}
+
+type DeleteChatStickerSet[T ChatId] struct {
+	ChatId T
+}
+
+func (p DeleteChatStickerSet[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (p DeleteChatStickerSet[T]) MarshalJSON() ([]byte, error) {
+	type alias DeleteChatStickerSet[T]
+	return json.Marshal(alias(p))
+}
+
+func (p DeleteChatStickerSet[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "deleteChatStickerSet", p)
+}
+
+var validIconColors = map[int]struct{}{
+	7322096:  {},
+	16766590: {},
+	13338331: {},
+	9367192:  {},
+	16749490: {},
+	16478047: {},
+}
+
+type CreateForumTopic[T ChatId] struct {
+	ChatId            T
+	Name              string
+	IconColor         *int
+	IconCustomEmojiId *string
+}
+
+func (c CreateForumTopic[T]) Validate() error {
+	if c, ok := any(c.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(c.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if len(c.Name) < 1 || len(c.Name) > 128 {
+		return errors.ErrInvalidParam("name parameter must be between 1 and 128 characters long")
+	}
+	if c.IconColor != nil {
+		if _, ok := validIconColors[*c.IconColor]; !ok {
+			return errors.ErrInvalidParam("icon_color must be one of 7322096 (0x6FB9F0), 16766590 (0xFFD67E), 13338331 (0xCB86DB), 9367192 (0x8EEE98), 16749490 (0xFF93B2), or 16478047 (0xFB6F5F)")
+		}
+	}
+	return nil
+}
+
+func (c CreateForumTopic[T]) MarshalJSON() ([]byte, error) {
+	type alias CreateForumTopic[T]
+	return json.Marshal(alias(c))
+}
+
+func (c CreateForumTopic[T]) Execute() (*types.ForumTopic, error) {
+	return internal.MakePostRequest[types.ForumTopic](telego.GetToken(), "createForumTopic", c)
+}
+
+type EditForumTopic[T ChatId] struct {
+	ChatId            T
+	MessageThreadId   string
+	Name              *string
+	IconCustomEmojiId *string
+}
+
+func (e EditForumTopic[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if strings.TrimSpace(e.MessageThreadId) == "" {
+		return errors.ErrInvalidParam("message_thread_id parameter can't be empty")
+	}
+	if e.Name != nil {
+		if len(*e.Name) > 128 {
+			return errors.ErrInvalidParam("name parameter must not be longer than 128 characters")
+		}
+	}
+	return nil
+}
+
+func (e EditForumTopic[T]) MarshalJSON() ([]byte, error) {
+	type alias EditForumTopic[T]
+	return json.Marshal(alias(e))
+}
+
+func (e EditForumTopic[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "editForumTopic", e)
+}
+
+type CloseForumTopic[T ChatId] struct {
+	ChatId          T
+	MessageThreadId string
+}
+
+func (e CloseForumTopic[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if strings.TrimSpace(e.MessageThreadId) == "" {
+		return errors.ErrInvalidParam("message_thread_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (e CloseForumTopic[T]) MarshalJSON() ([]byte, error) {
+	type alias CloseForumTopic[T]
+	return json.Marshal(alias(e))
+}
+
+func (e CloseForumTopic[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "closeForumTopic", e)
+}
+
+type ReopenForumTopic[T ChatId] struct {
+	ChatId          T
+	MessageThreadId string
+}
+
+func (e ReopenForumTopic[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if strings.TrimSpace(e.MessageThreadId) == "" {
+		return errors.ErrInvalidParam("message_thread_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (e ReopenForumTopic[T]) MarshalJSON() ([]byte, error) {
+	type alias ReopenForumTopic[T]
+	return json.Marshal(alias(e))
+}
+
+func (e ReopenForumTopic[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "reopenForumTopic", e)
+}
+
+type DeleteForumTopic[T ChatId] struct {
+	ChatId          T
+	MessageThreadId string
+}
+
+func (e DeleteForumTopic[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if strings.TrimSpace(e.MessageThreadId) == "" {
+		return errors.ErrInvalidParam("message_thread_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (e DeleteForumTopic[T]) MarshalJSON() ([]byte, error) {
+	type alias DeleteForumTopic[T]
+	return json.Marshal(alias(e))
+}
+
+func (e DeleteForumTopic[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "deleteForumTopic", e)
+}
+
+type UnpinAllForumTopicMessages[T ChatId] struct {
+	ChatId          T
+	MessageThreadId string
+}
+
+func (e UnpinAllForumTopicMessages[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if strings.TrimSpace(e.MessageThreadId) == "" {
+		return errors.ErrInvalidParam("message_thread_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (e UnpinAllForumTopicMessages[T]) MarshalJSON() ([]byte, error) {
+	type alias UnpinAllForumTopicMessages[T]
+	return json.Marshal(alias(e))
+}
+
+func (e UnpinAllForumTopicMessages[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "unpinAllForumTopicMessages", e)
+}
+
+type EditGeneralForumTopic[T ChatId] struct {
+	ChatId T
+	Name   string
+}
+
+func (e EditGeneralForumTopic[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if strings.TrimSpace(e.Name) == "" {
+		return errors.ErrInvalidParam("name parameter can't be empty")
+	}
+	return nil
+}
+
+func (e EditGeneralForumTopic[T]) MarshalJSON() ([]byte, error) {
+	type alias EditGeneralForumTopic[T]
+	return json.Marshal(alias(e))
+}
+
+func (e EditGeneralForumTopic[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "editGeneralForumTopic", e)
+}
+
+type CloseGeneralForumTopic[T ChatId] struct {
+	ChatId T
+}
+
+func (e CloseGeneralForumTopic[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (e CloseGeneralForumTopic[T]) MarshalJSON() ([]byte, error) {
+	type alias CloseGeneralForumTopic[T]
+	return json.Marshal(alias(e))
+}
+
+func (e CloseGeneralForumTopic[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "closeGeneralForumTopic", e)
+}
+
+type ReopenGeneralForumTopic[T ChatId] struct {
+	ChatId T
+}
+
+func (e ReopenGeneralForumTopic[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (e ReopenGeneralForumTopic[T]) MarshalJSON() ([]byte, error) {
+	type alias ReopenGeneralForumTopic[T]
+	return json.Marshal(alias(e))
+}
+
+func (e ReopenGeneralForumTopic[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "reopenGeneralForumTopic", e)
+}
+
+type HideGeneralForumTopic[T ChatId] struct {
+	ChatId T
+}
+
+func (e HideGeneralForumTopic[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (e HideGeneralForumTopic[T]) MarshalJSON() ([]byte, error) {
+	type alias HideGeneralForumTopic[T]
+	return json.Marshal(alias(e))
+}
+
+func (e HideGeneralForumTopic[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "hideGeneralForumTopic", e)
+}
+
+type UnhideGeneralForumTopic[T ChatId] struct {
+	ChatId T
+}
+
+func (e UnhideGeneralForumTopic[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (e UnhideGeneralForumTopic[T]) MarshalJSON() ([]byte, error) {
+	type alias UnhideGeneralForumTopic[T]
+	return json.Marshal(alias(e))
+}
+
+func (e UnhideGeneralForumTopic[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "unhideGeneralForumTopic", e)
+}
+
+type UnpinAllGeneralForumTopicMessages[T ChatId] struct {
+	ChatId T
+}
+
+func (e UnpinAllGeneralForumTopicMessages[T]) Validate() error {
+	if c, ok := any(e.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(e.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (e UnpinAllGeneralForumTopicMessages[T]) MarshalJSON() ([]byte, error) {
+	type alias UnhideGeneralForumTopic[T]
+	return json.Marshal(alias(e))
+}
+
+func (e UnpinAllGeneralForumTopicMessages[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "unpinAllGeneralForumTopicMessages", e)
+}
+
+type AnswerCallbackQuery struct {
+	CallbackQueryId string
+	Text            *string
+	ShowAlert       *bool
+	Url             *string
+	CacheTime       *int
+}
+
+func (a AnswerCallbackQuery) Validate() error {
+	if strings.TrimSpace(a.CallbackQueryId) == "" {
+		return errors.ErrInvalidParam("callback_query_id parameter can't be empty")
+	}
+	if a.Text != nil {
+		if len(*a.Text) > 200 {
+			return errors.ErrInvalidParam("text parameter must not be longer than 200 characters ")
+		}
+	}
+	return nil
+}
+
+type SetMyCommands struct {
+	Commands     []types.BotCommand
+	Scope        *types.BotCommandScope
+	LanguageCode *string
+}
+
+func (s SetMyCommands) Validate() error {
+	for _, command := range s.Commands {
+		if err := command.Validate(); err != nil {
+			return err
+		}
+	}
+	if s.LanguageCode != nil && *s.LanguageCode != "" {
+		// FIXME: maybe should replace it with my own list of lang codes
+		if !iso6391.ValidCode(*s.LanguageCode) {
+			return errors.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	return nil
+}
+
+func (s SetMyCommands) MarshalJSON() ([]byte, error) {
+	type alias SetMyCommands
+	return json.Marshal(alias(s))
+}
+
+func (s SetMyCommands) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setMyCommands", s)
+}
+
+type DeleteMyCommands struct {
+	Scope        *types.BotCommandScope
+	LanguageCode *string
+}
+
+func (s DeleteMyCommands) Validate() error {
+	if s.LanguageCode != nil && *s.LanguageCode != "" {
+		if !iso6391.ValidCode(*s.LanguageCode) {
+			return errors.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	return nil
+}
+
+func (s DeleteMyCommands) MarshalJSON() ([]byte, error) {
+	type alias DeleteMyCommands
+	return json.Marshal(alias(s))
+}
+
+func (s DeleteMyCommands) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "deleteMyCommands", s)
+}
+
+type SetMyName struct {
+	Name         *string
+	LanguageCode *string
+}
+
+func (s SetMyName) Validate() error {
+	if s.Name != nil {
+		if len(*s.Name) > 64 {
+			return errors.ErrInvalidParam("name parameter must not be longer than 64 characters")
+		}
+	}
+	if s.LanguageCode != nil && *s.LanguageCode != "" {
+		if !iso6391.ValidCode(*s.LanguageCode) {
+			return errors.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	return nil
+}
+
+func (s SetMyName) MarshalJSON() ([]byte, error) {
+	type alias SetMyName
+	return json.Marshal(alias(s))
+}
+
+func (s SetMyName) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setMyName", s)
+}
+
+type SetMyDescription struct {
+	Description  *string
+	LanguageCode *string
+}
+
+func (s SetMyDescription) Validate() error {
+	if s.Description != nil {
+		if len(*s.Description) > 64 {
+			return errors.ErrInvalidParam("name parameter must not be longer than 64 characters")
+		}
+	}
+	if s.LanguageCode != nil && *s.LanguageCode != "" {
+		if !iso6391.ValidCode(*s.LanguageCode) {
+			return errors.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	return nil
+}
+
+func (s SetMyDescription) MarshalJSON() ([]byte, error) {
+	type alias SetMyDescription
+	return json.Marshal(alias(s))
+}
+
+func (s SetMyDescription) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setMyDescription", s)
+}
+
+type SetMyShortDescription struct {
+	ShortDescription *string
+	LanguageCode     *string
+}
+
+func (s SetMyShortDescription) Validate() error {
+	if s.ShortDescription != nil {
+		if len(*s.ShortDescription) > 64 {
+			return errors.ErrInvalidParam("name parameter must not be longer than 64 characters")
+		}
+	}
+	if s.LanguageCode != nil && *s.LanguageCode != "" {
+		if !iso6391.ValidCode(*s.LanguageCode) {
+			return errors.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	return nil
+}
+
+func (s SetMyShortDescription) MarshalJSON() ([]byte, error) {
+	type alias SetMyShortDescription
+	return json.Marshal(alias(s))
+}
+
+func (s SetMyShortDescription) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setMyShortDescription", s)
+}
+
+type SetChatMenuButton[T ChatId] struct {
+	ChatId     *T
+	MenuButton *types.MenuButton
+}
+
+func (s SetChatMenuButton[T]) Validate() error {
+	if s.ChatId != nil {
+		if c, ok := any(*s.ChatId).(string); ok {
+			if strings.TrimSpace(c) == "" {
+				return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			}
+		}
+		if c, ok := any(*s.ChatId).(int); ok {
+			if c < 1 {
+				return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			}
+		}
+	}
+	if s.MenuButton != nil {
+		if err := s.MenuButton.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s SetChatMenuButton[T]) MarshalJSON() ([]byte, error) {
+	type alias SetChatMenuButton[T]
+	return json.Marshal(alias(s))
+}
+
+func (s SetChatMenuButton[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setChatMenuButton", s)
+}
+
+type SetMyDefaultAdministratorRights struct {
+	Rights      *types.ChatAdministratorRights
+	ForChannels *bool
+}
+
+// always nil
+func (s SetMyDefaultAdministratorRights) Validate() error {
+	return nil
+}
+
+func (s SetMyDefaultAdministratorRights) MarshalJSON() ([]byte, error) {
+	type alias SetMyDefaultAdministratorRights
+	return json.Marshal(alias(s))
+}
+
+func (s SetMyDefaultAdministratorRights) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "setMyDefaultAdministratorRights", s)
 }

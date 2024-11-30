@@ -1,2 +1,4 @@
+github.com/emvi/iso-639-1 v1.1.0 h1:EhZiYVA+ysa/b7+0T2DD9hcX7E/5sh4o1KyDAIPu7VE=
+github.com/emvi/iso-639-1 v1.1.0/go.mod h1:CSA53/Tx0xF9bk2DEA0Mr0wTdIxq7pqoVZgBOfoL5GI=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
 github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
