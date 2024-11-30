@@ -2488,3 +2488,104 @@ func (s SetMyDefaultAdministratorRights) MarshalJSON() ([]byte, error) {
 func (s SetMyDefaultAdministratorRights) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "setMyDefaultAdministratorRights", s)
 }
+
+type StopPoll[T ChatId] struct {
+	ChatId               T
+	MessageId            int
+	BusinessConnectionId *string
+	ReplyMarkup          *types.InlineKeyboardMarkup
+}
+
+func (s StopPoll[T]) Validate() error {
+	if c, ok := any(s.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(s.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if s.MessageId < 1 {
+		return errors.ErrInvalidParam("message_id parameter can't be empty")
+	}
+	if s.ReplyMarkup != nil {
+		if err := s.ReplyMarkup.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s StopPoll[T]) MarshalJSON() ([]byte, error) {
+	type alias StopPoll[T]
+	return json.Marshal(alias(s))
+}
+
+func (s StopPoll[T]) Execute() (*types.Poll, error) {
+	return internal.MakePostRequest[types.Poll](telego.GetToken(), "stopPoll", s)
+}
+
+type DeleteMessage[T ChatId] struct {
+	ChatId    T
+	MessageId int
+}
+
+func (d DeleteMessage[T]) Validate() error {
+	if c, ok := any(d.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(d.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if d.MessageId < 1 {
+		return errors.ErrInvalidParam("message_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (d DeleteMessage[T]) MarshalJSON() ([]byte, error) {
+	type alias DeleteMessage[T]
+	return json.Marshal(alias(d))
+}
+
+func (d DeleteMessage[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "deleteMessage", d)
+}
+
+type DeleteMessages[T ChatId] struct {
+	ChatId     T
+	MessageIds []int
+}
+
+func (d DeleteMessages[T]) Validate() error {
+	if c, ok := any(d.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(d.ChatId).(int); ok {
+		if c < 1 {
+			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if len(d.MessageIds) < 1 || len(d.MessageIds) > 100 {
+		return errors.ErrInvalidParam("message_ids parameter must be between 1 and 100")
+	}
+
+	return nil
+}
+
+func (d DeleteMessages[T]) MarshalJSON() ([]byte, error) {
+	type alias DeleteMessages[T]
+	return json.Marshal(alias(d))
+}
+
+func (d DeleteMessages[T]) Execute() (*bool, error) {
+	return internal.MakePostRequest[bool](telego.GetToken(), "deleteMessages", d)
+}
