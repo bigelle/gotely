@@ -48,9 +48,8 @@ type GetUpdates struct {
 	AllowedUpdates *[]string `json:"allowed_updates,omitempty"`
 }
 
-func (g GetUpdates) MarshalJSON() ([]byte, error) {
-	type alias GetUpdates
-	return json.Marshal(alias(g))
+func (g GetUpdates) ToRequestBody() ([]byte, error) {
+	return json.Marshal(g)
 }
 
 func (g GetUpdates) Validate() error {

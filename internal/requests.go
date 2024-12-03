@@ -22,7 +22,7 @@ func MakeRequest[T any](httpMethod, token, endpoint string, body Executable) (*T
 		return nil, fmt.Errorf("can't make request: %w", err)
 	}
 
-	data, err := json.Marshal(body)
+	data, err := body.ToRequestBody()
 	if err != nil {
 		return nil, fmt.Errorf("can't marshal request body: %w", err)
 	}

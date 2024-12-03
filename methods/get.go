@@ -30,9 +30,8 @@ func (g GetUserProfilePhotos) Validate() error {
 	return nil
 }
 
-func (g GetUserProfilePhotos) MarshalJSON() ([]byte, error) {
-	type alias GetUserProfilePhotos
-	return json.Marshal(alias(g))
+func (g GetUserProfilePhotos) ToRequestBody() ([]byte, error) {
+	return json.Marshal(g)
 }
 
 func (g GetUserProfilePhotos) Execute() (*types.UserProfilePhotos, error) {
@@ -50,16 +49,15 @@ func (g GetFile) Validate() error {
 	return nil
 }
 
-func (g GetFile) MarshalJSON() ([]byte, error) {
-	type alias GetFile
-	return json.Marshal(alias(g))
+func (g GetFile) ToRequestBody() ([]byte, error) {
+	return json.Marshal(g)
 }
 
 func (g GetFile) Execute() (*types.File, error) {
 	return internal.MakeGetRequest[types.File](telego.GetToken(), "getFile", g)
 }
 
-type GetChat[T ChatId] struct {
+type GetChat[T int | string] struct {
 	ChatId T
 }
 
@@ -77,16 +75,15 @@ func (p GetChat[T]) Validate() error {
 	return nil
 }
 
-func (p GetChat[T]) MarshalJSON() ([]byte, error) {
-	type alias GetChat[T]
-	return json.Marshal(alias(p))
+func (p GetChat[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p GetChat[T]) Execute() (*types.ChatFullInfo, error) {
 	return internal.MakeGetRequest[types.ChatFullInfo](telego.GetToken(), "getChat", p)
 }
 
-type GetChatAdministrators[T ChatId] struct {
+type GetChatAdministrators[T int | string] struct {
 	ChatId T
 }
 
@@ -104,16 +101,15 @@ func (p GetChatAdministrators[T]) Validate() error {
 	return nil
 }
 
-func (p GetChatAdministrators[T]) MarshalJSON() ([]byte, error) {
-	type alias GetChatAdministrators[T]
-	return json.Marshal(alias(p))
+func (p GetChatAdministrators[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p GetChatAdministrators[T]) Execute() (*[]types.ChatMember, error) {
 	return internal.MakeGetRequest[[]types.ChatMember](telego.GetToken(), "getChatAdministrators", p)
 }
 
-type GetChatMemberCount[T ChatId] struct {
+type GetChatMemberCount[T int | string] struct {
 	ChatId T
 }
 
@@ -131,16 +127,15 @@ func (p GetChatMemberCount[T]) Validate() error {
 	return nil
 }
 
-func (p GetChatMemberCount[T]) MarshalJSON() ([]byte, error) {
-	type alias GetChatMemberCount[T]
-	return json.Marshal(alias(p))
+func (p GetChatMemberCount[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p GetChatMemberCount[T]) Execute() (*int, error) {
 	return internal.MakeGetRequest[int](telego.GetToken(), "getChatMemberCount", p)
 }
 
-type GetChatMember[T ChatId] struct {
+type GetChatMember[T int | string] struct {
 	ChatId T
 	UserId int
 }
@@ -162,9 +157,8 @@ func (p GetChatMember[T]) Validate() error {
 	return nil
 }
 
-func (p GetChatMember[T]) MarshalJSON() ([]byte, error) {
-	type alias GetChatMember[T]
-	return json.Marshal(alias(p))
+func (p GetChatMember[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p GetChatMember[T]) Execute() (*types.ChatMember, error) {
@@ -180,7 +174,7 @@ func (g GetForumTopicIconStickers) Validate() error {
 }
 
 // alwways empty json
-func (g GetForumTopicIconStickers) MarshalJSON() ([]byte, error) {
+func (g GetForumTopicIconStickers) ToRequestBody() ([]byte, error) {
 	return json.Marshal(struct{}{})
 }
 
@@ -188,7 +182,7 @@ func (g GetForumTopicIconStickers) Execute() (*[]types.Sticker, error) {
 	return internal.MakeGetRequest[[]types.Sticker](telego.GetToken(), "getForumTopicStickers", g)
 }
 
-type GetUserChatBoosts[T ChatId] struct {
+type GetUserChatBoosts[T int | string] struct {
 	ChatId T
 	UserId int
 }
@@ -210,9 +204,8 @@ func (g GetUserChatBoosts[T]) Validate() error {
 	return nil
 }
 
-func (g GetUserChatBoosts[T]) MarshalJSON() ([]byte, error) {
-	type alias GetUserChatBoosts[T]
-	return json.Marshal(alias(g))
+func (g GetUserChatBoosts[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(g)
 }
 
 func (g GetUserChatBoosts[T]) Execute() (*types.UserChatBoosts, error) {
@@ -230,9 +223,8 @@ func (g GetBusinessConnection) Validate() error {
 	return nil
 }
 
-func (g GetBusinessConnection) MarshalJSON() ([]byte, error) {
-	type alias GetBusinessConnection
-	return json.Marshal(alias(g))
+func (g GetBusinessConnection) ToRequestBody() ([]byte, error) {
+	return json.Marshal(g)
 }
 
 func (g GetBusinessConnection) Execute() (*types.BusinessConnection, error) {
@@ -253,9 +245,8 @@ func (s GetMyCommands) Validate() error {
 	return nil
 }
 
-func (s GetMyCommands) MarshalJSON() ([]byte, error) {
-	type alias DeleteMyCommands
-	return json.Marshal(alias(s))
+func (s GetMyCommands) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s GetMyCommands) Execute() (*[]types.BotCommand, error) {
@@ -276,9 +267,8 @@ func (s GetMyName) Validate() error {
 	return nil
 }
 
-func (s GetMyName) MarshalJSON() ([]byte, error) {
-	type alias GetMyName
-	return json.Marshal(alias(s))
+func (s GetMyName) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s GetMyName) Execute() (*types.BotName, error) {
@@ -298,9 +288,8 @@ func (s GetMyDescription) Validate() error {
 	return nil
 }
 
-func (s GetMyDescription) MarshalJSON() ([]byte, error) {
-	type alias GetMyDescription
-	return json.Marshal(alias(s))
+func (s GetMyDescription) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s GetMyDescription) Execute() (*types.BotDescription, error) {
@@ -320,9 +309,8 @@ func (s GetMyShortDescription) Validate() error {
 	return nil
 }
 
-func (s GetMyShortDescription) MarshalJSON() ([]byte, error) {
-	type alias GetMyShortDescription
-	return json.Marshal(alias(s))
+func (s GetMyShortDescription) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s GetMyShortDescription) Execute() (*bool, error) {
@@ -342,9 +330,8 @@ func (s GetChatMenuButton) Validate() error {
 	return nil
 }
 
-func (s GetChatMenuButton) MarshalJSON() ([]byte, error) {
-	type alias GetChatMenuButton
-	return json.Marshal(alias(s))
+func (s GetChatMenuButton) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s GetChatMenuButton) Execute() (*types.MenuButton, error) {
@@ -360,9 +347,8 @@ func (s GetMyDefaultAdministratorRights) Validate() error {
 	return nil
 }
 
-func (s GetMyDefaultAdministratorRights) MarshalJSON() ([]byte, error) {
-	type alias GetMyDefaultAdministratorRights
-	return json.Marshal(alias(s))
+func (s GetMyDefaultAdministratorRights) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s GetMyDefaultAdministratorRights) Execute() (*types.ChatAdministratorRights, error) {

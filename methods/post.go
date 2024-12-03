@@ -13,10 +13,7 @@ import (
 	iso6391 "github.com/emvi/iso-639-1"
 )
 
-type ChatId interface {
-	int | string
-}
-type SendMessage[T ChatId] struct {
+type SendMessage[T int | string] struct {
 	ChatId               T                         `json:"chat_id"`
 	Text                 string                    `json:"text"`
 	BusinessConnectionId *string                   `json:"business_connection_id,omitempty"`
@@ -48,16 +45,16 @@ func (s SendMessage[T]) Validate() error {
 	return nil
 }
 
-func (s SendMessage[T]) MarshalJSON() ([]byte, error) {
-	type alias SendMessage[T]
-	return json.Marshal(alias(s))
+func (s SendMessage[T]) ToRequestBody() ([]byte, error) {
+
+	return json.Marshal(s)
 }
 
 func (s SendMessage[T]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendMessage", s)
 }
 
-type ForwardMessage[T ChatId] struct {
+type ForwardMessage[T int | string] struct {
 	ChatId              T
 	FromChatId          T
 	MessageId           int
@@ -93,16 +90,16 @@ func (f ForwardMessage[T]) Validate() error {
 	return nil
 }
 
-func (f ForwardMessage[T]) MarshalJSON() ([]byte, error) {
-	type alias ForwardMessage[T]
-	return json.Marshal(alias(f))
+func (f ForwardMessage[T]) ToRequestBody() ([]byte, error) {
+
+	return json.Marshal(f)
 }
 
 func (f ForwardMessage[T]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "forwardMessage", f)
 }
 
-type ForwardMessages[T ChatId] struct {
+type ForwardMessages[T int | string] struct {
 	ChatId              T
 	FromChatId          T
 	MessageIds          []int
@@ -138,16 +135,16 @@ func (f ForwardMessages[T]) Validate() error {
 	return nil
 }
 
-func (f ForwardMessages[T]) MarshalJSON() ([]byte, error) {
-	type alias ForwardMessages[T]
-	return json.Marshal(alias(f))
+func (f ForwardMessages[T]) ToRequestBody() ([]byte, error) {
+
+	return json.Marshal(f)
 }
 
 func (f ForwardMessages[T]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "forwardMessages", f)
 }
 
-type CopyMessage[T ChatId] struct {
+type CopyMessage[T int | string] struct {
 	ChatId                T
 	FromChatId            T
 	MessageId             int
@@ -190,16 +187,16 @@ func (c CopyMessage[T]) Validate() error {
 	return nil
 }
 
-func (c CopyMessage[T]) MarshalJSON() ([]byte, error) {
-	type alias CopyMessage[T]
-	return json.Marshal(alias(c))
+func (c CopyMessage[T]) ToRequestBody() ([]byte, error) {
+
+	return json.Marshal(c)
 }
 
 func (c CopyMessage[T]) Execute() (*types.MessageId, error) {
 	return internal.MakePostRequest[types.MessageId](telego.GetToken(), "copyMessage", c)
 }
 
-type CopyMessages[T ChatId] struct {
+type CopyMessages[T int | string] struct {
 	ChatId              T
 	FromChatId          T
 	MessageIds          []int
@@ -209,9 +206,9 @@ type CopyMessages[T ChatId] struct {
 	RemoveCaption       *bool
 }
 
-func (c CopyMessages[T]) MarshalJSON() ([]byte, error) {
-	type alias CopyMessages[T]
-	return json.Marshal(alias(c))
+func (c CopyMessages[T]) ToRequestBody() ([]byte, error) {
+
+	return json.Marshal(c)
 }
 
 func (c CopyMessages[T]) Validate() error {
@@ -245,7 +242,7 @@ func (c CopyMessages[T]) Execute() (*types.MessageId, error) {
 	return internal.MakePostRequest[types.MessageId](telego.GetToken(), "copyMessages", c)
 }
 
-type SendPhoto[T ChatId, B types.InputFile | string] struct {
+type SendPhoto[T int | string, B types.InputFile | string] struct {
 	ChatId                T
 	Photo                 B
 	BusinessConnectionId  *string
@@ -287,16 +284,15 @@ func (s SendPhoto[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendPhoto[T, B]) MarshalJSON() ([]byte, error) {
-	type alias SendPhoto[T, B]
-	return json.Marshal(alias(s))
+func (s SendPhoto[T, B]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendPhoto[T, B]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendPhoto", s)
 }
 
-type SendAudio[T ChatId, B types.InputFile | string] struct {
+type SendAudio[T int | string, B types.InputFile | string] struct {
 	ChatId               T
 	Audio                B
 	BusinessConnectionId *string
@@ -340,16 +336,15 @@ func (s SendAudio[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendAudio[T, B]) MarshalJSON() ([]byte, error) {
-	type alias SendAudio[T, B]
-	return json.Marshal(alias(s))
+func (s SendAudio[T, B]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendAudio[T, B]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendAudio", s)
 }
 
-type SendDocument[T ChatId, B types.InputFile | string] struct {
+type SendDocument[T int | string, B types.InputFile | string] struct {
 	ChatId                      T
 	Document                    B
 	BusinessConnectionId        *string
@@ -391,16 +386,15 @@ func (s SendDocument[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendDocument[T, B]) MarshalJSON() ([]byte, error) {
-	type alias SendDocument[T, B]
-	return json.Marshal(alias(s))
+func (s SendDocument[T, B]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendDocument[T, B]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendDocument", s)
 }
 
-type SendVideo[T ChatId, B types.InputFile | string] struct {
+type SendVideo[T int | string, B types.InputFile | string] struct {
 	ChatId                T
 	Video                 B
 	BusinessConnectionId  *string
@@ -447,16 +441,15 @@ func (s SendVideo[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendVideo[T, B]) MarshalJSON() ([]byte, error) {
-	type alias SendVideo[T, B]
-	return json.Marshal(alias(s))
+func (s SendVideo[T, B]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendVideo[T, B]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendVideo", s)
 }
 
-type SendAnimation[T ChatId, B types.InputFile | string] struct {
+type SendAnimation[T int | string, B types.InputFile | string] struct {
 	ChatId                T
 	Animation             B
 	BusinessConnectionId  *string
@@ -502,16 +495,15 @@ func (s SendAnimation[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendAnimation[T, B]) MarshalJSON() ([]byte, error) {
-	type alias SendAnimation[T, B]
-	return json.Marshal(alias(s))
+func (s SendAnimation[T, B]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendAnimation[T, B]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendAnimation", s)
 }
 
-type SendVoice[T ChatId, B types.InputFile | string] struct {
+type SendVoice[T int | string, B types.InputFile | string] struct {
 	ChatId               T
 	Voice                B
 	BusinessConnectionId *string
@@ -553,16 +545,15 @@ func (s SendVoice[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendVoice[T, B]) MarshalJSON() ([]byte, error) {
-	type alias SendVoice[T, B]
-	return json.Marshal(alias(s))
+func (s SendVoice[T, B]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendVoice[T, B]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendVoice", s)
 }
 
-type SendVideoNote[T ChatId, B types.InputFile | string] struct {
+type SendVideoNote[T int | string, B types.InputFile | string] struct {
 	ChatId               T
 	VideoNote            B
 	BusinessConnectionId *string
@@ -605,16 +596,15 @@ func (s SendVideoNote[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendVideoNote[T, B]) MarshalJSON() ([]byte, error) {
-	type alias SendVideoNote[T, B]
-	return json.Marshal(alias(s))
+func (s SendVideoNote[T, B]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendVideoNote[T, B]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendVideoNote", s)
 }
 
-type SendPaidMedia[T ChatId] struct {
+type SendPaidMedia[T int | string] struct {
 	ChatId                T
 	Media                 []types.InputPaidMedia
 	StarCount             int
@@ -659,16 +649,15 @@ func (s SendPaidMedia[T]) Validate() error {
 	return nil
 }
 
-func (s SendPaidMedia[T]) MarshalJSON() ([]byte, error) {
-	type alias SendPaidMedia[T]
-	return json.Marshal(alias(s))
+func (s SendPaidMedia[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendPaidMedia[T]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendPaidMedia", s)
 }
 
-type SendMediaGroup[T ChatId] struct {
+type SendMediaGroup[T int | string] struct {
 	ChatId               T
 	Media                []types.InputMedia
 	BusinessConnectionId *string
@@ -705,16 +694,15 @@ func (s SendMediaGroup[T]) Validate() error {
 	return nil
 }
 
-func (s SendMediaGroup[T]) MarshalJSON() ([]byte, error) {
-	type alias SendMediaGroup[T]
-	return json.Marshal(alias(s))
+func (s SendMediaGroup[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendMediaGroup[T]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendMediaGroup", s)
 }
 
-type SendLocation[T ChatId] struct {
+type SendLocation[T int | string] struct {
 	ChatId               T
 	Latitude             *float64
 	Longtitude           *float64
@@ -753,16 +741,15 @@ func (s SendLocation[T]) Validate() error {
 	return nil
 }
 
-func (s SendLocation[T]) MarshalJSON() ([]byte, error) {
-	type alias SendLocation[T]
-	return json.Marshal(alias(s))
+func (s SendLocation[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendLocation[T]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendLocation", s)
 }
 
-type SendVenue[T ChatId] struct {
+type SendVenue[T int | string] struct {
 	ChatId               T
 	Latitude             *float64
 	Longtitude           *float64
@@ -802,16 +789,15 @@ func (s SendVenue[T]) Validate() error {
 	return nil
 }
 
-func (s SendVenue[T]) MarshalJSON() ([]byte, error) {
-	type alias SendVenue[T]
-	return json.Marshal(alias(s))
+func (s SendVenue[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendVenue[T]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendVenue", s)
 }
 
-type SendContact[T ChatId] struct {
+type SendContact[T int | string] struct {
 	ChatId               T
 	PhoneNumber          string
 	FirstName            string
@@ -848,16 +834,15 @@ func (s SendContact[T]) Validate() error {
 }
 
 // NOTE: do i need it?
-func (s SendContact[T]) MarshalJSON() ([]byte, error) {
-	type alias SendContact[T]
-	return json.Marshal(alias(s))
+func (s SendContact[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendContact[T]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendContact", s)
 }
 
-type SendPoll[T ChatId] struct {
+type SendPoll[T int | string] struct {
 	ChatId               T
 	Question             string
 	Options              []types.InputPollOption
@@ -903,16 +888,15 @@ func (s SendPoll[T]) Validate() error {
 	return nil
 }
 
-func (s SendPoll[T]) MarshalJSON() ([]byte, error) {
-	type alias SendPoll[T]
-	return json.Marshal(alias(s))
+func (s SendPoll[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendPoll[T]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendPoll", s)
 }
 
-type SendDice[T ChatId] struct {
+type SendDice[T int | string] struct {
 	ChatId               T
 	Emoji                string
 	BusinessConnectionId *string
@@ -942,16 +926,15 @@ func (s SendDice[T]) Validate() error {
 	return nil
 }
 
-func (s SendDice[T]) MarshalJSON() ([]byte, error) {
-	type alias SendDice[T]
-	return json.Marshal(alias(s))
+func (s SendDice[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SendDice[T]) Execute() (*types.Message, error) {
 	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendPoll", s)
 }
 
-type SendChatAction[T ChatId] struct {
+type SendChatAction[T int | string] struct {
 	ChatId               T
 	Action               string
 	BusinessConnectionId *string
@@ -991,7 +974,7 @@ func (s SendChatAction[T]) Validate() error {
 	return nil
 }
 
-type SetMessageReaction[T ChatId] struct {
+type SetMessageReaction[T int | string] struct {
 	ChatId    T
 	MessageId int
 	Reaction  *[]types.ReactionType
@@ -1015,9 +998,8 @@ func (s SetMessageReaction[T]) Validate() error {
 	return nil
 }
 
-func (s SetMessageReaction[T]) MarshalJSON() ([]byte, error) {
-	type alias SetMessageReaction[T]
-	return json.Marshal(alias(s))
+func (s SetMessageReaction[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetMessageReaction[T]) Execute() (*bool, error) {
@@ -1037,12 +1019,11 @@ func (s SetUserEmojiStatus) Validate() error {
 	return nil
 }
 
-func (s SetUserEmojiStatus) MarshalJSON() ([]byte, error) {
-	type alias SetUserEmojiStatus
-	return json.Marshal(alias(s))
+func (s SetUserEmojiStatus) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
-type BanChatMember[T ChatId] struct {
+type BanChatMember[T int | string] struct {
 	ChatId         T
 	UserId         int
 	UntilDate      *int
@@ -1066,16 +1047,15 @@ func (b BanChatMember[T]) Validate() error {
 	return nil
 }
 
-func (b BanChatMember[T]) MarshalJSON() ([]byte, error) {
-	type alias BanChatMember[T]
-	return json.Marshal(alias(b))
+func (b BanChatMember[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(b)
 }
 
 func (b BanChatMember[T]) Execute() (*bool, error) {
 	return internal.MakeGetRequest[bool](telego.GetToken(), "banChatMember", b)
 }
 
-type UnbanChatMember[T ChatId] struct {
+type UnbanChatMember[T int | string] struct {
 	ChatId       T
 	UserId       int
 	OnlyIfBanned *bool
@@ -1098,16 +1078,15 @@ func (b UnbanChatMember[T]) Validate() error {
 	return nil
 }
 
-func (b UnbanChatMember[T]) MarshalJSON() ([]byte, error) {
-	type alias UnbanChatMember[T]
-	return json.Marshal(alias(b))
+func (b UnbanChatMember[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(b)
 }
 
 func (b UnbanChatMember[T]) Execute() (*bool, error) {
 	return internal.MakeGetRequest[bool](telego.GetToken(), "unbanChatMember", b)
 }
 
-type RestrictChatMember[T ChatId] struct {
+type RestrictChatMember[T int | string] struct {
 	ChatId                         T
 	UserId                         int
 	Permissions                    types.ChatPermissions
@@ -1132,16 +1111,15 @@ func (r RestrictChatMember[T]) Validate() error {
 	return nil
 }
 
-func (r RestrictChatMember[T]) MarshalJSON() ([]byte, error) {
-	type alias RestrictChatMember[T]
-	return json.Marshal(alias(r))
+func (r RestrictChatMember[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(r)
 }
 
 func (r RestrictChatMember[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "restrictChatMember", r)
 }
 
-type PromoteChatMember[T ChatId] struct {
+type PromoteChatMember[T int | string] struct {
 	ChatId              T
 	UserId              int
 	IsAnonymous         *bool
@@ -1178,16 +1156,15 @@ func (p PromoteChatMember[T]) Validate() error {
 	return nil
 }
 
-func (p PromoteChatMember[T]) MarshalJSON() ([]byte, error) {
-	type alias PromoteChatMember[T]
-	return json.Marshal(alias(p))
+func (p PromoteChatMember[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p PromoteChatMember[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "promoteChatMember", p)
 }
 
-type SetChatAdministratorCustomTitle[T ChatId] struct {
+type SetChatAdministratorCustomTitle[T int | string] struct {
 	ChatId      T
 	UserId      int
 	CustomTitle string
@@ -1221,16 +1198,15 @@ func (s SetChatAdministratorCustomTitle[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatAdministratorCustomTitle[T]) MarshalJSON() ([]byte, error) {
-	type alias SetChatAdministratorCustomTitle[T]
-	return json.Marshal(alias(s))
+func (s SetChatAdministratorCustomTitle[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetChatAdministratorCustomTitle[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "setChatAdministratorCustomTitle", s)
 }
 
-type BanChatSenderChat[T ChatId] struct {
+type BanChatSenderChat[T int | string] struct {
 	ChatId       T
 	SenderChatId int
 }
@@ -1252,16 +1228,15 @@ func (b BanChatSenderChat[T]) Validate() error {
 	return nil
 }
 
-func (b BanChatSenderChat[T]) MarshalJSON() ([]byte, error) {
-	type alias BanChatSenderChat[T]
-	return json.Marshal(alias(b))
+func (b BanChatSenderChat[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(b)
 }
 
 func (b BanChatSenderChat[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "banChatSenderChat", b)
 }
 
-type UnbanChatSenderChat[T ChatId] struct {
+type UnbanChatSenderChat[T int | string] struct {
 	ChatId       T
 	SenderChatId int
 }
@@ -1283,16 +1258,15 @@ func (b UnbanChatSenderChat[T]) Validate() error {
 	return nil
 }
 
-func (b UnbanChatSenderChat[T]) MarshalJSON() ([]byte, error) {
-	type alias UnbanChatSenderChat[T]
-	return json.Marshal(alias(b))
+func (b UnbanChatSenderChat[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(b)
 }
 
 func (b UnbanChatSenderChat[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "unbanChatSenderChat", b)
 }
 
-type SetChatPermissions[T ChatId] struct {
+type SetChatPermissions[T int | string] struct {
 	ChatId                         T
 	Permissions                    types.ChatPermissions
 	UserIndependentChatPermissions *bool
@@ -1312,16 +1286,15 @@ func (s SetChatPermissions[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatPermissions[T]) MarshalJSON() ([]byte, error) {
-	type alias SetChatPermissions[T]
-	return json.Marshal(alias(s))
+func (s SetChatPermissions[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetChatPermissions[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "setChatPermissions", s)
 }
 
-type ExportChatInviteLink[T ChatId] struct {
+type ExportChatInviteLink[T int | string] struct {
 	ChatId T
 }
 
@@ -1339,16 +1312,15 @@ func (e ExportChatInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (e ExportChatInviteLink[T]) MarshalJSON() ([]byte, error) {
-	type alias ExportChatInviteLink[T]
-	return json.Marshal(alias(e))
+func (e ExportChatInviteLink[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e ExportChatInviteLink[T]) Execute() (*string, error) {
 	return internal.MakePostRequest[string](telego.GetToken(), "exportChatInviteLink", e)
 }
 
-type CreateInviteLink[T ChatId] struct {
+type CreateInviteLink[T int | string] struct {
 	ChatId             T
 	Name               *string
 	ExpireDate         *int
@@ -1380,16 +1352,15 @@ func (c CreateInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (c CreateInviteLink[T]) MarshalJSON() ([]byte, error) {
-	type alias CreateInviteLink[T]
-	return json.Marshal(alias(c))
+func (c CreateInviteLink[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(c)
 }
 
 func (c CreateInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
 	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "createInviteLink", c)
 }
 
-type EditInviteLink[T ChatId] struct {
+type EditInviteLink[T int | string] struct {
 	ChatId             T
 	InviteLink         string
 	Name               *string
@@ -1422,16 +1393,15 @@ func (c EditInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (c EditInviteLink[T]) MarshalJSON() ([]byte, error) {
-	type alias EditInviteLink[T]
-	return json.Marshal(alias(c))
+func (c EditInviteLink[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(c)
 }
 
 func (c EditInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
 	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "editInviteLink", c)
 }
 
-type CreateChatSubscriptionInviteLink[T ChatId] struct {
+type CreateChatSubscriptionInviteLink[T int | string] struct {
 	ChatId             T
 	SubscriptionPeriod int
 	SubscriptionPrice  int
@@ -1463,16 +1433,15 @@ func (c CreateChatSubscriptionInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (c CreateChatSubscriptionInviteLink[T]) MarshalJSON() ([]byte, error) {
-	type alias CreateChatSubscriptionInviteLink[T]
-	return json.Marshal(alias(c))
+func (c CreateChatSubscriptionInviteLink[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(c)
 }
 
 func (c CreateChatSubscriptionInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
 	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "createChatSubscriptionInviteLink", c)
 }
 
-type EditChatSubscriptionInviteLink[T ChatId] struct {
+type EditChatSubscriptionInviteLink[T int | string] struct {
 	ChatId     T
 	InviteLink string
 	Name       *string
@@ -1500,16 +1469,15 @@ func (c EditChatSubscriptionInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (c EditChatSubscriptionInviteLink[T]) MarshalJSON() ([]byte, error) {
-	type alias EditChatSubscriptionInviteLink[T]
-	return json.Marshal(alias(c))
+func (c EditChatSubscriptionInviteLink[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(c)
 }
 
 func (c EditChatSubscriptionInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
 	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "editChatSubscriptionInviteLink", c)
 }
 
-type RevokeInviteLink[T ChatId] struct {
+type RevokeInviteLink[T int | string] struct {
 	ChatId     T
 	InviteLink string
 	Name       *string
@@ -1534,16 +1502,15 @@ func (c RevokeInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (c RevokeInviteLink[T]) MarshalJSON() ([]byte, error) {
-	type alias RevokeInviteLink[T]
-	return json.Marshal(alias(c))
+func (c RevokeInviteLink[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(c)
 }
 
 func (c RevokeInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
 	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "revokeInviteLink", c)
 }
 
-type ApproveChatJoinRequest[T ChatId] struct {
+type ApproveChatJoinRequest[T int | string] struct {
 	ChatId T
 	UserId int
 }
@@ -1565,16 +1532,15 @@ func (s ApproveChatJoinRequest[T]) Validate() error {
 	return nil
 }
 
-func (s ApproveChatJoinRequest[T]) MarshalJSON() ([]byte, error) {
-	type alias ApproveChatJoinRequest[T]
-	return json.Marshal(alias(s))
+func (s ApproveChatJoinRequest[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s ApproveChatJoinRequest[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "approveChatJoinRequest", s)
 }
 
-type DeclineChatJoinRequest[T ChatId] struct {
+type DeclineChatJoinRequest[T int | string] struct {
 	ChatId T
 	UserId int
 }
@@ -1596,9 +1562,8 @@ func (s DeclineChatJoinRequest[T]) Validate() error {
 	return nil
 }
 
-func (s DeclineChatJoinRequest[T]) MarshalJSON() ([]byte, error) {
-	type alias DeclineChatJoinRequest[T]
-	return json.Marshal(alias(s))
+func (s DeclineChatJoinRequest[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s DeclineChatJoinRequest[T]) Execute() (*bool, error) {
@@ -1606,7 +1571,7 @@ func (s DeclineChatJoinRequest[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "declineChatJoinRequest", s)
 }
 
-type SetChatPhoto[T ChatId] struct {
+type SetChatPhoto[T int | string] struct {
 	ChatId T
 	Photo  types.InputFile
 }
@@ -1628,16 +1593,15 @@ func (s SetChatPhoto[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatPhoto[T]) MarshalJSON() ([]byte, error) {
-	type alias SetChatPhoto[T]
-	return json.Marshal(alias(s))
+func (s SetChatPhoto[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetChatPhoto[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "setChatPhoto", s)
 }
 
-type DeleteChatPhoto[T ChatId] struct {
+type DeleteChatPhoto[T int | string] struct {
 	ChatId T
 }
 
@@ -1655,16 +1619,15 @@ func (d DeleteChatPhoto[T]) Validate() error {
 	return nil
 }
 
-func (d DeleteChatPhoto[T]) MarshalJSON() ([]byte, error) {
-	type alias DeleteChatPhoto[T]
-	return json.Marshal(alias(d))
+func (d DeleteChatPhoto[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(d)
 }
 
 func (d DeleteChatPhoto[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "deleteChatPhoto", d)
 }
 
-type SetChatTitle[T ChatId] struct {
+type SetChatTitle[T int | string] struct {
 	ChatId T
 	Title  string
 }
@@ -1686,16 +1649,15 @@ func (s SetChatTitle[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatTitle[T]) MarshalJSON() ([]byte, error) {
-	type alias SetChatTitle[T]
-	return json.Marshal(alias(s))
+func (s SetChatTitle[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetChatTitle[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "setChatTitle", s)
 }
 
-type SetChatDescription[T ChatId] struct {
+type SetChatDescription[T int | string] struct {
 	ChatId      T
 	Description string
 }
@@ -1717,16 +1679,15 @@ func (s SetChatDescription[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatDescription[T]) MarshalJSON() ([]byte, error) {
-	type alias SetChatDescription[T]
-	return json.Marshal(alias(s))
+func (s SetChatDescription[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetChatDescription[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "setChatTitle", s)
 }
 
-type PinChatMessage[T ChatId] struct {
+type PinChatMessage[T int | string] struct {
 	ChatId               T
 	MessageId            int
 	BusinessConnectionId *string
@@ -1750,16 +1711,15 @@ func (p PinChatMessage[T]) Validate() error {
 	return nil
 }
 
-func (p PinChatMessage[T]) MarshalJSON() ([]byte, error) {
-	type alias PinChatMessage[T]
-	return json.Marshal(alias(p))
+func (p PinChatMessage[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p PinChatMessage[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "pinChatMessage", p)
 }
 
-type UnpinChatMessage[T ChatId] struct {
+type UnpinChatMessage[T int | string] struct {
 	ChatId               T
 	MessageId            int
 	BusinessConnectionId *string
@@ -1782,16 +1742,15 @@ func (p UnpinChatMessage[T]) Validate() error {
 	return nil
 }
 
-func (p UnpinChatMessage[T]) MarshalJSON() ([]byte, error) {
-	type alias UnpinChatMessage[T]
-	return json.Marshal(alias(p))
+func (p UnpinChatMessage[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p UnpinChatMessage[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "unpinChatMessage", p)
 }
 
-type UnpinAllChatMessages[T ChatId] struct {
+type UnpinAllChatMessages[T int | string] struct {
 	ChatId T
 }
 
@@ -1809,16 +1768,15 @@ func (p UnpinAllChatMessages[T]) Validate() error {
 	return nil
 }
 
-func (p UnpinAllChatMessages[T]) MarshalJSON() ([]byte, error) {
-	type alias UnpinAllChatMessages[T]
-	return json.Marshal(alias(p))
+func (p UnpinAllChatMessages[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p UnpinAllChatMessages[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "unpinAllChatMessages", p)
 }
 
-type LeaveChat[T ChatId] struct {
+type LeaveChat[T int | string] struct {
 	ChatId T
 }
 
@@ -1836,16 +1794,15 @@ func (p LeaveChat[T]) Validate() error {
 	return nil
 }
 
-func (p LeaveChat[T]) MarshalJSON() ([]byte, error) {
-	type alias LeaveChat[T]
-	return json.Marshal(alias(p))
+func (p LeaveChat[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p LeaveChat[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "leaveChat", p)
 }
 
-type SetChatStickerSet[T ChatId] struct {
+type SetChatStickerSet[T int | string] struct {
 	ChatId         T
 	StickerSetName string
 }
@@ -1867,16 +1824,15 @@ func (p SetChatStickerSet[T]) Validate() error {
 	return nil
 }
 
-func (p SetChatStickerSet[T]) MarshalJSON() ([]byte, error) {
-	type alias SetChatStickerSet[T]
-	return json.Marshal(alias(p))
+func (p SetChatStickerSet[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p SetChatStickerSet[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "setChatStickerSet", p)
 }
 
-type DeleteChatStickerSet[T ChatId] struct {
+type DeleteChatStickerSet[T int | string] struct {
 	ChatId T
 }
 
@@ -1894,9 +1850,8 @@ func (p DeleteChatStickerSet[T]) Validate() error {
 	return nil
 }
 
-func (p DeleteChatStickerSet[T]) MarshalJSON() ([]byte, error) {
-	type alias DeleteChatStickerSet[T]
-	return json.Marshal(alias(p))
+func (p DeleteChatStickerSet[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 func (p DeleteChatStickerSet[T]) Execute() (*bool, error) {
@@ -1912,7 +1867,7 @@ var validIconColors = map[int]struct{}{
 	16478047: {},
 }
 
-type CreateForumTopic[T ChatId] struct {
+type CreateForumTopic[T int | string] struct {
 	ChatId            T
 	Name              string
 	IconColor         *int
@@ -1941,16 +1896,15 @@ func (c CreateForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (c CreateForumTopic[T]) MarshalJSON() ([]byte, error) {
-	type alias CreateForumTopic[T]
-	return json.Marshal(alias(c))
+func (c CreateForumTopic[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(c)
 }
 
 func (c CreateForumTopic[T]) Execute() (*types.ForumTopic, error) {
 	return internal.MakePostRequest[types.ForumTopic](telego.GetToken(), "createForumTopic", c)
 }
 
-type EditForumTopic[T ChatId] struct {
+type EditForumTopic[T int | string] struct {
 	ChatId            T
 	MessageThreadId   string
 	Name              *string
@@ -1979,16 +1933,15 @@ func (e EditForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e EditForumTopic[T]) MarshalJSON() ([]byte, error) {
-	type alias EditForumTopic[T]
-	return json.Marshal(alias(e))
+func (e EditForumTopic[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e EditForumTopic[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "editForumTopic", e)
 }
 
-type CloseForumTopic[T ChatId] struct {
+type CloseForumTopic[T int | string] struct {
 	ChatId          T
 	MessageThreadId string
 }
@@ -2010,16 +1963,15 @@ func (e CloseForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e CloseForumTopic[T]) MarshalJSON() ([]byte, error) {
-	type alias CloseForumTopic[T]
-	return json.Marshal(alias(e))
+func (e CloseForumTopic[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e CloseForumTopic[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "closeForumTopic", e)
 }
 
-type ReopenForumTopic[T ChatId] struct {
+type ReopenForumTopic[T int | string] struct {
 	ChatId          T
 	MessageThreadId string
 }
@@ -2041,16 +1993,15 @@ func (e ReopenForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e ReopenForumTopic[T]) MarshalJSON() ([]byte, error) {
-	type alias ReopenForumTopic[T]
-	return json.Marshal(alias(e))
+func (e ReopenForumTopic[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e ReopenForumTopic[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "reopenForumTopic", e)
 }
 
-type DeleteForumTopic[T ChatId] struct {
+type DeleteForumTopic[T int | string] struct {
 	ChatId          T
 	MessageThreadId string
 }
@@ -2072,16 +2023,15 @@ func (e DeleteForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e DeleteForumTopic[T]) MarshalJSON() ([]byte, error) {
-	type alias DeleteForumTopic[T]
-	return json.Marshal(alias(e))
+func (e DeleteForumTopic[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e DeleteForumTopic[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "deleteForumTopic", e)
 }
 
-type UnpinAllForumTopicMessages[T ChatId] struct {
+type UnpinAllForumTopicMessages[T int | string] struct {
 	ChatId          T
 	MessageThreadId string
 }
@@ -2103,16 +2053,15 @@ func (e UnpinAllForumTopicMessages[T]) Validate() error {
 	return nil
 }
 
-func (e UnpinAllForumTopicMessages[T]) MarshalJSON() ([]byte, error) {
-	type alias UnpinAllForumTopicMessages[T]
-	return json.Marshal(alias(e))
+func (e UnpinAllForumTopicMessages[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e UnpinAllForumTopicMessages[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "unpinAllForumTopicMessages", e)
 }
 
-type EditGeneralForumTopic[T ChatId] struct {
+type EditGeneralForumTopic[T int | string] struct {
 	ChatId T
 	Name   string
 }
@@ -2134,16 +2083,15 @@ func (e EditGeneralForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e EditGeneralForumTopic[T]) MarshalJSON() ([]byte, error) {
-	type alias EditGeneralForumTopic[T]
-	return json.Marshal(alias(e))
+func (e EditGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e EditGeneralForumTopic[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "editGeneralForumTopic", e)
 }
 
-type CloseGeneralForumTopic[T ChatId] struct {
+type CloseGeneralForumTopic[T int | string] struct {
 	ChatId T
 }
 
@@ -2161,16 +2109,15 @@ func (e CloseGeneralForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e CloseGeneralForumTopic[T]) MarshalJSON() ([]byte, error) {
-	type alias CloseGeneralForumTopic[T]
-	return json.Marshal(alias(e))
+func (e CloseGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e CloseGeneralForumTopic[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "closeGeneralForumTopic", e)
 }
 
-type ReopenGeneralForumTopic[T ChatId] struct {
+type ReopenGeneralForumTopic[T int | string] struct {
 	ChatId T
 }
 
@@ -2188,16 +2135,15 @@ func (e ReopenGeneralForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e ReopenGeneralForumTopic[T]) MarshalJSON() ([]byte, error) {
-	type alias ReopenGeneralForumTopic[T]
-	return json.Marshal(alias(e))
+func (e ReopenGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e ReopenGeneralForumTopic[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "reopenGeneralForumTopic", e)
 }
 
-type HideGeneralForumTopic[T ChatId] struct {
+type HideGeneralForumTopic[T int | string] struct {
 	ChatId T
 }
 
@@ -2215,16 +2161,15 @@ func (e HideGeneralForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e HideGeneralForumTopic[T]) MarshalJSON() ([]byte, error) {
-	type alias HideGeneralForumTopic[T]
-	return json.Marshal(alias(e))
+func (e HideGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e HideGeneralForumTopic[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "hideGeneralForumTopic", e)
 }
 
-type UnhideGeneralForumTopic[T ChatId] struct {
+type UnhideGeneralForumTopic[T int | string] struct {
 	ChatId T
 }
 
@@ -2242,16 +2187,15 @@ func (e UnhideGeneralForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e UnhideGeneralForumTopic[T]) MarshalJSON() ([]byte, error) {
-	type alias UnhideGeneralForumTopic[T]
-	return json.Marshal(alias(e))
+func (e UnhideGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e UnhideGeneralForumTopic[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "unhideGeneralForumTopic", e)
 }
 
-type UnpinAllGeneralForumTopicMessages[T ChatId] struct {
+type UnpinAllGeneralForumTopicMessages[T int | string] struct {
 	ChatId T
 }
 
@@ -2269,9 +2213,8 @@ func (e UnpinAllGeneralForumTopicMessages[T]) Validate() error {
 	return nil
 }
 
-func (e UnpinAllGeneralForumTopicMessages[T]) MarshalJSON() ([]byte, error) {
-	type alias UnhideGeneralForumTopic[T]
-	return json.Marshal(alias(e))
+func (e UnpinAllGeneralForumTopicMessages[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e UnpinAllGeneralForumTopicMessages[T]) Execute() (*bool, error) {
@@ -2319,9 +2262,8 @@ func (s SetMyCommands) Validate() error {
 	return nil
 }
 
-func (s SetMyCommands) MarshalJSON() ([]byte, error) {
-	type alias SetMyCommands
-	return json.Marshal(alias(s))
+func (s SetMyCommands) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetMyCommands) Execute() (*bool, error) {
@@ -2342,9 +2284,8 @@ func (s DeleteMyCommands) Validate() error {
 	return nil
 }
 
-func (s DeleteMyCommands) MarshalJSON() ([]byte, error) {
-	type alias DeleteMyCommands
-	return json.Marshal(alias(s))
+func (s DeleteMyCommands) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s DeleteMyCommands) Execute() (*bool, error) {
@@ -2370,9 +2311,8 @@ func (s SetMyName) Validate() error {
 	return nil
 }
 
-func (s SetMyName) MarshalJSON() ([]byte, error) {
-	type alias SetMyName
-	return json.Marshal(alias(s))
+func (s SetMyName) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetMyName) Execute() (*bool, error) {
@@ -2398,9 +2338,8 @@ func (s SetMyDescription) Validate() error {
 	return nil
 }
 
-func (s SetMyDescription) MarshalJSON() ([]byte, error) {
-	type alias SetMyDescription
-	return json.Marshal(alias(s))
+func (s SetMyDescription) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetMyDescription) Execute() (*bool, error) {
@@ -2426,16 +2365,15 @@ func (s SetMyShortDescription) Validate() error {
 	return nil
 }
 
-func (s SetMyShortDescription) MarshalJSON() ([]byte, error) {
-	type alias SetMyShortDescription
-	return json.Marshal(alias(s))
+func (s SetMyShortDescription) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetMyShortDescription) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "setMyShortDescription", s)
 }
 
-type SetChatMenuButton[T ChatId] struct {
+type SetChatMenuButton[T int | string] struct {
 	ChatId     *T
 	MenuButton *types.MenuButton
 }
@@ -2461,9 +2399,8 @@ func (s SetChatMenuButton[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatMenuButton[T]) MarshalJSON() ([]byte, error) {
-	type alias SetChatMenuButton[T]
-	return json.Marshal(alias(s))
+func (s SetChatMenuButton[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetChatMenuButton[T]) Execute() (*bool, error) {
@@ -2480,16 +2417,15 @@ func (s SetMyDefaultAdministratorRights) Validate() error {
 	return nil
 }
 
-func (s SetMyDefaultAdministratorRights) MarshalJSON() ([]byte, error) {
-	type alias SetMyDefaultAdministratorRights
-	return json.Marshal(alias(s))
+func (s SetMyDefaultAdministratorRights) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s SetMyDefaultAdministratorRights) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "setMyDefaultAdministratorRights", s)
 }
 
-type StopPoll[T ChatId] struct {
+type StopPoll[T int | string] struct {
 	ChatId               T
 	MessageId            int
 	BusinessConnectionId *string
@@ -2518,16 +2454,15 @@ func (s StopPoll[T]) Validate() error {
 	return nil
 }
 
-func (s StopPoll[T]) MarshalJSON() ([]byte, error) {
-	type alias StopPoll[T]
-	return json.Marshal(alias(s))
+func (s StopPoll[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s StopPoll[T]) Execute() (*types.Poll, error) {
 	return internal.MakePostRequest[types.Poll](telego.GetToken(), "stopPoll", s)
 }
 
-type DeleteMessage[T ChatId] struct {
+type DeleteMessage[T int | string] struct {
 	ChatId    T
 	MessageId int
 }
@@ -2549,16 +2484,15 @@ func (d DeleteMessage[T]) Validate() error {
 	return nil
 }
 
-func (d DeleteMessage[T]) MarshalJSON() ([]byte, error) {
-	type alias DeleteMessage[T]
-	return json.Marshal(alias(d))
+func (d DeleteMessage[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(d)
 }
 
 func (d DeleteMessage[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "deleteMessage", d)
 }
 
-type DeleteMessages[T ChatId] struct {
+type DeleteMessages[T int | string] struct {
 	ChatId     T
 	MessageIds []int
 }
@@ -2581,9 +2515,8 @@ func (d DeleteMessages[T]) Validate() error {
 	return nil
 }
 
-func (d DeleteMessages[T]) MarshalJSON() ([]byte, error) {
-	type alias DeleteMessages[T]
-	return json.Marshal(alias(d))
+func (d DeleteMessages[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(d)
 }
 
 func (d DeleteMessages[T]) Execute() (*bool, error) {

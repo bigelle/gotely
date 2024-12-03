@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	errors1 "github.com/bigelle/tele.go/errors"
+	errs "github.com/bigelle/tele.go/errors"
 )
 
 type StarTransaction struct {
@@ -181,10 +181,10 @@ type LabeledPrice struct {
 
 func (l LabeledPrice) Validate() error {
 	if strings.TrimSpace(l.Label) == "" {
-		return errors1.ErrInvalidParam("label parameter can't be empty")
+		return errs.ErrInvalidParam("label parameter can't be empty")
 	}
 	if l.Amount < 0 {
-		return errors1.ErrInvalidParam("amount can't be less than zero")
+		return errs.ErrInvalidParam("amount can't be less than zero")
 	}
 	return nil
 }
@@ -217,6 +217,27 @@ type RefundedPayment struct {
 	InvoicePayload          string  `json:"invoice_payload"`
 	TelegramPaymentChargeId string  `json:"telegram_payment_charge_id"`
 	ProviderPaymentChargeId *string `json:"provider_payment_charge_id,omitempty"`
+}
+
+type ShippingOption struct {
+	Id     string
+	Title  string
+	Prices []LabeledPrice
+}
+
+func (s ShippingOption) Validate() error {
+	if strings.TrimSpace(s.Id) == "" {
+		return errs.ErrInvalidParam("id parameter can't be empty")
+	}
+	if strings.TrimSpace(s.Title) == "" {
+		return errs.ErrInvalidParam("title parameter can't be empty")
+	}
+	for _, price := range s.Prices {
+		if err := price.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type ShippingAddress struct {

@@ -24,7 +24,7 @@ type MessageOrBool struct {
 	Bool    *bool
 }
 
-type EditMessageText[T ChatId] struct {
+type EditMessageText[T int | string] struct {
 	ChatId               *T
 	Text                 string
 	BusinessConnectionId *string
@@ -79,9 +79,8 @@ func (e EditMessageText[T]) Validate() error {
 	return nil
 }
 
-func (e EditMessageText[T]) MarshalJSON() ([]byte, error) {
-	type alias EditMessageText[T]
-	return json.Marshal(alias(e))
+func (e EditMessageText[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e EditMessageText[T]) Execute() (MessageOrBool, error) {
@@ -102,7 +101,7 @@ func (e EditMessageText[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type EditMessageCaption[T ChatId] struct {
+type EditMessageCaption[T int | string] struct {
 	ChatId                *T
 	Caption               *string
 	BusinessConnectionId  *string
@@ -159,9 +158,8 @@ func (e EditMessageCaption[T]) Validate() error {
 	return nil
 }
 
-func (e EditMessageCaption[T]) MarshalJSON() ([]byte, error) {
-	type alias EditMessageCaption[T]
-	return json.Marshal(alias(e))
+func (e EditMessageCaption[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e EditMessageCaption[T]) Execute() (MessageOrBool, error) {
@@ -182,7 +180,7 @@ func (e EditMessageCaption[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type EditMessageMedia[T ChatId] struct {
+type EditMessageMedia[T int | string] struct {
 	Media                 types.InputMedia
 	ChatId                *T
 	BusinessConnectionId  *string
@@ -232,9 +230,8 @@ func (e EditMessageMedia[T]) Validate() error {
 	return nil
 }
 
-func (e EditMessageMedia[T]) MarshalJSON() ([]byte, error) {
-	type alias EditMessageMedia[T]
-	return json.Marshal(alias(e))
+func (e EditMessageMedia[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e EditMessageMedia[T]) Execute() (MessageOrBool, error) {
@@ -255,7 +252,7 @@ func (e EditMessageMedia[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type EditMessageLiveLocation[T ChatId] struct {
+type EditMessageLiveLocation[T int | string] struct {
 	Latitude             *float64
 	Longtitude           *float64
 	LivePeriod           *int
@@ -322,9 +319,8 @@ func (e EditMessageLiveLocation[T]) Validate() error {
 	return nil
 }
 
-func (e EditMessageLiveLocation[T]) MarshalJSON() ([]byte, error) {
-	type alias EditMessageLiveLocation[T]
-	return json.Marshal(alias(e))
+func (e EditMessageLiveLocation[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e EditMessageLiveLocation[T]) Execute() (MessageOrBool, error) {
@@ -345,7 +341,7 @@ func (e EditMessageLiveLocation[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type StopMessageLiveLocation[T ChatId] struct {
+type StopMessageLiveLocation[T int | string] struct {
 	ChatId               *T
 	BusinessConnectionId *string
 	MessageId            *int
@@ -390,9 +386,8 @@ func (e StopMessageLiveLocation[T]) Validate() error {
 	return nil
 }
 
-func (e StopMessageLiveLocation[T]) MarshalJSON() ([]byte, error) {
-	type alias StopMessageLiveLocation[T]
-	return json.Marshal(alias(e))
+func (e StopMessageLiveLocation[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e StopMessageLiveLocation[T]) Execute() (MessageOrBool, error) {
@@ -413,7 +408,7 @@ func (e StopMessageLiveLocation[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type EditMessageReplyMarkup[T ChatId] struct {
+type EditMessageReplyMarkup[T int | string] struct {
 	ChatId               *T
 	BusinessConnectionId *string
 	MessageId            *int
@@ -458,9 +453,8 @@ func (e EditMessageReplyMarkup[T]) Validate() error {
 	return nil
 }
 
-func (e EditMessageReplyMarkup[T]) MarshalJSON() ([]byte, error) {
-	type alias EditMessageReplyMarkup[T]
-	return json.Marshal(alias(e))
+func (e EditMessageReplyMarkup[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 func (e EditMessageReplyMarkup[T]) Execute() (MessageOrBool, error) {
