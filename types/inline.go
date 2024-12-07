@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/bigelle/tele.go/errors"
@@ -15,6 +16,34 @@ type InlineQuery struct {
 	Offset   string    `json:"offset"`
 	ChatType *string   `json:"chat_type,omitempty"`
 	Location *Location `json:"location,omitempty"`
+}
+
+type InlineQueryResultsButton struct {
+	Text           string
+	WebApp         *WebAppInfo
+	StartParameter *string
+}
+
+var allowed_startparameter = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
+
+func (i InlineQueryResultsButton) Validate() error {
+	if strings.TrimSpace(i.Text) == "" {
+		return errors.ErrInvalidParam("text parameter can't be empty")
+	}
+	if i.WebApp != nil {
+		if err := i.WebApp.Validate(); err != nil {
+			return err
+		}
+	}
+	if i.StartParameter != nil {
+		if !allowed_startparameter.MatchString(*i.StartParameter) {
+			return errors.ErrInvalidParam("start_parameter parameter must contain only A-Z, a-z, 0-9, \"_\" and \"-\"")
+		}
+		if len(*i.StartParameter) < 1 || len(*i.StartParameter) > 64 {
+			return errors.ErrInvalidParam("start_parameter parameter must be between 1 and 64 characters")
+		}
+	}
+	return nil
 }
 
 type InlineQueryResult struct {
@@ -1032,4 +1061,9 @@ type ChosenInlineResult struct {
 
 type SentWebAppMessage struct {
 	InlineMessageId *string `json:"inline_message_id,omitempty"`
+}
+
+type PreparedInlineMessage struct {
+	Id             string
+	ExpirationDate int
 }
