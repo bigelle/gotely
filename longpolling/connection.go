@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	telego "github.com/bigelle/tele.go"
+	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -90,7 +91,7 @@ func getMe() (types.User, error) {
 		return types.User{}, err
 	}
 
-	var respObj types.ApiResponse[types.User]
+	var respObj internal.ApiResponse[types.User]
 	if err := json.Unmarshal(b, &respObj); err != nil {
 		return types.User{}, err
 	}

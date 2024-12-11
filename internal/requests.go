@@ -50,7 +50,7 @@ func MakeRequest[T any](httpMethod, token, endpoint string, body Executable) (*T
 		return nil, fmt.Errorf("can't read response: %w", err)
 	}
 
-	var apiResp types.ApiResponse[T]
+	var apiResp ApiResponse[T]
 	if err := json.Unmarshal(b, &apiResp); err != nil {
 		return nil, fmt.Errorf("can't unmarshal response body: %w", err)
 	}
@@ -69,4 +69,12 @@ func MakeGetRequest[T any](token, endnpoint string, body Executable) (*T, error)
 
 func MakePostRequest[T any](token, endpoint string, body Executable) (*T, error) {
 	return MakeRequest[T]("POST", token, endpoint, body)
+}
+
+type ApiResponse[T any] struct {
+	Ok          bool                      `json:"ok"`
+	ErrorCode   int                       `json:"error_code"`
+	Description *string                   `json:"description,omitempty"`
+	Parameters  *types.ResponseParameters `json:"parameters,omitempty"`
+	Result      T                         `json:"result"`
 }
