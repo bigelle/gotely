@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
@@ -25,10 +24,10 @@ type SendGame struct {
 
 func (s SendGame) Validate() error {
 	if s.ChatId == 0 {
-		return errors.ErrInvalidParam("chat_id parameter can't be empty")
+		return types.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.GameShortName) == "" {
-		return errors.ErrInvalidParam("game_short_name parameter can't be empty")
+		return types.ErrInvalidParam("game_short_name parameter can't be empty")
 	}
 	if s.ReplyMarkup != nil {
 		if err := s.ReplyMarkup.Validate(); err != nil {
@@ -63,22 +62,22 @@ type SetGameHighScore struct {
 
 func (s SetGameHighScore) Validate() error {
 	if s.UserId == 0 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if s.Score < 0 {
-		return errors.ErrInvalidParam("score parameter must be non-negative")
+		return types.ErrInvalidParam("score parameter must be non-negative")
 	}
 	if s.InlineMessageId == nil {
 		if s.ChatId == nil {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if s.MessageId == nil {
-			return errors.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if s.ChatId == nil && s.MessageId == nil {
 		if s.InlineMessageId == nil {
-			return errors.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
+			return types.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
 		}
 	}
 	return nil
@@ -115,19 +114,19 @@ type GetGameHighScores struct {
 
 func (s GetGameHighScores) Validate() error {
 	if s.UserId == 0 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if s.InlineMessageId == nil {
 		if s.ChatId == nil {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if s.MessageId == nil {
-			return errors.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if s.ChatId == nil && s.MessageId == nil {
 		if s.InlineMessageId == nil {
-			return errors.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
+			return types.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
 		}
 	}
 	return nil

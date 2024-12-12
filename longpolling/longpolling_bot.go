@@ -8,7 +8,6 @@ import (
 	"strings"
 	"sync"
 
-	errs "github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -82,7 +81,7 @@ func (l LongPollingBot) Validate() error {
 		}
 		for _, p := range *l.AllowedUpdates {
 			if !slices.Contains(allowedUpdates, p) {
-				return errs.ErrInvalidParam(fmt.Sprintf("invalid param: %s. allowed parameters: %s", p, strings.Join(allowedUpdates, ", ")))
+				return types.ErrInvalidParam(fmt.Sprintf("invalid param: %s. allowed parameters: %s", p, strings.Join(allowedUpdates, ", ")))
 			}
 		}
 	}

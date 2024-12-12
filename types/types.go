@@ -7,9 +7,17 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-
-	errs "github.com/bigelle/tele.go/errors"
 )
+
+type Validable interface {
+	Validate() error
+}
+
+type ErrInvalidParam string
+
+func (e ErrInvalidParam) Error() string {
+	return string(e)
+}
 
 // This object represents an incoming update.
 // At most one of the optional parameters can be present in any given update.
@@ -643,14 +651,14 @@ type ReplyParameters struct {
 func (r ReplyParameters) Validate() error {
 	if r.ChatId != nil {
 		if strings.TrimSpace(*r.ChatId) == "" {
-			return errs.ErrInvalidParam("chat_id parameter can't be empty")
+			return ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if r.MessageId < 1 {
-		return errs.ErrInvalidParam("message_id parameter can't be empty")
+		return ErrInvalidParam("message_id parameter can't be empty")
 	}
 	if r.QuoteParseMode != nil && r.QuoteEntities != nil {
-		return errs.ErrInvalidParam("quote)parse_mode can't be used if quote_entities are provided")
+		return ErrInvalidParam("quote)parse_mode can't be used if quote_entities are provided")
 	}
 	return nil
 }
@@ -1654,7 +1662,7 @@ type WebAppInfo struct {
 
 func (w WebAppInfo) Validate() error {
 	if strings.TrimSpace(w.Url) == "" {
-		return errs.ErrInvalidParam("url paramter can't be empty")
+		return ErrInvalidParam("url paramter can't be empty")
 	}
 	return nil
 }
@@ -1742,7 +1750,7 @@ type KeyboardButton struct {
 
 func (k KeyboardButton) Validate() error {
 	if strings.TrimSpace(k.Text) == "" {
-		return errs.ErrInvalidParam("text paramter can't be empty")
+		return ErrInvalidParam("text paramter can't be empty")
 	}
 
 	requestsProvided := 0
@@ -1808,7 +1816,7 @@ type KeyboardButtonRequestUsers struct {
 
 func (k KeyboardButtonRequestUsers) Validate() error {
 	if k.RequestId == 0 {
-		return errs.ErrInvalidParam("request_id paramter can't be empty")
+		return ErrInvalidParam("request_id paramter can't be empty")
 	}
 	if *k.MaxQuantity < 1 || *k.MaxQuantity > 10 {
 		return fmt.Errorf("MaxQuantity parameter must be between 1 and 10")
@@ -1853,7 +1861,7 @@ type KeyboardButtonRequestChat struct {
 
 func (k KeyboardButtonRequestChat) Validate() error {
 	if k.RequestId == 0 {
-		return errs.ErrInvalidParam("request_id paramter can't be empty")
+		return ErrInvalidParam("request_id paramter can't be empty")
 	}
 	return nil
 }
@@ -1868,7 +1876,7 @@ type KeyboardButtonPollType struct {
 func (k KeyboardButtonPollType) Validate() error {
 	if k.Type != nil {
 		if *k.Type != "regular" && *k.Type != "quiz" {
-			return errs.ErrInvalidParam("type must be reqular or quiz if specified")
+			return ErrInvalidParam("type must be reqular or quiz if specified")
 		}
 	}
 	return nil
@@ -1911,12 +1919,12 @@ func (m InlineKeyboardMarkup) Validate() error {
 			}
 			if key.Pay != nil {
 				if i == 0 || j == 0 {
-					return errs.ErrInvalidParam("the button with a specified pay parameter must always be the first button at the first row")
+					return ErrInvalidParam("the button with a specified pay parameter must always be the first button at the first row")
 				}
 			}
 			if key.CallbackGame != nil {
 				if i == 0 || j == 0 {
-					return errs.ErrInvalidParam("the button with a specified callback_game parameter must always be the first button at the first row")
+					return ErrInvalidParam("the button with a specified callback_game parameter must always be the first button at the first row")
 				}
 			}
 		}
@@ -1969,11 +1977,11 @@ type InlineKeyboardButton struct {
 
 func (b InlineKeyboardButton) Validate() error {
 	if strings.TrimSpace(b.Text) == "" {
-		return errs.ErrInvalidParam("text paramter can't be empty")
+		return ErrInvalidParam("text paramter can't be empty")
 	}
 	if b.CallbackData != nil {
 		if len([]byte(*b.CallbackData)) > 64 {
-			return errs.ErrInvalidParam("callback_data must not be longer than 64 bytes if specified")
+			return ErrInvalidParam("callback_data must not be longer than 64 bytes if specified")
 		}
 	}
 	if b.CopyText != nil {
@@ -2019,7 +2027,7 @@ type LoginUrl struct {
 
 func (l LoginUrl) Validate() error {
 	if strings.TrimSpace(l.Url) == "" {
-		return errs.ErrInvalidParam("url paramter can't be empty")
+		return ErrInvalidParam("url paramter can't be empty")
 	}
 	return nil
 }
@@ -2046,7 +2054,7 @@ type CopyTextButton struct {
 
 func (c CopyTextButton) Validate() error {
 	if len(c.Text) < 1 || len(c.Text) > 256 {
-		return errs.ErrInvalidParam("text parameter must be between 1 and 256 characters")
+		return ErrInvalidParam("text parameter must be between 1 and 256 characters")
 	}
 	return nil
 }
@@ -2618,10 +2626,10 @@ func (r ReactionTypeEmoji) reactionTypeEmojiContract() {}
 
 func (r ReactionTypeEmoji) Validate() error {
 	if strings.TrimSpace(r.Emoji) == "" {
-		return errs.ErrInvalidParam("emoji paramter can't be empty")
+		return ErrInvalidParam("emoji paramter can't be empty")
 	}
 	if r.Type != "emoji" {
-		return errs.ErrInvalidParam("type must be \"emoji\"")
+		return ErrInvalidParam("type must be \"emoji\"")
 	}
 	return nil
 }
@@ -2638,10 +2646,10 @@ func (r ReactionTypeCustomEmoji) reactionTypeEmojiContract() {}
 
 func (r ReactionTypeCustomEmoji) Validate() error {
 	if strings.TrimSpace(r.CustomEmojiId) == "" {
-		return errs.ErrInvalidParam("custom_emoji_id paramter can't be empty")
+		return ErrInvalidParam("custom_emoji_id paramter can't be empty")
 	}
 	if r.Type != "custom_emoji" {
-		return errs.ErrInvalidParam("type must be \"custom_emoji\"")
+		return ErrInvalidParam("type must be \"custom_emoji\"")
 	}
 	return nil
 }
@@ -2656,7 +2664,7 @@ func (r ReactionTypePaid) reactionTypeEmojiContract() {}
 
 func (r ReactionTypePaid) Validate() error {
 	if r.Type != "paid" {
-		return errs.ErrInvalidParam("type must be\"paid\"")
+		return ErrInvalidParam("type must be\"paid\"")
 	}
 	return nil
 }
@@ -2723,13 +2731,13 @@ var valid_command = regexp.MustCompile(`^[a-z0-9_]+$`)
 
 func (b BotCommand) Validate() error {
 	if len(b.Command) < 1 || len(b.Command) > 32 {
-		return errs.ErrInvalidParam("command parameter must be between 1 and 32 characters")
+		return ErrInvalidParam("command parameter must be between 1 and 32 characters")
 	}
 	if !valid_command.MatchString(b.Command) {
-		return errs.ErrInvalidParam("command parameter can contain only lowercase English letters, digits and underscores")
+		return ErrInvalidParam("command parameter can contain only lowercase English letters, digits and underscores")
 	}
 	if len(b.Description) < 1 || len(b.Description) > 256 {
-		return errs.ErrInvalidParam("description parameter must be between 1 and 256 characters")
+		return ErrInvalidParam("description parameter must be between 1 and 256 characters")
 	}
 	return nil
 }
@@ -2846,7 +2854,7 @@ func (b BotCommandScopeDefault) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeDefault) Validate() error {
 	if b.Type != "default" {
-		return errs.ErrInvalidParam("type must be \"default\"")
+		return ErrInvalidParam("type must be \"default\"")
 	}
 	return nil
 }
@@ -2863,7 +2871,7 @@ func (b BotCommandScopeAllPrivateChats) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeAllPrivateChats) Validate() error {
 	if b.Type != "all_private_chats" {
-		return errs.ErrInvalidParam("type must be \"all_private_chats\"")
+		return ErrInvalidParam("type must be \"all_private_chats\"")
 	}
 	return nil
 }
@@ -2880,7 +2888,7 @@ func (b BotCommandScopeAllGroupChats) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeAllGroupChats) Validate() error {
 	if b.Type != "all_group_chats" {
-		return errs.ErrInvalidParam("type must be \"all_group_chats\"")
+		return ErrInvalidParam("type must be \"all_group_chats\"")
 	}
 	return nil
 }
@@ -2897,7 +2905,7 @@ func (b BotCommandScopeAllChatAdministrators) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeAllChatAdministrators) Validate() error {
 	if b.Type != "all_chat_administrators" {
-		return errs.ErrInvalidParam("type must be \"all_chat_administrators\"")
+		return ErrInvalidParam("type must be \"all_chat_administrators\"")
 	}
 	return nil
 }
@@ -2916,16 +2924,16 @@ func (b BotCommandScopeChat[T]) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeChat[T]) Validate() error {
 	if b.Type != "chat" {
-		return errs.ErrInvalidParam("type must be \"chat\"")
+		return ErrInvalidParam("type must be \"chat\"")
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return errs.ErrInvalidParam("chat_id paramter can't be empty")
+			return ErrInvalidParam("chat_id paramter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
 		if c == 0 {
-			return errs.ErrInvalidParam("chat_id parameter can't be empty")
+			return ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -2945,16 +2953,16 @@ func (b BotCommandScopeChatAdministrators[T]) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeChatAdministrators[T]) Validate() error {
 	if b.Type != "chat_administrators" {
-		return errs.ErrInvalidParam("type must be \"chat_administrators\"")
+		return ErrInvalidParam("type must be \"chat_administrators\"")
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return errs.ErrInvalidParam("chat_id paramter can't be empty")
+			return ErrInvalidParam("chat_id paramter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
 		if c == 0 {
-			return errs.ErrInvalidParam("chat_id parameter can't be empty")
+			return ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -2976,20 +2984,20 @@ func (b BotCommandScopeChatMember[T]) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeChatMember[T]) Validate() error {
 	if b.Type != "chat_member" {
-		return errs.ErrInvalidParam("type must be \"chat_member\"")
+		return ErrInvalidParam("type must be \"chat_member\"")
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return errs.ErrInvalidParam("chat_id paramter can't be empty")
+			return ErrInvalidParam("chat_id paramter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
 		if c == 0 {
-			return errs.ErrInvalidParam("chat_id parameter can't be empty")
+			return ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if b.UserId < 1 {
-		return errs.ErrInvalidParam("user_id parameter can't be empty")
+		return ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3076,7 +3084,7 @@ type MenuButtonCommands struct {
 
 func (m MenuButtonCommands) Validate() error {
 	if m.Type != "commands" {
-		return errs.ErrInvalidParam("type must be \"commands\"")
+		return ErrInvalidParam("type must be \"commands\"")
 	}
 	return nil
 }
@@ -3104,10 +3112,10 @@ func (m MenuButtonWebApp) GetMenuButtonType() string {
 
 func (m MenuButtonWebApp) Validate() error {
 	if m.Type != "web_app" {
-		return errs.ErrInvalidParam("type must be \"web_app\"")
+		return ErrInvalidParam("type must be \"web_app\"")
 	}
 	if strings.TrimSpace(m.Text) == "" {
-		return errs.ErrInvalidParam("text parameter can't be empty")
+		return ErrInvalidParam("text parameter can't be empty")
 	}
 	if err := m.WebAppInfo.Validate(); err != nil {
 		return err
@@ -3123,7 +3131,7 @@ type MenuButtonDefault struct {
 
 func (m MenuButtonDefault) Validate() error {
 	if m.Type != "default" {
-		return errs.ErrInvalidParam("type must be \"default\"")
+		return ErrInvalidParam("type must be \"default\"")
 	}
 	return nil
 }
@@ -3366,15 +3374,15 @@ func (i *InputMediaPhoto) SetInputMedia(media string, isNew bool) {
 
 func (i InputMediaPhoto) Validate() error {
 	if i.Type != "photo" {
-		return errs.ErrInvalidParam("type must be photo")
+		return ErrInvalidParam("type must be photo")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return errs.ErrInvalidParam("media parameter can't be empty")
+		return ErrInvalidParam("media parameter can't be empty")
 	}
 
 	if i.isNew {
 		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return errs.ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
 		}
 	}
 
@@ -3437,15 +3445,15 @@ func (i *InputMediaVideo[T]) SetInputMedia(media string, isNew bool) {
 
 func (i InputMediaVideo[t]) Validate() error {
 	if i.Type != "video" {
-		return errs.ErrInvalidParam("type must be video")
+		return ErrInvalidParam("type must be video")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return errs.ErrInvalidParam("media parameter can't be empty")
+		return ErrInvalidParam("media parameter can't be empty")
 	}
 
 	if i.isNew {
 		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return errs.ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
 		}
 	}
 
@@ -3506,15 +3514,15 @@ func (i *InputMediaAnimation[T]) SetInputMedia(media string, isNew bool) {
 
 func (i InputMediaAnimation[T]) Validate() error {
 	if i.Type != "animation" {
-		return errs.ErrInvalidParam("type must be animation")
+		return ErrInvalidParam("type must be animation")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return errs.ErrInvalidParam("media parameter can't be empty")
+		return ErrInvalidParam("media parameter can't be empty")
 	}
 
 	if i.isNew {
 		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return errs.ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
 		}
 	}
 	return nil
@@ -3570,15 +3578,15 @@ func (i *InputMediaAudio) SetInputMedia(media string, isNew bool) {
 
 func (i InputMediaAudio) Validate() error {
 	if i.Type != "audio" {
-		return errs.ErrInvalidParam("type must be audio")
+		return ErrInvalidParam("type must be audio")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return errs.ErrInvalidParam("media parameter can't be empty")
+		return ErrInvalidParam("media parameter can't be empty")
 	}
 
 	if i.isNew {
 		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return errs.ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
 		}
 	}
 	return nil
@@ -3631,15 +3639,15 @@ func (i *InputMediaDocument) SetInputMedia(media string, isNew bool) {
 
 func (i InputMediaDocument) Validate() error {
 	if i.Type != "document" {
-		return errs.ErrInvalidParam("type must be document")
+		return ErrInvalidParam("type must be document")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return errs.ErrInvalidParam("media parameter can't be empty")
+		return ErrInvalidParam("media parameter can't be empty")
 	}
 
 	if i.isNew {
 		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return errs.ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
 		}
 	}
 	return nil
@@ -3657,7 +3665,7 @@ func (i InputFile) Validate() error {
 	case attachmentRegex.MatchString(string(i)):
 		return nil
 	default:
-		return errs.ErrInvalidParam(
+		return ErrInvalidParam(
 			"invalid media parameter. Please refer to: https://core.telegram.org/bots/api#sending-files",
 		)
 	}
@@ -3699,15 +3707,15 @@ type InputPaidMediaPhoto struct {
 
 func (i InputPaidMediaPhoto) Validate() error {
 	if i.Type != "photo" {
-		return errs.ErrInvalidParam("type must be photo")
+		return ErrInvalidParam("type must be photo")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return errs.ErrInvalidParam("media parameter can't be empty")
+		return ErrInvalidParam("media parameter can't be empty")
 	}
 
 	if i.isNew {
 		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return errs.ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
 		}
 	}
 	return nil
@@ -3771,15 +3779,15 @@ func (i *InputPaidMediaVideo) SetInputPaidMedia(media string, isNew bool) {
 
 func (i InputPaidMediaVideo) Validate() error {
 	if i.Type != "video" {
-		return errs.ErrInvalidParam("type must be video")
+		return ErrInvalidParam("type must be video")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return errs.ErrInvalidParam("media parameter can't be empty")
+		return ErrInvalidParam("media parameter can't be empty")
 	}
 
 	if i.isNew {
 		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return errs.ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
 		}
 	}
 	return nil

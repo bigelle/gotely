@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
-
-	errors1 "github.com/bigelle/tele.go/errors"
 )
 
 type PassportData struct {
@@ -108,16 +106,16 @@ func (p PassportElementErrorDataField) passportElementErrorContract() {}
 
 func (p PassportElementErrorDataField) Validate() error {
 	if strings.TrimSpace(p.Type) == "" {
-		return errors1.ErrInvalidParam("type parameter can't be empty")
+		return ErrInvalidParam("type parameter can't be empty")
 	}
 	if strings.TrimSpace(p.DataHash) == "" {
-		return errors1.ErrInvalidParam("data_hash parameter can't be empty")
+		return ErrInvalidParam("data_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return errors1.ErrInvalidParam("message parameter can't be empty")
+		return ErrInvalidParam("message parameter can't be empty")
 	}
 	if strings.TrimSpace(p.FieldName) == "" {
-		return errors1.ErrInvalidParam("field_name parameter can't be empty")
+		return ErrInvalidParam("field_name parameter can't be empty")
 	}
 	return nil
 }
@@ -133,13 +131,13 @@ func (p PassportElementErrorFile) passportElementErrorContract() {}
 
 func (p PassportElementErrorFile) Validate() error {
 	if strings.TrimSpace(p.Type) == "" {
-		return errors1.ErrInvalidParam("type parameter can't be empty")
+		return ErrInvalidParam("type parameter can't be empty")
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
+		return ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return errors1.ErrInvalidParam("message parameter can't be empty")
+		return ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -155,13 +153,13 @@ func (p PassportElementErrorFiles) passportElementErrorContract() {}
 
 func (p PassportElementErrorFiles) Validate() error {
 	if strings.TrimSpace(p.Type) == "" {
-		return errors1.ErrInvalidParam("type parameter can't be empty")
+		return ErrInvalidParam("type parameter can't be empty")
 	}
 	if len(p.FileHashes) == 0 {
-		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
+		return ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return errors1.ErrInvalidParam("message parameter can't be empty")
+		return ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -177,13 +175,13 @@ func (p PassportElementErrorFrontSide) passportElementErrorContract() {}
 
 func (p PassportElementErrorFrontSide) Validate() error {
 	if strings.TrimSpace(p.Type) == "" {
-		return errors1.ErrInvalidParam("type parameter can't be empty")
+		return ErrInvalidParam("type parameter can't be empty")
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
+		return ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return errors1.ErrInvalidParam("message parameter can't be empty")
+		return ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -199,13 +197,13 @@ func (p PassportElementErrorReverseSide) passportElementErrorContract() {}
 
 func (p PassportElementErrorReverseSide) Validate() error {
 	if strings.TrimSpace(p.Type) == "" {
-		return errors1.ErrInvalidParam("type parameter can't be empty")
+		return ErrInvalidParam("type parameter can't be empty")
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
+		return ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return errors1.ErrInvalidParam("message parameter can't be empty")
+		return ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -221,13 +219,13 @@ func (p PassportElementErrorSelfie) passportElementErrorContract() {}
 
 func (p PassportElementErrorSelfie) Validate() error {
 	if strings.TrimSpace(p.Type) == "" {
-		return errors1.ErrInvalidParam("type parameter can't be empty")
+		return ErrInvalidParam("type parameter can't be empty")
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
+		return ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return errors1.ErrInvalidParam("message parameter can't be empty")
+		return ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -243,13 +241,13 @@ func (p PassportElementErrorTranslationFile) passportElementErrorContract() {}
 
 func (p PassportElementErrorTranslationFile) Validate() error {
 	if strings.TrimSpace(p.Type) == "" {
-		return errors1.ErrInvalidParam("type parameter can't be empty")
+		return ErrInvalidParam("type parameter can't be empty")
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return errors1.ErrInvalidParam("file_hash parameter can't be empty")
+		return ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return errors1.ErrInvalidParam("message parameter can't be empty")
+		return ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -265,13 +263,13 @@ func (p PassportElementErrorTranslationFiles) passportElementErrorContract() {}
 
 func (p PassportElementErrorTranslationFiles) Validate() error {
 	if strings.TrimSpace(p.Type) == "" {
-		return errors1.ErrInvalidParam("type parameter can't be empty")
+		return ErrInvalidParam("type parameter can't be empty")
 	}
 	if len(p.FileHashes) == 0 {
-		return errors1.ErrInvalidParam("file_hashes parameter can't be empty")
+		return ErrInvalidParam("file_hashes parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return errors1.ErrInvalidParam("message parameter can't be empty")
+		return ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -287,13 +285,13 @@ func (p PassportElementErrorUnspecified) passportElementErrorContract() {}
 
 func (p PassportElementErrorUnspecified) Validate() error {
 	if strings.TrimSpace(p.Type) == "" {
-		return errors1.ErrInvalidParam("type parameter can't be empty")
+		return ErrInvalidParam("type parameter can't be empty")
 	}
 	if strings.TrimSpace(p.ElementHash) == "" {
-		return errors1.ErrInvalidParam("element_hashe parameter can't be empty")
+		return ErrInvalidParam("element_hashe parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return errors1.ErrInvalidParam("message parameter can't be empty")
+		return ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }

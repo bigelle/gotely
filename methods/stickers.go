@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
@@ -30,12 +29,12 @@ type SendSticker[T int | string, B types.InputFile | string] struct {
 func (s SendSticker[T, B]) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(s.ChatId).(int); ok {
 		if c < 1 {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if p, ok := any(s.Sticker).(types.InputFile); ok {
@@ -45,7 +44,7 @@ func (s SendSticker[T, B]) Validate() error {
 	}
 	if p, ok := any(s.Sticker).(string); ok {
 		if strings.TrimSpace(p) == "" {
-			return errors.ErrInvalidParam("photo parameter can't be empty")
+			return types.ErrInvalidParam("photo parameter can't be empty")
 		}
 	}
 	return nil
@@ -65,7 +64,7 @@ type GetStickerSet struct {
 
 func (g GetStickerSet) Validate() error {
 	if strings.TrimSpace(g.Name) == "" {
-		return errors.ErrInvalidParam("name parameter can't be empty")
+		return types.ErrInvalidParam("name parameter can't be empty")
 	}
 	return nil
 }
@@ -84,7 +83,7 @@ type GetCustomEmojiStickers struct {
 
 func (g GetCustomEmojiStickers) Validate() error {
 	if len(g.CustomEmojiIds) == 0 {
-		return errors.ErrInvalidParam("custom_emoji_ids parameter can't be empty")
+		return types.ErrInvalidParam("custom_emoji_ids parameter can't be empty")
 	}
 	return nil
 }
@@ -111,13 +110,13 @@ var allowed_formats = []string{
 
 func (u UploadStickerFile) Validate() error {
 	if u.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if err := u.Sticker.Validate(); err != nil {
 		return err
 	}
 	if !slices.Contains(allowed_formats, u.StickerFormat) {
-		return errors.ErrInvalidParam("sticker_format must be one of \"static\", \"animated\", \"video\"")
+		return types.ErrInvalidParam("sticker_format must be one of \"static\", \"animated\", \"video\"")
 	}
 	return nil
 }
@@ -149,19 +148,19 @@ var valid_stickertypes = []string{
 
 func (c CreateNewStickerSet) Validate() error {
 	if c.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if len(c.Name) < 1 || len(c.Name) > 64 {
-		return errors.ErrInvalidParam("name parameter must be between 1 and 64 characters")
+		return types.ErrInvalidParam("name parameter must be between 1 and 64 characters")
 	}
 	if !valid_stickerset_name.MatchString(c.Name) {
-		return errors.ErrInvalidParam("name parameter can contain only English letters, digits and underscores")
+		return types.ErrInvalidParam("name parameter can contain only English letters, digits and underscores")
 	}
 	if consecutive_underscores.MatchString(c.Name) {
-		return errors.ErrInvalidParam("name parameter can't contain consecutive underscores")
+		return types.ErrInvalidParam("name parameter can't contain consecutive underscores")
 	}
 	if len(c.Title) < 1 || len(c.Title) > 64 {
-		return errors.ErrInvalidParam("title parameter must be between 1 and 64 characters")
+		return types.ErrInvalidParam("title parameter must be between 1 and 64 characters")
 	}
 	for _, sticker := range c.Stickers {
 		if err := sticker.Validate(); err != nil {
@@ -170,7 +169,7 @@ func (c CreateNewStickerSet) Validate() error {
 	}
 	if c.StickerType != nil {
 		if !slices.Contains(valid_stickertypes, *c.StickerType) {
-			return errors.ErrInvalidParam("sticker_type must be \"regular\", \"mask\" or \"custom_emoji\"")
+			return types.ErrInvalidParam("sticker_type must be \"regular\", \"mask\" or \"custom_emoji\"")
 		}
 	}
 	return nil
@@ -192,10 +191,10 @@ type AddStickerToSet struct {
 
 func (a AddStickerToSet) Validate() error {
 	if a.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(a.Name) == "" {
-		return errors.ErrInvalidParam("name parameter can't be empty")
+		return types.ErrInvalidParam("name parameter can't be empty")
 	}
 	if err := a.Sticker.Validate(); err != nil {
 		return err
@@ -218,10 +217,10 @@ type SetStickerPositionInSet struct {
 
 func (s SetStickerPositionInSet) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return errors.ErrInvalidParam("sticker parameter can't be empty")
+		return types.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if s.Position < 0 {
-		return errors.ErrInvalidParam("position parameter must be positive")
+		return types.ErrInvalidParam("position parameter must be positive")
 	}
 	return nil
 }
@@ -240,7 +239,7 @@ type DeleteStickerFromSet struct {
 
 func (d DeleteStickerFromSet) Validate() error {
 	if strings.TrimSpace(d.Sticker) == "" {
-		return errors.ErrInvalidParam("sticker parameter can't be empty")
+		return types.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	return nil
 }
@@ -262,13 +261,13 @@ type ReplaceStickerInSet struct {
 
 func (r ReplaceStickerInSet) Validate() error {
 	if r.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(r.OldSticker) == "" {
-		return errors.ErrInvalidParam("old_sticker parameter can't be empty")
+		return types.ErrInvalidParam("old_sticker parameter can't be empty")
 	}
 	if strings.TrimSpace(r.Name) == "" {
-		return errors.ErrInvalidParam("name parameter can't be empty")
+		return types.ErrInvalidParam("name parameter can't be empty")
 	}
 	if err := r.Sticker.Validate(); err != nil {
 		return err
@@ -291,10 +290,10 @@ type SetStickerEmojiList struct {
 
 func (s SetStickerEmojiList) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return errors.ErrInvalidParam("sticker parameter can't be empty")
+		return types.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if len(s.EmojiList) < 1 || len(s.EmojiList) > 20 {
-		return errors.ErrInvalidParam("emoji_list parameter can contain only 1-20 elements")
+		return types.ErrInvalidParam("emoji_list parameter can contain only 1-20 elements")
 	}
 	return nil
 }
@@ -314,11 +313,11 @@ type SetStickerKeywords struct {
 
 func (s SetStickerKeywords) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return errors.ErrInvalidParam("sticker parameter can't be empty")
+		return types.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if s.Keywords != nil {
 		if len(*s.Keywords) > 20 {
-			return errors.ErrInvalidParam("keywords parameter can't be longer than 20")
+			return types.ErrInvalidParam("keywords parameter can't be longer than 20")
 		}
 	}
 	return nil
@@ -339,7 +338,7 @@ type SetStickerMaskPosition struct {
 
 func (s SetStickerMaskPosition) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return errors.ErrInvalidParam("sticker parameter can't be empty")
+		return types.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if s.MaskPosition != nil {
 		if err := s.MaskPosition.Validate(); err != nil {
@@ -364,10 +363,10 @@ type SetStickerSetTitle struct {
 
 func (s SetStickerSetTitle) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return errors.ErrInvalidParam("name parameter can't be empty")
+		return types.ErrInvalidParam("name parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Title) == "" {
-		return errors.ErrInvalidParam("title parameter can't be empty")
+		return types.ErrInvalidParam("title parameter can't be empty")
 	}
 	return nil
 }
@@ -395,10 +394,10 @@ var valid_stickerset_thumbnail = []string{
 
 func (s SetStickerSetThumbnail[T]) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return errors.ErrInvalidParam("name parameter can't be empty")
+		return types.ErrInvalidParam("name parameter can't be empty")
 	}
 	if s.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if s.Thumbnail != nil {
 		if t, ok := any(*s.Thumbnail).(types.InputFile); ok {
@@ -408,12 +407,12 @@ func (s SetStickerSetThumbnail[T]) Validate() error {
 		}
 		if t, ok := any(*s.Thumbnail).(string); ok {
 			if strings.TrimSpace(t) == "" {
-				return errors.ErrInvalidParam("thumbnail file id can't be empty")
+				return types.ErrInvalidParam("thumbnail file id can't be empty")
 			}
 		}
 	}
 	if !slices.Contains(valid_stickerset_thumbnail, s.Format) {
-		return errors.ErrInvalidParam("format parameter must be one of “static”, “animated” or “video”")
+		return types.ErrInvalidParam("format parameter must be one of “static”, “animated” or “video”")
 	}
 	return nil
 }
@@ -433,11 +432,11 @@ type SetCustomEmojiStickerSetThumbnail struct {
 
 func (s SetCustomEmojiStickerSetThumbnail) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return errors.ErrInvalidParam("name parameter can't be empty")
+		return types.ErrInvalidParam("name parameter can't be empty")
 	}
 	if s.CustomEmojiId != nil {
 		if strings.TrimSpace(*s.CustomEmojiId) == "" {
-			return errors.ErrInvalidParam("custom_emoji_id parameter can't be empty")
+			return types.ErrInvalidParam("custom_emoji_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -457,7 +456,7 @@ type DeleteStickerSet struct {
 
 func (d DeleteStickerSet) Validate() error {
 	if strings.TrimSpace(d.Name) == "" {
-		return errors.ErrInvalidParam("name parameter can't be empty")
+		return types.ErrInvalidParam("name parameter can't be empty")
 	}
 	return nil
 }
@@ -495,18 +494,18 @@ type SendGift struct {
 
 func (s SendGift) Validate() error {
 	if s.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.GiftId) == "" {
-		return errors.ErrInvalidParam("gift_id parameter can't be empty")
+		return types.ErrInvalidParam("gift_id parameter can't be empty")
 	}
 	if s.Text != nil {
 		if len(*s.Text) > 255 {
-			return errors.ErrInvalidParam("text parameter must not be longer than 255 characters")
+			return types.ErrInvalidParam("text parameter must not be longer than 255 characters")
 		}
 	}
 	if s.TextParseMode != nil && s.TextEntities != nil {
-		return errors.ErrInvalidParam("parse_mode can't be used if entities are provided")
+		return types.ErrInvalidParam("parse_mode can't be used if entities are provided")
 	}
 	return nil
 }

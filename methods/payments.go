@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
@@ -45,25 +44,25 @@ type SendInvoice[T int | string] struct {
 func (s SendInvoice[T]) Validate() error {
 	if c, ok := any(s.ChatId).(int); ok {
 		if c == 0 {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if len(s.Title) < 1 || len(s.Title) > 32 {
-		return errors.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
+		return types.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
 	}
 	if len(s.Description) < 1 || len(s.Description) > 255 {
-		return errors.ErrInvalidParam("description parameter must be between 1 and 255 characters long")
+		return types.ErrInvalidParam("description parameter must be between 1 and 255 characters long")
 	}
 	if len([]byte(s.Payload)) < 1 || len([]byte(s.Payload)) > 128 {
-		return errors.ErrInvalidParam("payload parameter must be between 1 and 128 bytes long")
+		return types.ErrInvalidParam("payload parameter must be between 1 and 128 bytes long")
 	}
 	if len(s.Prices) < 1 {
-		return errors.ErrInvalidParam("prices parameter can't be empty")
+		return types.ErrInvalidParam("prices parameter can't be empty")
 	}
 	for _, price := range s.Prices {
 		if err := price.Validate(); err != nil {
@@ -72,23 +71,23 @@ func (s SendInvoice[T]) Validate() error {
 	}
 	if s.SuggestedTipAmounts != nil {
 		if len(*s.SuggestedTipAmounts) > 4 {
-			return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
+			return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
 		}
 		if (*s.SuggestedTipAmounts)[0] < 0 {
-			return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
+			return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
 		}
 		if s.MaxTipAmount != nil && (*s.SuggestedTipAmounts)[0] > *s.MaxTipAmount {
-			return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
+			return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
 		}
 		for i := 1; i < len(*s.SuggestedTipAmounts); i++ {
 			if (*s.SuggestedTipAmounts)[i] < 0 {
-				return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
+				return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
 			}
 			if (*s.SuggestedTipAmounts)[i-1] > (*s.SuggestedTipAmounts)[i] {
-				return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be passed in a strictly increased order")
+				return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be passed in a strictly increased order")
 			}
 			if s.MaxTipAmount != nil && (*s.SuggestedTipAmounts)[i] > *s.MaxTipAmount {
-				return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
+				return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
 			}
 		}
 	}
@@ -130,16 +129,16 @@ type CreateInvoiceLink struct {
 
 func (c CreateInvoiceLink) Validate() error {
 	if len(c.Title) < 1 || len(c.Title) > 32 {
-		return errors.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
+		return types.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
 	}
 	if len(c.Description) < 1 || len(c.Description) > 255 {
-		return errors.ErrInvalidParam("description parameter must be between 1 and 255 characters long")
+		return types.ErrInvalidParam("description parameter must be between 1 and 255 characters long")
 	}
 	if len([]byte(c.Payload)) < 1 || len([]byte(c.Payload)) > 128 {
-		return errors.ErrInvalidParam("payload parameter must be between 1 and 128 bytes long")
+		return types.ErrInvalidParam("payload parameter must be between 1 and 128 bytes long")
 	}
 	if len(c.Prices) < 1 {
-		return errors.ErrInvalidParam("prices parameter can't be empty")
+		return types.ErrInvalidParam("prices parameter can't be empty")
 	}
 	for _, price := range c.Prices {
 		if err := price.Validate(); err != nil {
@@ -148,23 +147,23 @@ func (c CreateInvoiceLink) Validate() error {
 	}
 	if c.SuggestedTipAmounts != nil {
 		if len(*c.SuggestedTipAmounts) > 4 {
-			return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
+			return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
 		}
 		if (*c.SuggestedTipAmounts)[0] < 0 {
-			return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
+			return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
 		}
 		if c.MaxTipAmount != nil && (*c.SuggestedTipAmounts)[0] > *c.MaxTipAmount {
-			return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
+			return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
 		}
 		for i := 1; i < len(*c.SuggestedTipAmounts); i++ {
 			if (*c.SuggestedTipAmounts)[i] < 0 {
-				return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
+				return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
 			}
 			if (*c.SuggestedTipAmounts)[i-1] > (*c.SuggestedTipAmounts)[i] {
-				return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be passed in a strictly increased order")
+				return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be passed in a strictly increased order")
 			}
 			if c.MaxTipAmount != nil && (*c.SuggestedTipAmounts)[i] > *c.MaxTipAmount {
-				return errors.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
+				return types.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
 			}
 		}
 	}
@@ -188,13 +187,13 @@ type AnswerShippingQuery struct {
 
 func (a AnswerShippingQuery) Validate() error {
 	if strings.TrimSpace(a.ShippingQueryId) == "" {
-		return errors.ErrInvalidParam("shipping_query_id parameter can't be empty")
+		return types.ErrInvalidParam("shipping_query_id parameter can't be empty")
 	}
 	if a.Ok && a.ShippingOptions == nil {
-		return errors.ErrInvalidParam("shipping_options parameter can't be empty if ok == true")
+		return types.ErrInvalidParam("shipping_options parameter can't be empty if ok == true")
 	}
 	if !a.Ok && a.ErrorMessage == nil {
-		return errors.ErrInvalidParam("error_message parameter can't be empty if ok == false")
+		return types.ErrInvalidParam("error_message parameter can't be empty if ok == false")
 	}
 	if a.ShippingOptions != nil {
 		for _, opt := range *a.ShippingOptions {
@@ -222,10 +221,10 @@ type AnswerPreCheckoutQuery struct {
 
 func (a AnswerPreCheckoutQuery) Validate() error {
 	if strings.TrimSpace(a.PreCheckoutQueryId) == "" {
-		return errors.ErrInvalidParam("pre_checkout_query_id parameter can't be empty")
+		return types.ErrInvalidParam("pre_checkout_query_id parameter can't be empty")
 	}
 	if !a.Ok && a.ErrorMessage == nil {
-		return errors.ErrInvalidParam("error_message parameter can't be empty if ok == false")
+		return types.ErrInvalidParam("error_message parameter can't be empty if ok == false")
 	}
 	return nil
 }
@@ -246,7 +245,7 @@ type GetStarTransactions struct {
 func (g GetStarTransactions) Validate() error {
 	if g.Limit != nil {
 		if *g.Limit < 1 || *g.Limit > 100 {
-			return errors.ErrInvalidParam("limit parameter must be between 1 and 100")
+			return types.ErrInvalidParam("limit parameter must be between 1 and 100")
 		}
 	}
 	return nil
@@ -269,10 +268,10 @@ type RefundStarPayment struct {
 
 func (r RefundStarPayment) Validate() error {
 	if r.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(r.TelegramPaymentChargeId) == "" {
-		return errors.ErrInvalidParam("telegram_payment_charge_id parameter can't be empty")
+		return types.ErrInvalidParam("telegram_payment_charge_id parameter can't be empty")
 	}
 	return nil
 }
@@ -293,10 +292,10 @@ type EditUserStarSubscription struct {
 
 func (e EditUserStarSubscription) Validate() error {
 	if e.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.TelegramPaymentChargeId) == "" {
-		return errors.ErrInvalidParam("telegram_payment_charge_id parameter can't be empty")
+		return types.ErrInvalidParam("telegram_payment_charge_id parameter can't be empty")
 	}
 	return nil
 }

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
@@ -38,38 +37,38 @@ type EditMessageText[T int | string] struct {
 
 func (e EditMessageText[T]) Validate() error {
 	if len(e.Text) < 1 || len(e.Text) > 4096 {
-		return errors.ErrInvalidParam("text parameter must be between 1 and 4096 characters")
+		return types.ErrInvalidParam("text parameter must be between 1 and 4096 characters")
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return errors.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return types.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
 				if strings.TrimSpace(c) == "" {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 			if c, ok := any(*e.ChatId).(int); ok {
 				if c < 1 {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 		}
 		if e.MessageId == nil {
-			return errors.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if *e.MessageId < 1 {
-				return errors.ErrInvalidParam("message_id parameter can't be empty")
+				return types.ErrInvalidParam("message_id parameter can't be empty")
 			}
 		}
 	}
 	if e.Entities != nil && e.ParseMode != nil {
-		return errors.ErrInvalidParam("entities can't be used if parse_mode is provided")
+		return types.ErrInvalidParam("entities can't be used if parse_mode is provided")
 	}
 	if e.ReplyMarkup != nil {
 		if err := e.ReplyMarkup.Validate(); err != nil {
@@ -116,39 +115,39 @@ type EditMessageCaption[T int | string] struct {
 func (e EditMessageCaption[T]) Validate() error {
 	if e.Caption != nil {
 		if len(*e.Caption) < 1 || len(*e.Caption) > 4096 {
-			return errors.ErrInvalidParam("caption parameter must be between 1 and 4096 characters")
+			return types.ErrInvalidParam("caption parameter must be between 1 and 4096 characters")
 		}
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return errors.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return types.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
 				if strings.TrimSpace(c) == "" {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 			if c, ok := any(*e.ChatId).(int); ok {
 				if c < 1 {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 		}
 		if e.MessageId == nil {
-			return errors.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if *e.MessageId < 1 {
-				return errors.ErrInvalidParam("message_id parameter can't be empty")
+				return types.ErrInvalidParam("message_id parameter can't be empty")
 			}
 		}
 	}
 	if e.Entities != nil && e.ParseMode != nil {
-		return errors.ErrInvalidParam("entities can't be used if parse_mode is provided")
+		return types.ErrInvalidParam("entities can't be used if parse_mode is provided")
 	}
 	if e.ReplyMarkup != nil {
 		if err := e.ReplyMarkup.Validate(); err != nil {
@@ -196,29 +195,29 @@ func (e EditMessageMedia[T]) Validate() error {
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return errors.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return types.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
 				if strings.TrimSpace(c) == "" {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 			if c, ok := any(*e.ChatId).(int); ok {
 				if c < 1 {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 		}
 		if e.MessageId == nil {
-			return errors.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if *e.MessageId < 1 {
-				return errors.ErrInvalidParam("message_id parameter can't be empty")
+				return types.ErrInvalidParam("message_id parameter can't be empty")
 			}
 		}
 	}
@@ -268,46 +267,46 @@ type EditMessageLiveLocation[T int | string] struct {
 
 func (e EditMessageLiveLocation[T]) Validate() error {
 	if e.Latitude == nil {
-		return errors.ErrInvalidParam("latitude parameter can't be empty")
+		return types.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if e.Longtitude == nil {
-		return errors.ErrInvalidParam("longtitude parameter can't be empty")
+		return types.ErrInvalidParam("longtitude parameter can't be empty")
 	}
 	if e.HorizontalAccuracy != nil {
 		if *e.HorizontalAccuracy < 0 || *e.HorizontalAccuracy > 1500 {
-			return errors.ErrInvalidParam("horizontal_accuracy parameter must be between 0 and 1500 meetrs")
+			return types.ErrInvalidParam("horizontal_accuracy parameter must be between 0 and 1500 meetrs")
 		}
 	}
 	if e.Heading != nil {
 		if *e.Heading < 1 || *e.Heading > 360 {
-			return errors.ErrInvalidParam("heading parameter must be between 1 and 360 degrees")
+			return types.ErrInvalidParam("heading parameter must be between 1 and 360 degrees")
 		}
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return errors.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return types.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
 				if strings.TrimSpace(c) == "" {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 			if c, ok := any(*e.ChatId).(int); ok {
 				if c < 1 {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 		}
 		if e.MessageId == nil {
-			return errors.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if *e.MessageId < 1 {
-				return errors.ErrInvalidParam("message_id parameter can't be empty")
+				return types.ErrInvalidParam("message_id parameter can't be empty")
 			}
 		}
 	}
@@ -352,29 +351,29 @@ type StopMessageLiveLocation[T int | string] struct {
 func (e StopMessageLiveLocation[T]) Validate() error {
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return errors.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return types.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
 				if strings.TrimSpace(c) == "" {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 			if c, ok := any(*e.ChatId).(int); ok {
 				if c < 1 {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 		}
 		if e.MessageId == nil {
-			return errors.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if *e.MessageId < 1 {
-				return errors.ErrInvalidParam("message_id parameter can't be empty")
+				return types.ErrInvalidParam("message_id parameter can't be empty")
 			}
 		}
 	}
@@ -419,29 +418,29 @@ type EditMessageReplyMarkup[T int | string] struct {
 func (e EditMessageReplyMarkup[T]) Validate() error {
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return errors.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return types.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
 				if strings.TrimSpace(c) == "" {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 			if c, ok := any(*e.ChatId).(int); ok {
 				if c < 1 {
-					return errors.ErrInvalidParam("chat_id parameter can't be empty")
+					return types.ErrInvalidParam("chat_id parameter can't be empty")
 				}
 			}
 		}
 		if e.MessageId == nil {
-			return errors.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return types.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if *e.MessageId < 1 {
-				return errors.ErrInvalidParam("message_id parameter can't be empty")
+				return types.ErrInvalidParam("message_id parameter can't be empty")
 			}
 		}
 	}

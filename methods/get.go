@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 	iso6391 "github.com/emvi/iso-639-1"
@@ -20,11 +19,11 @@ type GetUserProfilePhotos struct {
 
 func (g GetUserProfilePhotos) Validate() error {
 	if g.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if g.Limit != nil {
 		if *g.Limit < 1 || *g.Limit > 100 {
-			return errors.ErrInvalidParam("limit parameter must be between 1 and 100")
+			return types.ErrInvalidParam("limit parameter must be between 1 and 100")
 		}
 	}
 	return nil
@@ -44,7 +43,7 @@ type GetFile struct {
 
 func (g GetFile) Validate() error {
 	if strings.TrimSpace(g.FileId) == "" {
-		return errors.ErrInvalidParam("file_id parameter can't be empty")
+		return types.ErrInvalidParam("file_id parameter can't be empty")
 	}
 	return nil
 }
@@ -64,12 +63,12 @@ type GetChat[T int | string] struct {
 func (p GetChat[T]) Validate() error {
 	if c, ok := any(p.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(p.ChatId).(int); ok {
 		if c < 1 {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -90,12 +89,12 @@ type GetChatAdministrators[T int | string] struct {
 func (p GetChatAdministrators[T]) Validate() error {
 	if c, ok := any(p.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(p.ChatId).(int); ok {
 		if c < 1 {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -116,12 +115,12 @@ type GetChatMemberCount[T int | string] struct {
 func (p GetChatMemberCount[T]) Validate() error {
 	if c, ok := any(p.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(p.ChatId).(int); ok {
 		if c < 1 {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -143,16 +142,16 @@ type GetChatMember[T int | string] struct {
 func (p GetChatMember[T]) Validate() error {
 	if c, ok := any(p.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(p.ChatId).(int); ok {
 		if c < 1 {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if p.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -190,16 +189,16 @@ type GetUserChatBoosts[T int | string] struct {
 func (g GetUserChatBoosts[T]) Validate() error {
 	if c, ok := any(g.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(g.ChatId).(int); ok {
 		if c < 1 {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if g.UserId < 1 {
-		return errors.ErrInvalidParam("user_id parameter can't be empty")
+		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -218,7 +217,7 @@ type GetBusinessConnection struct {
 
 func (g GetBusinessConnection) Validate() error {
 	if strings.TrimSpace(g.BusinessConnectionId) == "" {
-		return errors.ErrInvalidParam("business_connection_id parameter can't be empty")
+		return types.ErrInvalidParam("business_connection_id parameter can't be empty")
 	}
 	return nil
 }
@@ -239,7 +238,7 @@ type GetMyCommands struct {
 func (s GetMyCommands) Validate() error {
 	if s.LanguageCode != nil && *s.LanguageCode != "" {
 		if !iso6391.ValidCode(*s.LanguageCode) {
-			return errors.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+			return types.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
 		}
 	}
 	return nil
@@ -261,7 +260,7 @@ func (s GetMyName) Validate() error {
 
 	if s.LanguageCode != nil && *s.LanguageCode != "" {
 		if !iso6391.ValidCode(*s.LanguageCode) {
-			return errors.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+			return types.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
 		}
 	}
 	return nil
@@ -282,7 +281,7 @@ type GetMyDescription struct {
 func (s GetMyDescription) Validate() error {
 	if s.LanguageCode != nil && *s.LanguageCode != "" {
 		if !iso6391.ValidCode(*s.LanguageCode) {
-			return errors.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+			return types.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
 		}
 	}
 	return nil
@@ -303,7 +302,7 @@ type GetMyShortDescription struct {
 func (s GetMyShortDescription) Validate() error {
 	if s.LanguageCode != nil && *s.LanguageCode != "" {
 		if !iso6391.ValidCode(*s.LanguageCode) {
-			return errors.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+			return types.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
 		}
 	}
 	return nil
@@ -324,7 +323,7 @@ type GetChatMenuButton struct {
 func (s GetChatMenuButton) Validate() error {
 	if s.ChatId != nil {
 		if *s.ChatId < 1 {
-			return errors.ErrInvalidParam("chat_id parameter can't be empty")
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	return nil

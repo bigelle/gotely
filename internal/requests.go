@@ -7,15 +7,28 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/bigelle/tele.go/errors"
 	"github.com/bigelle/tele.go/types"
 )
 
+type Executable interface {
+	types.Validable
+	ToRequestBody() ([]byte, error)
+}
+
 const api_url = "https://api.telegram.org/bot%s/%s"
+
+type ErrFailedRequest struct {
+	Code    int
+	Message string
+}
+
+func (e ErrFailedRequest) Error() string {
+	return fmt.Sprintf("request failed with code %d: %s", e.Code, e.Message)
+}
 
 func MakeRequest[T any](httpMethod, token, endpoint string, body Executable) (*T, error) {
 	if token == "" {
-		return nil, errors.ErrInvalidParam("token can't be empty. did you connect the bot?")
+		return nil, types.ErrInvalidParam("token can't be empty. did you connect the bot?")
 	}
 
 	if err := body.Validate(); err != nil {
@@ -38,7 +51,7 @@ func MakeRequest[T any](httpMethod, token, endpoint string, body Executable) (*T
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, errors.ErrFailedRequest{
+		return nil, ErrFailedRequest{
 			Code:    resp.StatusCode,
 			Message: err.Error(),
 		}
@@ -55,7 +68,7 @@ func MakeRequest[T any](httpMethod, token, endpoint string, body Executable) (*T
 		return nil, fmt.Errorf("can't unmarshal response body: %w", err)
 	}
 	if !apiResp.Ok {
-		return nil, errors.ErrFailedRequest{
+		return nil, ErrFailedRequest{
 			Code:    apiResp.ErrorCode,
 			Message: *apiResp.Description,
 		}

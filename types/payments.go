@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
-
-	errs "github.com/bigelle/tele.go/errors"
 )
 
 type StarTransaction struct {
@@ -181,10 +179,10 @@ type LabeledPrice struct {
 
 func (l LabeledPrice) Validate() error {
 	if strings.TrimSpace(l.Label) == "" {
-		return errs.ErrInvalidParam("label parameter can't be empty")
+		return ErrInvalidParam("label parameter can't be empty")
 	}
 	if l.Amount < 0 {
-		return errs.ErrInvalidParam("amount can't be less than zero")
+		return ErrInvalidParam("amount can't be less than zero")
 	}
 	return nil
 }
@@ -227,10 +225,10 @@ type ShippingOption struct {
 
 func (s ShippingOption) Validate() error {
 	if strings.TrimSpace(s.Id) == "" {
-		return errs.ErrInvalidParam("id parameter can't be empty")
+		return ErrInvalidParam("id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Title) == "" {
-		return errs.ErrInvalidParam("title parameter can't be empty")
+		return ErrInvalidParam("title parameter can't be empty")
 	}
 	for _, price := range s.Prices {
 		if err := price.Validate(); err != nil {
