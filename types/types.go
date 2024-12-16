@@ -1967,11 +1967,11 @@ type InlineKeyboardButton struct {
 	CopyText *CopyTextButton `json:"copy_text,omitempty"`
 	// 	Optional. Description of the game that will be launched when the user presses the button.
 	//
-	//NOTE: This type of button must always be the first button in the first row.
+	//IMPORTANT: This type of button must always be the first button in the first row.
 	CallbackGame *CallbackGame `json:"callback_game,omitempty"`
 	//Optional. Specify True, to send a Pay button. Substrings “⭐” and “XTR” in the buttons's text will be replaced with a Telegram Star icon.
 	//
-	//NOTE: This type of button must always be the first button in the first row and can only be used in invoice messages.
+	//IMPORTANT: This type of button must always be the first button in the first row and can only be used in invoice messages.
 	Pay *bool `json:"pay,omitempty"`
 }
 
@@ -2012,7 +2012,7 @@ type LoginUrl struct {
 	//If the user refuses to provide authorization data, the original URL without information about the user will be opened.
 	//The data added is the same as described in Receiving authorization data.
 	//
-	//NOTE: You must always check the hash of the received data to verify the authentication and
+	//IMPORTANT: You must always check the hash of the received data to verify the authentication and
 	//the integrity of the data as described in https://core.telegram.org/widgets/login#checking-authorization.
 	Url string `json:"url"` // FIXME: should somehow check the hash of the received data
 	//Optional. New text of the button in forwarded messages.
@@ -2064,7 +2064,7 @@ func (c CopyTextButton) Validate() error {
 // If the button was attached to a message sent via the bot (in inline mode), the field inline_message_id will be present.
 // Exactly one of the fields data or game_short_name will be present.
 //
-// NOTE: After the user presses a callback button, Telegram clients will display a progress bar until you call answerCallbackQuery.
+// IMPORTANT: After the user presses a callback button, Telegram clients will display a progress bar until you call answerCallbackQuery.
 // It is, therefore, necessary to react by calling answerCallbackQuery even if no notification to the user is needed
 // (e.g., without specifying any of the optional parameters).
 type CallbackQuery struct {
@@ -3335,7 +3335,7 @@ var (
 
 // Represents a photo to be sent.
 //
-// NOTE: It is strongly recommended to use the SetInputMedia method to ensure
+// IMPORTANT: It is strongly recommended to use the SetInputMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaPhoto struct {
@@ -3391,7 +3391,7 @@ func (i InputMediaPhoto) Validate() error {
 
 // Represents a video to be sent.
 //
-// NOTE: It is strongly recommended to use the SetInputMedia method to ensure
+// IMPORTANT: It is strongly recommended to use the SetInputMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaVideo[T InputFile | string] struct {
@@ -3462,7 +3462,7 @@ func (i InputMediaVideo[t]) Validate() error {
 
 // Represents an animation file (GIF or H.264/MPEG-4 AVC video without sound) to be sent.
 //
-// NOTE: It is strongly recommended to use the SetInputMedia method to ensure
+// IMPORTANT: It is strongly recommended to use the SetInputMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaAnimation[T InputFile | string] struct {
@@ -3530,7 +3530,7 @@ func (i InputMediaAnimation[T]) Validate() error {
 
 // Represents an audio file to be treated as music to be sent.
 //
-// NOTE: It is strongly recommended to use the SetInputMedia method to ensure
+// IMPORTANT: It is strongly recommended to use the SetInputMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaAudio struct {
@@ -3594,7 +3594,7 @@ func (i InputMediaAudio) Validate() error {
 
 // Represents a general file to be sent.
 //
-// NOTE: It is strongly recommended to use the SetInputMedia method to ensure
+// IMPORTANT: It is strongly recommended to use the SetInputMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaDocument struct {
@@ -3614,7 +3614,8 @@ type InputMediaDocument struct {
 	Thumbnail *InputFile `json:"thumbnail,omitempty"`
 	//Optional. Caption of the document to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
-	//Optional. Mode for parsing entities in the document caption. See formatting options for more details.
+	//Optional. Mode for parsing entities in the document caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
 	ParseMode *string `json:"parse_mode,omitempty"`
 	//Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
 	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
@@ -3691,7 +3692,7 @@ func (i InputPaidMedia) MarshalJSON() ([]byte, error) {
 
 // The paid media to send is a photo.
 //
-// NOTE: It is strongly recommended to use the SetInputPaidMedia method to ensure
+// IMPORTANT: It is strongly recommended to use the SetInputPaidMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputPaidMediaPhoto struct {
@@ -3735,7 +3736,8 @@ func (i *InputPaidMediaPhoto) SetInputPaidMedia(media string, isNew bool) {
 }
 
 // The paid media to send is a video.
-// NOTE: It is strongly recommended to use the SetInputPaidMedia method to ensure
+//
+// IMPORTANT: It is strongly recommended to use the SetInputPaidMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputPaidMediaVideo struct {

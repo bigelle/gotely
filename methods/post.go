@@ -2253,7 +2253,8 @@ func (s SetMyCommands) Validate() error {
 		}
 	}
 	if s.LanguageCode != nil && *s.LanguageCode != "" {
-		// FIXME: maybe should replace it with my own list of lang codes
+		// FIXME: should validate it using no dependencies
+		//https://ru.wikipedia.org/wiki/%D0%A1%D0%BF%D0%B8%D1%81%D0%BE%D0%BA_%D0%BA%D0%BE%D0%B4%D0%BE%D0%B2_ISO_639-1
 		if !iso6391.ValidCode(*s.LanguageCode) {
 			return types.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
 		}

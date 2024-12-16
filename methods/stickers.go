@@ -129,11 +129,11 @@ func (u UploadStickerFile) Execute() (*types.File, error) {
 	return internal.MakePostRequest[types.File](telego.GetToken(), "uploadStickerFile", u)
 }
 
-type CreateNewStickerSet struct {
+type CreateNewStickerSet[T types.InputFile | string] struct {
 	UserId          int
 	Name            string
 	Title           string
-	Stickers        []types.InputSticker
+	Stickers        []types.InputSticker[T]
 	StickerType     *string
 	NeedsRepainting *bool
 }
@@ -146,7 +146,7 @@ var valid_stickertypes = []string{
 	"custom_emoji",
 }
 
-func (c CreateNewStickerSet) Validate() error {
+func (c CreateNewStickerSet[T]) Validate() error {
 	if c.UserId < 1 {
 		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
@@ -175,21 +175,21 @@ func (c CreateNewStickerSet) Validate() error {
 	return nil
 }
 
-func (c CreateNewStickerSet) ToRequestBody() ([]byte, error) {
+func (c CreateNewStickerSet[T]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CreateNewStickerSet) Execute() (*bool, error) {
+func (c CreateNewStickerSet[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "createNewStickerSet", c)
 }
 
-type AddStickerToSet struct {
+type AddStickerToSet[T types.InputFile | string] struct {
 	UserId  int
 	Name    string
-	Sticker types.InputSticker
+	Sticker types.InputSticker[T]
 }
 
-func (a AddStickerToSet) Validate() error {
+func (a AddStickerToSet[T]) Validate() error {
 	if a.UserId < 1 {
 		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
@@ -202,11 +202,11 @@ func (a AddStickerToSet) Validate() error {
 	return nil
 }
 
-func (a AddStickerToSet) ToRequestBody() ([]byte, error) {
+func (a AddStickerToSet[T]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(a)
 }
 
-func (a AddStickerToSet) Execute() (*bool, error) {
+func (a AddStickerToSet[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "addStickerToSet", a)
 }
 
@@ -252,14 +252,14 @@ func (d DeleteStickerFromSet) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "deleteStickerFromSet", d)
 }
 
-type ReplaceStickerInSet struct {
+type ReplaceStickerInSet[T types.InputFile | string] struct {
 	UserId     int
 	Name       string
 	OldSticker string
-	Sticker    types.InputSticker
+	Sticker    types.InputSticker[T]
 }
 
-func (r ReplaceStickerInSet) Validate() error {
+func (r ReplaceStickerInSet[T]) Validate() error {
 	if r.UserId < 1 {
 		return types.ErrInvalidParam("user_id parameter can't be empty")
 	}
@@ -275,11 +275,11 @@ func (r ReplaceStickerInSet) Validate() error {
 	return nil
 }
 
-func (r ReplaceStickerInSet) ToRequestBody() ([]byte, error) {
+func (r ReplaceStickerInSet[T]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func (r ReplaceStickerInSet) Execute() (*bool, error) {
+func (r ReplaceStickerInSet[T]) Execute() (*bool, error) {
 	return internal.MakePostRequest[bool](telego.GetToken(), "replaceStickerInSet", r)
 }
 

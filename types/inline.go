@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -112,17 +111,9 @@ func (i InlineQueryResultsButton) Validate() error {
 // - InlineQueryResultVoice
 //
 // Note: All URLs passed in inline query results will be available to end users and therefore must be assumed to be public.
-type InlineQueryResult struct {
-	InlineQueryResultInterface
-}
-
-type InlineQueryResultInterface interface {
+type InlineQueryResult interface {
 	Validable
 	GetInlineQueryResultType() string
-}
-
-func (i InlineQueryResult) MarshalJSON() ([]byte, error) {
-	return json.Marshal(i.InlineQueryResultInterface)
 }
 
 // Represents a link to an article or web page.
@@ -208,7 +199,7 @@ type InlineQueryResultPhoto struct {
 	//Optional. Inline keyboard attached to the message
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 	//Optional. Content of the message to be sent instead of the photo
-	InputMessageContent *InputMessageContent `json:"input_message_content,omitempty"`
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
 func (i InlineQueryResultPhoto) GetInlineQueryResultType() string {
@@ -275,7 +266,7 @@ type InlineQueryResultGif struct {
 	//Optional. Pass True, if the caption must be shown above the message media
 	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
 	//Optional. Content of the message to be sent instead of the GIF animation
-	InputMessageContent *InputMessageContent `json:"input_message_content,omitempty"`
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 	//Optional. Inline keyboard attached to the message
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
@@ -347,7 +338,7 @@ type InlineQueryResultMpeg4Gif struct {
 	//Optional. Inline keyboard attached to the message
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 	//Optional. Content of the message to be sent instead of the video animation
-	InputMessageContent *InputMessageContent `json:"input_message_content,omitempty"`
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
 func (i InlineQueryResultMpeg4Gif) GetInlineQueryResultType() string {
@@ -424,7 +415,7 @@ type InlineQueryResultVideo struct {
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 	//Optional. Content of the message to be sent instead of the video.
 	//This field is required if InlineQueryResultVideo is used to send an HTML-page as a result (e.g., a YouTube video).
-	InputMessageContent *InputMessageContent `json:"input_message_content,omitempty"`
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
 func (i InlineQueryResultVideo) GetInlineQueryResultType() string {
@@ -493,7 +484,7 @@ type InlineQueryResultAudio struct {
 	//Optional. Inline keyboard attached to the message
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 	//Optional. Content of the message to be sent instead of the audio
-	InputMessageContent *InputMessageContent `json:"input_message_content,omitempty"`
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
 func (i InlineQueryResultAudio) GetInlineQueryResultType() string {
@@ -554,7 +545,7 @@ type InlineQueryResultVoice struct {
 	//Optional. Inline keyboard attached to the message
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 	//Optional. Content of the message to be sent instead of the voice recording
-	InputMessageContent *InputMessageContent `json:"input_message_content,omitempty"`
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
 func (i InlineQueryResultVoice) GetInlineQueryResultType() string {
@@ -617,7 +608,7 @@ type InlineQueryResultDocument struct {
 	//Optional. Inline keyboard attached to the message
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 	//Optional. Content of the message to be sent instead of the file
-	InputMessageContent *InputMessageContent `json:"input_message_content,omitempty"`
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 	//Optional. URL of the thumbnail (JPEG only) for the file
 	ThumbnailUrl *string `json:"thumbnail_url,omitempty"`
 	//Optional. Thumbnail width
@@ -651,7 +642,7 @@ func (i InlineQueryResultDocument) Validate() error {
 		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
 	}
 	if i.InputMessageContent != nil {
-		if err := (*i.InputMessageContent).Validate(); err != nil {
+		if err := i.InputMessageContent.Validate(); err != nil {
 			return err
 		}
 	}
@@ -689,7 +680,7 @@ type InlineQueryResultLocation struct {
 	//Optional. Inline keyboard attached to the message
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 	//Optional. Content of the message to be sent instead of the location
-	InputMessageContent *InputMessageContent `json:"input_message_content,omitempty"`
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 	//Optional. Url of the thumbnail for the result
 	ThumbnailUrl *string `json:"thumbnail_url,omitempty"`
 	//Optional. Thumbnail width
@@ -760,7 +751,7 @@ type InlineQueryResultVenue struct {
 	//Optional. Inline keyboard attached to the message
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 	//Optional. Content of the message to be sent instead of the venue
-	InputMessageContent *InputMessageContent `json:"input_message_content,omitempty"`
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 	//Optional. Url of the thumbnail for the result
 	ThumbnailUrl *string `json:"thumbnail_url,omitempty"`
 	//Optional. Thumbnail width
@@ -823,7 +814,7 @@ type InlineQueryResultContact struct {
 	//Optional. Inline keyboard attached to the message
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 	//Optional. Content of the message to be sent instead of the contact
-	InputMessageContent *InputMessageContent `json:"input_message_content,omitempty"`
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 	//Optional. Url of the thumbnail for the result
 	ThumbnailUrl string `json:"thumbnail_url,omitempty"`
 	//Optional. Thumbnail width
@@ -853,7 +844,7 @@ func (i InlineQueryResultContact) Validate() error {
 		return ErrInvalidParam("first_name parameter can't be empty")
 	}
 	if i.InputMessageContent != nil {
-		if err := (*i.InputMessageContent).Validate(); err != nil {
+		if err := i.InputMessageContent.Validate(); err != nil {
 			return err
 		}
 	}
@@ -899,44 +890,51 @@ func (i InlineQueryResultGame) Validate() error {
 	return nil
 }
 
-type InlineQueryResultCached struct {
-	InlineQueryResultCachedInterface
-}
-
-type InlineQueryResultCachedInterface interface {
-	Validate() error
-	inlineQueryResultCachedContract()
-}
-
-func (i InlineQueryResultCached) MarshalJSON() ([]byte, error) {
-	return json.Marshal(i.InlineQueryResultCachedInterface)
-}
-
+// Represents a link to a photo stored on the Telegram servers.
+// By default, this photo will be sent by the user with an optional caption.
+// Alternatively, you can use input_message_content to send a message with the specified content instead of the photo.
 type InlineQueryResultCachedPhoto struct {
-	Type                  string                `json:"type"`
-	Id                    string                `json:"id"`
-	PhotoFileId           string                `json:"photo_file_id"`
-	Title                 *string               `json:"title,omitempty"`
-	Description           *string               `json:"description,omitempty"`
-	Caption               *string               `json:"caption,omitempty"`
-	ParseMode             *string               `json:"parse_mode,omitempty"`
-	CaptionEntities       *[]MessageEntity      `json:"caption_entities,omitempty"`
-	ShowCaptionAboveMedia *bool                 `json:"show_caption_above_media,omitempty"`
-	ReplyMarkup           *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-	InputMessageContent   *InputMessageContent  `json:"input_message_content,omitempty"`
+	//Type of the result, must be photo
+	Type string `json:"type"`
+	//Unique identifier for this result, 1-64 bytes
+	Id string `json:"id"`
+	//A valid file identifier of the photo
+	PhotoFileId string `json:"photo_file_id"`
+	//Optional. Title for the result
+	Title *string `json:"title,omitempty"`
+	//Optional. Short description of the result
+	Description *string `json:"description,omitempty"`
+	//Optional. Caption of the photo to be sent, 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Optional. Mode for parsing entities in the photo caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
+	//Optional. Pass True, if the caption must be shown above the message media
+	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
+	// /Optional. Inline keyboard attached to the message
+	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Optional. Content of the message to be sent instead of the photo
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
-func (i InlineQueryResultCachedPhoto) inlineQueryResultCachedContract() {}
+func (i InlineQueryResultCachedPhoto) GetInlineQueryResultType() string {
+	return "photo"
+}
 
 func (i InlineQueryResultCachedPhoto) Validate() error {
-	if strings.TrimSpace(i.Id) == "" {
-		return ErrInvalidParam("id parameter can't be empty")
+	if i.Type != "photo" {
+		return ErrInvalidParam("type must be \"photo\"")
+	}
+	if b := len([]byte(i.Id)); b < 1 || b > 64 {
+		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.PhotoFileId) == "" {
 		return ErrInvalidParam("photo_file_id parameter can't be empty")
 	}
-	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
+	if i.ParseMode != nil && i.CaptionEntities != nil {
+		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -951,30 +949,49 @@ func (i InlineQueryResultCachedPhoto) Validate() error {
 	return nil
 }
 
+// Represents a link to an animated GIF file stored on the Telegram servers.
+// By default, this animated GIF file will be sent by the user with an optional caption.
+// Alternatively, you can use input_message_content to send a message with specified content instead of the animation.
 type InlineQueryResultCachedGif struct {
-	Type                  string                `json:"type"`
-	Id                    string                `json:"id"`
-	GifFileId             string                `json:"gif_file_id"`
-	Title                 *string               `json:"title,omitempty"`
-	Caption               *string               `json:"caption,omitempty"`
-	ParseMode             *string               `json:"parse_mode,omitempty"`
-	CaptionEntities       *[]MessageEntity      `json:"caption_entities,omitempty"`
-	ShowCaptionAboveMedia *bool                 `json:"show_caption_above_media,omitempty"`
-	ReplyMarkup           *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-	InputMessageContent   *InputMessageContent  `json:"input_message_content,omitempty"`
+	//Type of the result, must be gif
+	Type string `json:"type"`
+	//Unique identifier for this result, 1-64 bytes
+	Id string `json:"id"`
+	//A valid file identifier for the GIF file
+	GifFileId string `json:"gif_file_id"`
+	//Optional. Title for the result
+	Title *string `json:"title,omitempty"`
+	//Optional. Caption of the GIF file to be sent, 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Optional. Mode for parsing entities in the caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
+	//Optional. Pass True, if the caption must be shown above the message media
+	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
+	//Optional. Inline keyboard attached to the message
+	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Optional. Content of the message to be sent instead of the GIF animation
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
-func (i InlineQueryResultCachedGif) inlineQueryResultCachedContract() {}
+func (i InlineQueryResultCachedGif) GetInlineQueryResultType() string {
+	return "gif"
+}
 
 func (i InlineQueryResultCachedGif) Validate() error {
-	if strings.TrimSpace(i.Id) == "" {
-		return ErrInvalidParam("id parameter can't be empty")
+	if i.Type != "gif" {
+		return ErrInvalidParam("type must be \"gif\"")
+	}
+	if b := len([]byte(i.Id)); b < 1 || b > 64 {
+		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.GifFileId) == "" {
 		return ErrInvalidParam("gif_file_id parameter can't be empty")
 	}
-	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
+	if i.ParseMode != nil && i.CaptionEntities != nil {
+		return fmt.Errorf("parse_mode can't be enabled if caption_entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -989,30 +1006,49 @@ func (i InlineQueryResultCachedGif) Validate() error {
 	return nil
 }
 
+// Represents a link to a video animation (H.264/MPEG-4 AVC video without sound) stored on the Telegram servers.
+// By default, this animated MPEG-4 file will be sent by the user with an optional caption.
+// Alternatively, you can use input_message_content to send a message with the specified content instead of the animation.
 type InlineQueryResultCachedMpeg4Gif struct {
-	Type                  string                `json:"type"`
-	Id                    string                `json:"id"`
-	Mpeg4FileId           string                `json:"mpeg_4_file_id"`
-	Title                 *string               `json:"title,omitempty"`
-	Caption               *string               `json:"caption,omitempty"`
-	ParseMode             *string               `json:"parse_mode,omitempty"`
-	CaptionEntities       *[]MessageEntity      `json:"caption_entities,omitempty"`
-	ShowCaptionAboveMedia *bool                 `json:"show_caption_above_media,omitempty"`
-	ReplyMarkup           *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-	InputMessageContent   *InputMessageContent  `json:"input_message_content,omitempty"`
+	//Type of the result, must be mpeg4_gif
+	Type string `json:"type"`
+	//Unique identifier for this result, 1-64 bytes
+	Id string `json:"id"`
+	//A valid file identifier for the MPEG4 file
+	Mpeg4FileId string `json:"mpeg_4_file_id"`
+	//Optional. Title for the result
+	Title *string `json:"title,omitempty"`
+	//Optional. Caption of the MPEG-4 file to be sent, 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Optional. Mode for parsing entities in the caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
+	//Optional. Pass True, if the caption must be shown above the message media
+	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
+	//Optional. Inline keyboard attached to the message
+	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Optional. Content of the message to be sent instead of the video animation
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
-func (i InlineQueryResultCachedMpeg4Gif) inlineQueryResultCachedContract() {}
+func (i InlineQueryResultCachedMpeg4Gif) GetInlineQueryResultType() string {
+	return "mpeg4_gif"
+}
 
 func (i InlineQueryResultCachedMpeg4Gif) Validate() error {
-	if strings.TrimSpace(i.Id) == "" {
-		return ErrInvalidParam("id parameter can't be empty")
+	if i.Type != "mpeg4_gif" {
+		return ErrInvalidParam("type must be \"mpeg4_gif\"")
 	}
-	if strings.TrimSpace(i.Id) == "" {
-		return ErrInvalidParam("id parameter can't be empty")
+	if b := len([]byte(i.Id)); b < 1 || b > 64 {
+		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
-	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
+	if i.Mpeg4FileId == "" {
+		return ErrInvalidParam("mpeg_4_file_id parameter can't be empty")
+	}
+	if i.ParseMode != nil && i.CaptionEntities != nil {
+		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -1027,21 +1063,34 @@ func (i InlineQueryResultCachedMpeg4Gif) Validate() error {
 	return nil
 }
 
+// Represents a link to a sticker stored on the Telegram servers.
+// By default, this sticker will be sent by the user.
+// Alternatively, you can use input_message_content to send a message with the specified content instead of the sticker.
 type InlineQueryResultCachedSticker struct {
-	Type                string                `json:"type"`
-	Id                  string                `json:"id"`
-	StickerFileId       string                `json:"sticker_file_id"`
-	ReplyMarkup         *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-	InputMessageContent *InputMessageContent  `json:"input_message_content,omitempty"`
+	//Type of the result, must be sticker
+	Type string `json:"type"`
+	//Unique identifier for this result, 1-64 bytes
+	Id string `json:"id"`
+	//A valid file identifier of the sticker
+	StickerFileId string `json:"sticker_file_id"`
+	//Optional. Inline keyboard attached to the message
+	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Optional. Content of the message to be sent instead of the sticker
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
-func (i InlineQueryResultCachedSticker) inlineQueryResultCachedContract() {}
+func (i InlineQueryResultCachedSticker) GetInlineQueryResultType() string {
+	return "sticker"
+}
 
 func (i InlineQueryResultCachedSticker) Validate() error {
-	if strings.TrimSpace(i.Id) == "" {
-		return ErrInvalidParam("id parameter can't be empty")
+	if i.Type != "sticker" {
+		return ErrInvalidParam("type must be \"sticker\"")
 	}
-	if strings.TrimSpace(i.StickerFileId) == "" {
+	if b := len([]byte(i.Id)); b < 1 || b > 64 {
+		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+	}
+	if i.StickerFileId == "" {
 		return ErrInvalidParam("sticker_file_id parameter can't be empty")
 	}
 	if i.ReplyMarkup != nil {
@@ -1057,31 +1106,49 @@ func (i InlineQueryResultCachedSticker) Validate() error {
 	return nil
 }
 
-type InlineQueryResultCachedVideo struct {
-	Type                  string                `json:"type"`
-	Id                    string                `json:"id"`
-	VideoFileId           string                `json:"video_file_id"`
-	Title                 string                `json:"title"`
-	Description           *string               `json:"description,omitempty"`
-	Caption               *string               `json:"caption,omitempty"`
-	ParseMode             *string               `json:"parse_mode,omitempty"`
-	CaptionEntities       *[]MessageEntity      `json:"caption_entities,omitempty"`
-	ShowCaptionAboveMedia *bool                 `json:"show_caption_above_media,omitempty"`
-	ReplyMarkup           *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-	InputMessageContent   *InputMessageContent  `json:"input_message_content,omitempty"`
+// Represents a link to a file stored on the Telegram servers.
+// By default, this file will be sent by the user with an optional caption.
+// Alternatively, you can use input_message_content to send a message with the specified content instead of the file.
+type InlineQueryResultCachedDocument struct {
+	//Type of the result, must be document
+	Type string `json:"type"`
+	//Unique identifier for this result, 1-64 bytes
+	Id string `json:"id"`
+	//Title for the result
+	Title string `json:"title"`
+	//A valid file identifier for the file
+	DocumentFileId string `json:"document_file_id"`
+	//Optional. Short description of the result
+	Description *string `json:"description,omitempty"`
+	//Optional. Caption of the document to be sent, 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Optional. Mode for parsing entities in the document caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
+	//Optional. Inline keyboard attached to the message
+	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Optional. Content of the message to be sent instead of the file
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
-func (i InlineQueryResultCachedVideo) inlineQueryResultCachedContract() {}
+func (i InlineQueryResultCachedDocument) GetInlineQueryResultType() string {
+	return "document"
+}
 
-func (i InlineQueryResultCachedVideo) Validate() error {
-	if strings.TrimSpace(i.Id) == "" {
-		return ErrInvalidParam("id parameter can't be empty")
+func (i InlineQueryResultCachedDocument) Validate() error {
+	if i.Type != "document" {
+		return ErrInvalidParam("type must be \"document\"")
 	}
-	if strings.TrimSpace(i.VideoFileId) == "" {
-		return ErrInvalidParam("video_file_id parameter can't be empty")
+	if b := len([]byte(i.Id)); b < 1 || b > 64 {
+		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
-	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
+	if i.DocumentFileId == "" {
+		return ErrInvalidParam("document_file_id parameter can't be empty")
+	}
+	if i.ParseMode != nil && i.CaptionEntities != nil {
+		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -1096,29 +1163,105 @@ func (i InlineQueryResultCachedVideo) Validate() error {
 	return nil
 }
 
-type InlineQueryResultCachedVoice struct {
-	Type                  string                `json:"type"`
-	Id                    string                `json:"id"`
-	VoiceFileId           string                `json:"voice_file_id"`
-	Title                 string                `json:"title"`
-	Caption               *string               `json:"caption,omitempty"`
-	ParseMode             *string               `json:"parse_mode,omitempty"`
-	CaptionEntities       *[]MessageEntity      `json:"caption_entities,omitempty"`
-	ShowCaptionAboveMedia *bool                 `json:"show_caption_above_media,omitempty"`
-	ReplyMarkup           *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-	InputMessageContent   *InputMessageContent  `json:"input_message_content,omitempty"`
+// Represents a link to a video file stored on the Telegram servers.
+// By default, this video file will be sent by the user with an optional caption.
+// Alternatively, you can use input_message_content to send a message with the specified content instead of the video.
+type InlineQueryResultCachedVideo struct {
+	//Type of the result, must be video
+	Type string `json:"type"`
+	//Unique identifier for this result, 1-64 bytes
+	Id string `json:"id"`
+	//A valid file identifier for the video file
+	VideoFileId string `json:"video_file_id"`
+	//Title for the result
+	Title string `json:"title"`
+	//Optional. Short description of the result
+	Description *string `json:"description,omitempty"`
+	// /Optional. Caption of the video to be sent, 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Optional. Mode for parsing entities in the video caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
+	//Optional. Pass True, if the caption must be shown above the message media
+	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
+	//Optional. Inline keyboard attached to the message
+	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Optional. Content of the message to be sent instead of the video
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
-func (i InlineQueryResultCachedVoice) inlineQueryResultCachedContract() {}
+func (i InlineQueryResultCachedVideo) GetInlineQueryResultType() string {
+	return "video"
+}
+
+func (i InlineQueryResultCachedVideo) Validate() error {
+	if i.Type != "video" {
+		return ErrInvalidParam("type must be \"video\"")
+	}
+	if b := len([]byte(i.Id)); b < 1 || b > 64 {
+		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+	}
+	if strings.TrimSpace(i.VideoFileId) == "" {
+		return ErrInvalidParam("video_file_id parameter can't be empty")
+	}
+	if i.ParseMode != nil && i.CaptionEntities != nil {
+		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
+	}
+	if i.ReplyMarkup != nil {
+		if err := i.ReplyMarkup.Validate(); err != nil {
+			return err
+		}
+	}
+	if i.InputMessageContent != nil {
+		if err := i.InputMessageContent.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Represents a link to a voice message stored on the Telegram servers.
+// By default, this voice message will be sent by the user.
+// Alternatively, you can use input_message_content to send a message with the specified content instead of the voice message.
+type InlineQueryResultCachedVoice struct {
+	//Type of the result, must be voice
+	Type string `json:"type"`
+	//Unique identifier for this result, 1-64 bytes
+	Id string `json:"id"`
+	//A valid file identifier for the voice message
+	VoiceFileId string `json:"voice_file_id"`
+	//Voice message title
+	Title string `json:"title"`
+	//Optional. Caption, 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Optional. Mode for parsing entities in the voice message caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
+	//Optional. Inline keyboard attached to the message
+	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Optional. Content of the message to be sent instead of the voice message
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
+}
+
+func (i InlineQueryResultCachedVoice) GetInlineQueryResultType() string {
+	return "voice"
+}
 
 func (i InlineQueryResultCachedVoice) Validate() error {
-	if strings.TrimSpace(i.Id) == "" {
+	if i.Type != "voice" {
+		return ErrInvalidParam("type must be \"voice\"")
+	}
+	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		return ErrInvalidParam("id parameter can't be empty")
 	}
 	if strings.TrimSpace(i.VoiceFileId) == "" {
 		return ErrInvalidParam("voice_file_id parameter can't be empty")
 	}
-	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
+	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
 	}
 	if i.ReplyMarkup != nil {
@@ -1134,30 +1277,45 @@ func (i InlineQueryResultCachedVoice) Validate() error {
 	return nil
 }
 
+// Represents a link to an MP3 audio file stored on the Telegram servers.
+// By default, this audio file will be sent by the user.
+// Alternatively, you can use input_message_content to send a message with the specified content instead of the audio.
 type InlineQueryResultCachedAudio struct {
-	Type                  string                `json:"type"`
-	Id                    string                `json:"id"`
-	AudioFileId           string                `json:"audio_file_id"`
-	Title                 *string               `json:"title,omitempty"`
-	Caption               *string               `json:"caption,omitempty"`
-	ParseMode             *string               `json:"parse_mode,omitempty"`
-	CaptionEntities       *[]MessageEntity      `json:"caption_entities,omitempty"`
-	ShowCaptionAboveMedia *bool                 `json:"show_caption_above_media,omitempty"`
-	ReplyMarkup           *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-	InputMessageContent   *InputMessageContent  `json:"input_message_content,omitempty"`
+	//Type of the result, must be audio
+	Type string `json:"type"`
+	//Unique identifier for this result, 1-64 bytes
+	Id string `json:"id"`
+	//A valid file identifier for the audio file
+	AudioFileId string `json:"audio_file_id"`
+	//Optional. Caption, 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Optional. Mode for parsing entities in the audio caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
+	//Optional. Inline keyboard attached to the message
+	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Optional. Content of the message to be sent instead of the audio
+	InputMessageContent InputMessageContent `json:"input_message_content,omitempty"`
 }
 
-func (i InlineQueryResultCachedAudio) inlineQueryResultCachedContract() {}
+func (i InlineQueryResultCachedAudio) GetInlineQueryResultType() string {
+	return "audio"
+}
 
 func (i InlineQueryResultCachedAudio) Validate() error {
-	if strings.TrimSpace(i.Id) == "" {
-		return ErrInvalidParam("id parameter can't be empty")
+	if i.Type != "audio" {
+		return ErrInvalidParam("type must be \"audio\"")
+	}
+	if b := len([]byte(i.Id)); b < 1 || b > 64 {
+		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.AudioFileId) == "" {
 		return ErrInvalidParam("audio_file_id parameter can't be empty")
 	}
-	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
+	if i.ParseMode != nil && i.CaptionEntities != nil {
+		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -1172,139 +1330,83 @@ func (i InlineQueryResultCachedAudio) Validate() error {
 	return nil
 }
 
-type InlineQueryResultCachedDocument struct {
-	Type                  string                `json:"type"`
-	Id                    string                `json:"id"`
-	DocumentFileId        string                `json:"document_file_id"`
-	Title                 string                `json:"title"`
-	Caption               *string               `json:"caption,omitempty"`
-	ParseMode             *string               `json:"parse_mode,omitempty"`
-	CaptionEntities       *[]MessageEntity      `json:"caption_entities,omitempty"`
-	ShowCaptionAboveMedia *bool                 `json:"show_caption_above_media,omitempty"`
-	ReplyMarkup           *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-	InputMessageContent   *InputMessageContent  `json:"input_message_content,omitempty"`
+// This object represents the content of a message to be sent as a result of an inline query.
+// Telegram clients currently support the following 5 types:
+//
+// - InputTextMessageContent
+//
+// - InputLocationMessageContent
+//
+// - InputVenueMessageContent
+//
+// - InputContactMessageContent
+//
+// - InputInvoiceMessageContent
+type InputMessageContent interface {
+	Validable
+	GetInputMessageContentType() string
 }
 
-func (i InlineQueryResultCachedDocument) inlineQueryResultCachedContract() {}
+// Represents the content of a text message to be sent as the result of an inline query.
+type InputTextMessageContent struct {
+	//Text of the message to be sent, 1-4096 characters
+	MessageText string `json:"message_text"`
+	//Optional. Mode for parsing entities in the message text.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional. List of special entities that appear in message text, which can be specified instead of parse_mode
+	Entities *[]MessageEntity `json:"entities,omitempty"`
+	//Optional. Link preview generation options for the message
+	LinkPreviewOptions *LinkPreviewOptions `json:"link_preview_options,omitempty"`
+}
 
-func (i InlineQueryResultCachedDocument) Validate() error {
-	if strings.TrimSpace(i.Id) == "" {
-		return ErrInvalidParam("id parameter can't be empty")
+func (i InputTextMessageContent) GetInputMessageContentType() string {
+	return "text"
+}
+
+func (i InputTextMessageContent) Validate() error {
+	if l := len(i.MessageText); l < 1 || l > 4096 {
+		return ErrInvalidParam("message_text parameter must be between 1 and 4096 characters")
 	}
-	if strings.TrimSpace(i.DocumentFileId) == "" {
-		return ErrInvalidParam("document_file_id parameter can't be empty")
+	if i.ParseMode != nil && i.Entities != nil {
+		return fmt.Errorf("parse_mode can't be used if entities are provided")
 	}
-	if len(*i.ParseMode) != 0 && len(*i.CaptionEntities) != 0 {
-		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
-	}
-	if i.ReplyMarkup != nil {
-		if err := i.ReplyMarkup.Validate(); err != nil {
-			return err
-		}
-	}
-	if i.InputMessageContent != nil {
-		if err := i.InputMessageContent.Validate(); err != nil {
+	if i.LinkPreviewOptions != nil {
+		if err := i.LinkPreviewOptions.Validate(); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-type InputMessageContent struct {
-	InputMessageContentInterface
-}
-
-type InputMessageContentInterface interface {
-	Validate() error
-	inputMessageContentContract()
-}
-
-func (i InputMessageContent) MarshalJSON() ([]byte, error) {
-	return json.Marshal(i.InputMessageContentInterface)
-}
-
-type InputContactMessageContent struct {
-	PhoneNumber string `json:"phone_number"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	VCard       string `json:"v_card"`
-}
-
-func (i InputContactMessageContent) inputMessageContentContract() {}
-
-func (i InputContactMessageContent) Validate() error {
-	if i.PhoneNumber == "" || strings.TrimSpace(i.PhoneNumber) == "" {
-		return fmt.Errorf("phone number can't be empty")
-	}
-	if i.FirstName == "" || strings.TrimSpace(i.FirstName) == "" {
-		return fmt.Errorf("firstname can't be empty")
-	}
-	return nil
-}
-
-type InputInvoiceMessageContent struct {
-	Title                     string         `json:"title"`
-	Description               string         `json:"description"`
-	Payload                   string         `json:"payload"`
-	Currency                  string         `json:"currency"`
-	Prices                    []LabeledPrice `json:"prices"`
-	MaxTipAmount              *int           `json:"max_tip_amount,omitempty"`
-	SuggestedTipAmounts       *[]int         `json:"suggested_tip_amounts,omitempty"`
-	ProviderData              *string        `json:"provider_data,omitempty"`
-	PhotoSize                 *int           `json:"photo_size,omitempty"`
-	PhotoWidth                *int           `json:"photo_width,omitempty"`
-	PhotoHeight               *int           `json:"photo_height,omitempty"`
-	NeedName                  *bool          `json:"need_name,omitempty"`
-	NeedPhoneNumber           *bool          `json:"need_phone_number,omitempty"`
-	NeedEmail                 *bool          `json:"need_email,omitempty"`
-	NeedShippingAddress       *bool          `json:"need_shipping_address,omitempty"`
-	SendPhoneNumberToProvider *bool          `json:"send_phone_number_to_provider,omitempty"`
-	SendEmailToProvider       *bool          `json:"send_email_to_provider,omitempty"`
-	IsFlexible                *bool          `json:"is_flexible,omitempty"`
-	ProviderToken             *string        `json:"provider_token,omitempty"`
-}
-
-func (i InputInvoiceMessageContent) inputMessageContentContract() {}
-
-func (i InputInvoiceMessageContent) Validate() error {
-	if i.Title == "" || strings.TrimSpace(i.Title) == "" || len(i.Title) > 32 {
-		return ErrInvalidParam("title parameter must be between 1 and 32 characters")
-	}
-	if i.Description == "" || strings.TrimSpace(i.Description) == "" || len(i.Description) > 255 {
-		return ErrInvalidParam("description parameter must be between 1 and 255 characters")
-	}
-	if len([]byte(i.Payload)) < 1 || len([]byte(i.Payload)) > 128 {
-		return ErrInvalidParam("payload parameter must be between 1 and 128 bytes")
-	}
-	if strings.TrimSpace(i.Currency) == "" {
-		return ErrInvalidParam("currency parameter can't be empty")
-	}
-	if len(i.Prices) == 0 {
-		return ErrInvalidParam("prices parameter can't be empty")
-	}
-	for _, label := range i.Prices {
-		if err := label.Validate(); err != nil {
-			return err
-		}
-	}
-	if len(*i.SuggestedTipAmounts) != 0 || len(*i.SuggestedTipAmounts) > 4 {
-		return fmt.Errorf("only up to 4 suggested tip amounts are allowed")
-	}
-	return nil
-}
-
+// Represents the content of a location message to be sent as the result of an inline query.
 type InputLocationMessageContent struct {
-	Latitude              float64  `json:"latitude"`
-	Longtitude            float64  `json:"longtitude"`
-	LivePeriod            *int     `json:"live_period,omitempty"`
-	HorizontalAccuracy    *float64 `json:"horizontal_accuracy,omitempty"`
-	Heading               *int     `json:"heading,omitempty"`
-	ProximityAlertRaidius *int     `json:"proximity_alert_raidius,omitempty"`
+	//Latitude of the location in degrees
+	Latitude *float64 `json:"latitude"`
+	//Longitude of the location in degrees
+	Longtitude *float64 `json:"longtitude"`
+	//Optional. The radius of uncertainty for the location, measured in meters; 0-1500
+	HorizontalAccuracy *float64 `json:"horizontal_accuracy,omitempty"`
+	//Optional. Period in seconds during which the location can be updated, should be between 60 and 86400,
+	//or 0x7FFFFFFF for live locations that can be edited indefinitely.
+	LivePeriod *int `json:"live_period,omitempty"`
+	//Optional. For live locations, a direction in which the user is moving, in degrees. Must be between 1 and 360 if specified.
+	Heading *int `json:"heading,omitempty"`
+	//Optional. For live locations, a maximum distance for proximity alerts about approaching another chat member, in meters. Must be between 1 and 100000 if specified.
+	ProximityAlertRaidius *int `json:"proximity_alert_raidius,omitempty"`
 }
 
-func (i InputLocationMessageContent) inputMessageContentContract() {}
+func (i InputLocationMessageContent) GetInputMessageContentType() string {
+	return "location"
+}
 
 func (i InputLocationMessageContent) Validate() error {
+	if i.Latitude == nil {
+		return ErrInvalidParam("latitude parameter can't be empty")
+	}
+	if i.Longtitude == nil {
+		return ErrInvalidParam("longtitude parameter can't be empty")
+	}
 	if i.LivePeriod != nil {
 		if (*i.LivePeriod < 60 || *i.LivePeriod > 86400) && *i.LivePeriod != 0x7FFFFFFF {
 			return ErrInvalidParam("live_period parameter must be between 60 and 86400 or equal to 0x7FFFFFFF")
@@ -1328,66 +1430,210 @@ func (i InputLocationMessageContent) Validate() error {
 	return nil
 }
 
-type InputTextMessageContent struct {
-	MessageText        string              `json:"message_text"`
-	ParseMode          *string             `json:"parse_mode,omitempty"`
-	Entities           *[]MessageEntity    `json:"entities,omitempty"`
-	LinkPreviewOptions *LinkPreviewOptions `json:"link_preview_options,omitempty"`
-}
-
-func (i InputTextMessageContent) inputMessageContentContract() {}
-
-func (i InputTextMessageContent) Validate() error {
-	if strings.TrimSpace(i.MessageText) == "" {
-		return ErrInvalidParam("message_text")
-	}
-	if *i.ParseMode != "" && len(*i.Entities) != 0 {
-		return fmt.Errorf("parse mode can't be enabled if entities are provided")
-	}
-	if i.LinkPreviewOptions != nil {
-		if err := i.LinkPreviewOptions.Validate(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
+// Represents the content of a venue message to be sent as the result of an inline query.
 type InputVenueMessageContent struct {
-	Latitude        float32 `json:"latitude"`
-	Longtitude      float32 `json:"longtitude"`
-	Title           string  `json:"title"`
-	Address         string  `json:"address"`
-	FoursquareId    *string `json:"foursquare_id,omitempty"`
-	FoursquareType  *string `json:"foursquare_type,omitempty"`
-	GooglePlaceId   *string `json:"google_place_id,omitempty"`
+	//Latitude of the venue in degrees
+	Latitude *float64 `json:"latitude"`
+	//Longitude of the venue in degrees
+	Longtitude *float64 `json:"longtitude"`
+	//Name of the venue
+	Title string `json:"title"`
+	//Address of the venue
+	Address string `json:"address"`
+	//Optional. Foursquare identifier of the venue, if known
+	FoursquareId *string `json:"foursquare_id,omitempty"`
+	//Optional. Foursquare type of the venue, if known.
+	//(For example, “arts_entertainment/default”, “arts_entertainment/aquarium” or “food/icecream”.)
+	FoursquareType *string `json:"foursquare_type,omitempty"`
+	//Optional. Google Places identifier of the venue
+	GooglePlaceId *string `json:"google_place_id,omitempty"`
+	//ptional. Google Places type of the venue.
+	//(See https://developers.google.com/places/web-service/supported_types)
 	GooglePlaceType *string `json:"google_place_type,omitempty"`
 }
 
-func (i InputVenueMessageContent) inputMessageContentContract() {}
+func (i InputVenueMessageContent) GetInputMessageContentType() string {
+	return "venue"
+}
 
 func (i InputVenueMessageContent) Validate() error {
-	if i.Title == "" || strings.TrimSpace(i.Title) == "" {
+	if i.Latitude == nil {
+		return ErrInvalidParam("latitude parameter can't be empty")
+	}
+	if i.Longtitude == nil {
+		return ErrInvalidParam("longtitude parameter can't be empty")
+	}
+	if strings.TrimSpace(i.Title) == "" {
 		return fmt.Errorf("title parameter can't be empty")
 	}
-	if i.Address == "" || strings.TrimSpace(i.Address) == "" {
+	if strings.TrimSpace(i.Address) == "" {
 		return fmt.Errorf("address parameter can't be empty")
 	}
 	return nil
 }
 
-type ChosenInlineResult struct {
-	ResultId        string    `json:"result_id"`
-	From            User      `json:"from"`
-	Query           string    `json:"query"`
-	Location        *Location `json:"location,omitempty"`
-	InlineMessageId *string   `json:"inline_message_id,omitempty"`
+// Represents the content of a contact message to be sent as the result of an inline query.
+type InputContactMessageContent struct {
+	//Contact's phone number
+	PhoneNumber string `json:"phone_number"`
+	//Contact's first name
+	FirstName string `json:"first_name"`
+	//Optional. Contact's last name
+	LastName string `json:"last_name"`
+	//Optional. Additional data about the contact in the form of a vCard, 0-2048 bytes
+	VCard string `json:"v_card"`
 }
 
+func (i InputContactMessageContent) GetInputMessageContentType() string {
+	return "contact"
+}
+
+func (i InputContactMessageContent) Validate() error {
+	if i.PhoneNumber == "" || strings.TrimSpace(i.PhoneNumber) == "" {
+		return fmt.Errorf("phone number can't be empty")
+	}
+	if i.FirstName == "" || strings.TrimSpace(i.FirstName) == "" {
+		return fmt.Errorf("firstname can't be empty")
+	}
+	return nil
+}
+
+// Represents the content of an invoice message to be sent as the result of an inline query.
+type InputInvoiceMessageContent struct {
+	//Product name, 1-32 characters
+	Title string `json:"title"`
+	//Product description, 1-255 characters
+	Description string `json:"description"`
+	//Bot-defined invoice payload, 1-128 bytes. This will not be displayed to the user, use it for your internal processes.
+	Payload string `json:"payload"`
+	//Optional. Payment provider token, obtained via @BotFather. Pass an empty string for payments in Telegram Stars.
+	ProviderToken *string `json:"provider_token,omitempty"`
+	//Three-letter ISO 4217 currency code, see more on currencies. Pass “XTR” for payments in Telegram Stars.
+	Currency string `json:"currency"`
+	//Price breakdown, a JSON-serialized list of components
+	//(e.g. product price, tax, discount, delivery cost, delivery tax, bonus, etc.).
+	//Must contain exactly one item for payments in Telegram Stars.
+	Prices []LabeledPrice `json:"prices"`
+	//Optional. The maximum accepted amount for tips in the smallest units of the currency (integer, not float/double).
+	//For example, for a maximum tip of US$ 1.45 pass max_tip_amount = 145.
+	//See the exp parameter in https://core.telegram.org/bots/payments/currencies.json,
+	//it shows the number of digits past the decimal point for each currency (2 for the majority of currencies).
+	//Defaults to 0. Not supported for payments in Telegram Stars.
+	MaxTipAmount *int `json:"max_tip_amount,omitempty"`
+	//Optional. A JSON-serialized array of suggested amounts of tip in the smallest units of the currency (integer, not float/double).
+	//At most 4 suggested tip amounts can be specified. The suggested tip amounts must be positive,
+	//passed in a strictly increased order and must not exceed max_tip_amount.
+	SuggestedTipAmounts *[]int `json:"suggested_tip_amounts,omitempty"`
+	//Optional. A JSON-serialized object for data about the invoice, which will be shared with the payment provider.
+	//A detailed description of the required fields should be provided by the payment provider.
+	ProviderData *string `json:"provider_data,omitempty"`
+	//Optional. URL of the product photo for the invoice.
+	//Can be a photo of the goods or a marketing image for a service.
+	PhotoUrl *string `json:"photo_url,omitempty"`
+	//Optional. Photo size in bytes
+	PhotoSize *int `json:"photo_size,omitempty"`
+	//Optional. Photo width
+	PhotoWidth *int `json:"photo_width,omitempty"`
+	//Optional. Photo height
+	PhotoHeight *int `json:"photo_height,omitempty"`
+	//Optional. Pass True if you require the user's full name to complete the order.
+	//Ignored for payments in Telegram Stars.
+	NeedName *bool `json:"need_name,omitempty"`
+	//Optional. Pass True if you require the user's phone number to complete the order.
+	//Ignored for payments in Telegram Stars.
+	NeedPhoneNumber *bool `json:"need_phone_number,omitempty"`
+	//Optional. Pass True if you require the user's email address to complete the order.
+	//Ignored for payments in Telegram Stars.
+	NeedEmail *bool `json:"need_email,omitempty"`
+	//Optional. Pass True if you require the user's shipping address to complete the order.
+	//Ignored for payments in Telegram Stars.
+	NeedShippingAddress *bool `json:"need_shipping_address,omitempty"`
+	//Optional. Pass True if the user's phone number should be sent to the provider.
+	//Ignored for payments in Telegram Stars.
+	SendPhoneNumberToProvider *bool `json:"send_phone_number_to_provider,omitempty"`
+	//Optional. Pass True if the user's email address should be sent to the provider.
+	//Ignored for payments in Telegram Stars.
+	SendEmailToProvider *bool `json:"send_email_to_provider,omitempty"`
+	//Optional. Pass True if the final price depends on the shipping method.
+	//Ignored for payments in Telegram Stars.
+	IsFlexible *bool `json:"is_flexible,omitempty"`
+}
+
+func (i InputInvoiceMessageContent) GetInputMessageContentType() string {
+	return "invoice"
+}
+
+func (i InputInvoiceMessageContent) Validate() error {
+	if l := len(i.Title); l < 1 || l > 32 {
+		return ErrInvalidParam("title parameter must be between 1 and 32 characters")
+	}
+	if l := len(i.Description); l < 1 || l > 255 {
+		return ErrInvalidParam("description parameter must be between 1 and 255 characters")
+	}
+	if l := len([]byte(i.Payload)); l < 1 || l > 128 {
+		return ErrInvalidParam("payload parameter must be between 1 and 128 bytes")
+	}
+	//FIXME: should properly validate currency codes as in
+	//https://en.wikipedia.org/wiki/ISO_4217#Active_codes_(list_one)
+	if len(i.Currency) > 3 {
+		return ErrInvalidParam("currency parameter accepts only valid three-letter ISO 4217 currency codes")
+	}
+	if i.Currency == "XTR" {
+		if len(i.Prices) > 1 {
+			return ErrInvalidParam("prices parameter must contain exactly one item for payments in Telegram Stars.")
+		}
+		if i.MaxTipAmount != nil {
+			return ErrInvalidParam("max_tip_amount parameter is not supported for payments in Telegram stars")
+		}
+	}
+	if i.SuggestedTipAmounts != nil {
+		if len(*i.SuggestedTipAmounts) > 4 {
+			return ErrInvalidParam("suggested_tip_amounts parameter can't be longer than 4 elements")
+		}
+		for j := 0; j < len(*i.SuggestedTipAmounts); j++ {
+			if (*i.SuggestedTipAmounts)[j] <= 0 {
+				return ErrInvalidParam("suggested_tip_amounts parameter accepts only positive integers")
+			}
+			if (*i.SuggestedTipAmounts)[j] > *i.MaxTipAmount {
+				return ErrInvalidParam("suggested_tip_amounts parameter accepts only integers that do not exceed the max_tip_amount")
+			}
+			if j > 0 && (*i.SuggestedTipAmounts)[j] <= (*i.SuggestedTipAmounts)[j-1] {
+				return ErrInvalidParam("suggested_tip_amounts parameter should be passed in a strictly increased order")
+			}
+		}
+	}
+	return nil
+}
+
+// Represents a result of an inline query that was chosen by the user and sent to their chat partner.
+//
+// Note: It is necessary to enable inline feedback via @BotFather in order to receive these objects in updates.
+type ChosenInlineResult struct {
+	//The unique identifier for the result that was chosen
+	ResultId string `json:"result_id"`
+	//The user that chose the result
+	From User `json:"from"`
+	//Optional. Sender location, only for bots that require user location
+	Location *Location `json:"location,omitempty"`
+	//Optional. Identifier of the sent inline message.
+	//Available only if there is an inline keyboard attached to the message.
+	// Will be also received in callback queries and can be used to edit the message.
+	InlineMessageId *string `json:"inline_message_id,omitempty"`
+	//The query that was used to obtain the result
+	Query string `json:"query"`
+}
+
+// Describes an inline message sent by a Web App on behalf of a user.
 type SentWebAppMessage struct {
+	//Optional. Identifier of the sent inline message.
+	//Available only if there is an inline keyboard attached to the message.
 	InlineMessageId *string `json:"inline_message_id,omitempty"`
 }
 
+// Describes an inline message to be sent by a user of a Mini App.
 type PreparedInlineMessage struct {
-	Id             string
+	//Unique identifier of the prepared message
+	Id string
+	//Expiration date of the prepared message, in Unix time. Expired prepared messages can no longer be used
 	ExpirationDate int
 }
