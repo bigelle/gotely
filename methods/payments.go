@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -99,7 +98,7 @@ func (s SendInvoice[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendInvoice[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendInvoice", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendInvoice", s)
 }
 
 type CreateInvoiceLink struct {
@@ -175,7 +174,7 @@ func (c CreateInvoiceLink) ToRequestBody() ([]byte, error) {
 }
 
 func (c CreateInvoiceLink) Execute() (*string, error) {
-	return internal.MakePostRequest[string](telego.GetToken(), "createInvoiceLink", c)
+	return MakePostRequest[string](telego.GetToken(), "createInvoiceLink", c)
 }
 
 type AnswerShippingQuery struct {
@@ -210,7 +209,7 @@ func (a AnswerShippingQuery) ToRequestBody() ([]byte, error) {
 }
 
 func (a AnswerShippingQuery) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "answerShippingQuery", a)
+	return MakePostRequest[bool](telego.GetToken(), "answerShippingQuery", a)
 }
 
 type AnswerPreCheckoutQuery struct {
@@ -234,7 +233,7 @@ func (a AnswerPreCheckoutQuery) ToRequestBody() ([]byte, error) {
 }
 
 func (a AnswerPreCheckoutQuery) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "answerPreCheckoutQuery", a)
+	return MakePostRequest[bool](telego.GetToken(), "answerPreCheckoutQuery", a)
 }
 
 type GetStarTransactions struct {
@@ -256,7 +255,7 @@ func (g GetStarTransactions) ToRequestBody() ([]byte, error) {
 }
 
 func (g GetStarTransactions) Execute() (*types.StarTransactions, error) {
-	return internal.MakeGetRequest[types.StarTransactions](telego.GetToken(), "getStarTransactions", g)
+	return MakeGetRequest[types.StarTransactions](telego.GetToken(), "getStarTransactions", g)
 }
 
 type RefundStarPayment struct {
@@ -281,7 +280,7 @@ func (r RefundStarPayment) ToRequestBody() ([]byte, error) {
 }
 
 func (r RefundStarPayment) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "refundStarPayment", r)
+	return MakePostRequest[bool](telego.GetToken(), "refundStarPayment", r)
 }
 
 type EditUserStarSubscription struct {
@@ -305,5 +304,5 @@ func (e EditUserStarSubscription) ToRequestBody() ([]byte, error) {
 }
 
 func (e EditUserStarSubscription) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "editUserStarSubscription", e)
+	return MakePostRequest[bool](telego.GetToken(), "editUserStarSubscription", e)
 }

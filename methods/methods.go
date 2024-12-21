@@ -7,24 +7,54 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 	iso6391 "github.com/emvi/iso-639-1"
 )
 
+// Use this method to send text messages. On success, the sent Message is returned.
 type SendMessage[T int | string] struct {
-	ChatId               T                         `json:"chat_id"`
-	Text                 string                    `json:"text"`
-	BusinessConnectionId *string                   `json:"business_connection_id,omitempty"`
-	MessageThreadId      *int                      `json:"message_thread_id,omitempty"`
-	ParseMode            *string                   `json:"parse_mode,omitempty"`
-	Entities             *[]types.MessageEntity    `json:"entities,omitempty"`
-	LinkPreviewOptions   *types.LinkPreviewOptions `json:"link_preview_options,omitempty"`
-	DisableNotification  *bool                     `json:"disable_notification,omitempty"`
-	ProtectContent       *bool                     `json:"protect_content,omitempty"`
-	MessageEffectId      *string                   `json:"message_effect_id,omitempty"`
-	ReplyParameters      *types.ReplyParameters    `json:"reply_parameters,omitempty"`
-	ReplyMarkup          *types.ReplyMarkup        `json:"reply_markup,omitempty"`
+	//Required
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Required
+	//Text of the message to be sent, 1-4096 characters after entities parsing
+	Text string `json:"text"`
+	//Optional.
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty,"`
+	//Optional.
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty,"`
+	//Optional.
+	//Mode for parsing entities in the message text.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty,"`
+	//Optional.
+	//A JSON-serialized list of special entities that appear in message text, which can be specified instead of parse_mode
+	Entities *[]types.MessageEntity `json:"entities,omitempty,"`
+	//Optional.
+	//Link preview generation options for the message
+	LinkPreviewOptions *types.LinkPreviewOptions `json:"link_preview_options,omitempty,"`
+	//Optional.
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty,"`
+	//Optional.
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty,"`
+	//Optional.
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Optional.
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty,"`
+	//Optional.
+	//Description of the message to reply to
+	ReplyParameters *types.ReplyParameters `json:"reply_parameters,omitempty,"`
+	//Optional.
+	//Additional interface options. A JSON-serialized object for an inline keyboard,
+	//custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *types.ReplyMarkup `json:"reply_markup,omitempty,"`
 }
 
 func (s SendMessage[T]) Validate() error {
@@ -45,21 +75,35 @@ func (s SendMessage[T]) Validate() error {
 }
 
 func (s SendMessage[T]) ToRequestBody() ([]byte, error) {
-
 	return json.Marshal(s)
 }
 
 func (s SendMessage[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendMessage", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendMessage", s)
 }
 
+// Use this method to forward messages of any kind.
+// Service messages and messages with protected content can't be forwarded.
+// On success, the sent Message is returned.
 type ForwardMessage[T int | string] struct {
-	ChatId              T
-	FromChatId          T
-	MessageId           int
-	MessageThreadId     *int
+	//Required.
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T
+	//Required.
+	//Unique identifier for the chat where the original message was sent (or channel username in the format @channelusername
+	FromChatId T
+	//Required.
+	//Message identifier in the chat specified in from_chat_id
+	MessageId int
+	//Optional.
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int
+	//Optional.
+	//Sends the message silently. Users will receive a notification with no sound.
 	DisableNotification *bool
-	ProtectContent      *bool
+	//Optional.
+	//Protects the contents of the forwarded message from forwarding and saving
+	ProtectContent *bool
 }
 
 func (f ForwardMessage[T]) Validate() error {
@@ -90,21 +134,38 @@ func (f ForwardMessage[T]) Validate() error {
 }
 
 func (f ForwardMessage[T]) ToRequestBody() ([]byte, error) {
-
 	return json.Marshal(f)
 }
 
 func (f ForwardMessage[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "forwardMessage", f)
+	return MakePostRequest[types.Message](telego.GetToken(), "forwardMessage", f)
 }
 
+// Use this method to forward multiple messages of any kind.
+// If some of the specified messages can't be found or forwarded, they are skipped.
+// Service messages and messages with protected content can't be forwarded.
+// Album grouping is kept for forwarded messages.
+// On success, an array of MessageId of the sent messages is returned.
 type ForwardMessages[T int | string] struct {
-	ChatId              T
-	FromChatId          T
-	MessageIds          []int
-	MessageThreadId     *int
+	//Required.
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T
+	//Required.
+	//Unique identifier for the chat where the original messages were sent (or channel username in the format @channelusername)
+	FromChatId T
+	//Required.
+	//A JSON-serialized list of 1-100 identifiers of messages in the chat from_chat_id to forward.
+	//The identifiers must be specified in a strictly increasing order.
+	MessageIds []int
+	//Optional.
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int
+	//Optional.
+	//Sends the messages silently. Users will receive a notification with no sound.
 	DisableNotification *bool
-	ProtectContent      *bool
+	//Optional.
+	//Protects the contents of the forwarded messages from forwarding and saving
+	ProtectContent *bool
 }
 
 func (f ForwardMessages[T]) Validate() error {
@@ -135,28 +196,62 @@ func (f ForwardMessages[T]) Validate() error {
 }
 
 func (f ForwardMessages[T]) ToRequestBody() ([]byte, error) {
-
 	return json.Marshal(f)
 }
 
-func (f ForwardMessages[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "forwardMessages", f)
+func (f ForwardMessages[T]) Execute() (*[]types.MessageId, error) {
+	return MakePostRequest[[]types.MessageId](telego.GetToken(), "forwardMessages", f)
 }
 
+// Use this method to copy messages of any kind.
+// Service messages, paid media messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied.
+// A quiz poll can be copied only if the value of the field correct_option_id is known to the bot.
+// The method is analogous to the method forwardMessage, but the copied message doesn't have a link to the original message.
+// Returns the MessageId of the sent message on success.
 type CopyMessage[T int | string] struct {
-	ChatId                T
-	FromChatId            T
-	MessageId             int
-	MessageThreadId       *int
-	Caption               *string
-	ParseMode             *string
-	CaptionEntities       *[]types.MessageEntity
-	ShowCaptionAboveMedia *bool
-	AllowPaidBroadcast    *bool
-	ReplyParameters       *types.ReplyParameters
-	ReplyMarkup           *types.ReplyMarkup
-	DisableNotification   *bool
-	ProtectContent        *bool
+	//Required.
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Required.
+	//Unique identifier for the chat where the original message was sent (or channel username in the format @channelusername)
+	FromChatId T `json:"from_chat_id"`
+	//Required.
+	//Message identifier in the chat specified in from_chat_id
+	MessageId int `json:"message_id"`
+	//Optional.
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	//Optional.
+	//New caption for media, 0-1024 characters after entities parsing. If not specified, the original caption is kept
+	Caption *string `json:"caption,omitempty"`
+	//Optional.
+	//Mode for parsing entities in the new caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional.
+	//A JSON-serialized list of special entities that appear in the new caption, which can be specified instead of parse_mode
+	CaptionEntities *[]types.MessageEntity `json:"caption_entities,omitempty"`
+	//Optional.
+	//Pass True, if the caption must be shown above the message media. Ignored if a new caption isn't specified.
+	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
+	//Optional.
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Optional.
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Optional.
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Optional.
+	//Description of the message to reply to
+	ReplyParameters *types.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Optional.
+	//Additional interface options.
+	//A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *types.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 func (c CopyMessage[T]) Validate() error {
@@ -192,7 +287,7 @@ func (c CopyMessage[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (c CopyMessage[T]) Execute() (*types.MessageId, error) {
-	return internal.MakePostRequest[types.MessageId](telego.GetToken(), "copyMessage", c)
+	return MakePostRequest[types.MessageId](telego.GetToken(), "copyMessage", c)
 }
 
 type CopyMessages[T int | string] struct {
@@ -237,8 +332,8 @@ func (c CopyMessages[T]) Validate() error {
 	return nil
 }
 
-func (c CopyMessages[T]) Execute() (*types.MessageId, error) {
-	return internal.MakePostRequest[types.MessageId](telego.GetToken(), "copyMessages", c)
+func (c CopyMessages[T]) Execute() (*[]types.MessageId, error) {
+	return MakePostRequest[[]types.MessageId](telego.GetToken(), "copyMessages", c)
 }
 
 type SendPhoto[T int | string, B types.InputFile | string] struct {
@@ -288,7 +383,7 @@ func (s SendPhoto[T, B]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendPhoto[T, B]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendPhoto", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendPhoto", s)
 }
 
 type SendAudio[T int | string, B types.InputFile | string] struct {
@@ -340,7 +435,7 @@ func (s SendAudio[T, B]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendAudio[T, B]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendAudio", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendAudio", s)
 }
 
 type SendDocument[T int | string, B types.InputFile | string] struct {
@@ -390,7 +485,7 @@ func (s SendDocument[T, B]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendDocument[T, B]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendDocument", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendDocument", s)
 }
 
 type SendVideo[T int | string, B types.InputFile | string] struct {
@@ -445,7 +540,7 @@ func (s SendVideo[T, B]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendVideo[T, B]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendVideo", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendVideo", s)
 }
 
 type SendAnimation[T int | string, B types.InputFile | string] struct {
@@ -499,7 +594,7 @@ func (s SendAnimation[T, B]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendAnimation[T, B]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendAnimation", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendAnimation", s)
 }
 
 type SendVoice[T int | string, B types.InputFile | string] struct {
@@ -549,7 +644,7 @@ func (s SendVoice[T, B]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendVoice[T, B]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendVoice", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendVoice", s)
 }
 
 type SendVideoNote[T int | string, B types.InputFile | string] struct {
@@ -600,7 +695,7 @@ func (s SendVideoNote[T, B]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendVideoNote[T, B]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendVideoNote", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendVideoNote", s)
 }
 
 type SendPaidMedia[T int | string] struct {
@@ -653,7 +748,7 @@ func (s SendPaidMedia[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendPaidMedia[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendPaidMedia", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendPaidMedia", s)
 }
 
 type SendMediaGroup[T int | string] struct {
@@ -698,7 +793,7 @@ func (s SendMediaGroup[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendMediaGroup[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendMediaGroup", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendMediaGroup", s)
 }
 
 type SendLocation[T int | string] struct {
@@ -745,7 +840,7 @@ func (s SendLocation[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendLocation[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendLocation", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendLocation", s)
 }
 
 type SendVenue[T int | string] struct {
@@ -793,7 +888,7 @@ func (s SendVenue[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendVenue[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendVenue", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendVenue", s)
 }
 
 type SendContact[T int | string] struct {
@@ -838,7 +933,7 @@ func (s SendContact[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendContact[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendContact", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendContact", s)
 }
 
 type SendPoll[T int | string] struct {
@@ -892,7 +987,7 @@ func (s SendPoll[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendPoll[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendPoll", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendPoll", s)
 }
 
 type SendDice[T int | string] struct {
@@ -930,7 +1025,7 @@ func (s SendDice[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendDice[T]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendPoll", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendPoll", s)
 }
 
 type SendChatAction[T int | string] struct {
@@ -1002,7 +1097,33 @@ func (s SetMessageReaction[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetMessageReaction[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setMessageReaction", s)
+	return MakePostRequest[bool](telego.GetToken(), "setMessageReaction", s)
+}
+
+type GetUserProfilePhotos struct {
+	UserId int
+	Offset *int
+	Limit  *int
+}
+
+func (g GetUserProfilePhotos) Validate() error {
+	if g.UserId < 1 {
+		return types.ErrInvalidParam("user_id parameter can't be empty")
+	}
+	if g.Limit != nil {
+		if *g.Limit < 1 || *g.Limit > 100 {
+			return types.ErrInvalidParam("limit parameter must be between 1 and 100")
+		}
+	}
+	return nil
+}
+
+func (g GetUserProfilePhotos) ToRequestBody() ([]byte, error) {
+	return json.Marshal(g)
+}
+
+func (g GetUserProfilePhotos) Execute() (*types.UserProfilePhotos, error) {
+	return MakeGetRequest[types.UserProfilePhotos](telego.GetToken(), "getUserProfilePhotos", g)
 }
 
 type SetUserEmojiStatus struct {
@@ -1020,6 +1141,29 @@ func (s SetUserEmojiStatus) Validate() error {
 
 func (s SetUserEmojiStatus) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
+}
+
+func (s SetUserEmojiStatus) Execute() (*bool, error) {
+	return MakePostRequest[bool](telego.GetToken(), "setUserEmojiStatus", s)
+}
+
+type GetFile struct {
+	FileId string
+}
+
+func (g GetFile) Validate() error {
+	if strings.TrimSpace(g.FileId) == "" {
+		return types.ErrInvalidParam("file_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (g GetFile) ToRequestBody() ([]byte, error) {
+	return json.Marshal(g)
+}
+
+func (g GetFile) Execute() (*types.File, error) {
+	return MakeGetRequest[types.File](telego.GetToken(), "getFile", g)
 }
 
 type BanChatMember[T int | string] struct {
@@ -1051,7 +1195,7 @@ func (b BanChatMember[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (b BanChatMember[T]) Execute() (*bool, error) {
-	return internal.MakeGetRequest[bool](telego.GetToken(), "banChatMember", b)
+	return MakeGetRequest[bool](telego.GetToken(), "banChatMember", b)
 }
 
 type UnbanChatMember[T int | string] struct {
@@ -1082,7 +1226,7 @@ func (b UnbanChatMember[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (b UnbanChatMember[T]) Execute() (*bool, error) {
-	return internal.MakeGetRequest[bool](telego.GetToken(), "unbanChatMember", b)
+	return MakeGetRequest[bool](telego.GetToken(), "unbanChatMember", b)
 }
 
 type RestrictChatMember[T int | string] struct {
@@ -1115,7 +1259,7 @@ func (r RestrictChatMember[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (r RestrictChatMember[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "restrictChatMember", r)
+	return MakePostRequest[bool](telego.GetToken(), "restrictChatMember", r)
 }
 
 type PromoteChatMember[T int | string] struct {
@@ -1160,7 +1304,7 @@ func (p PromoteChatMember[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (p PromoteChatMember[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "promoteChatMember", p)
+	return MakePostRequest[bool](telego.GetToken(), "promoteChatMember", p)
 }
 
 type SetChatAdministratorCustomTitle[T int | string] struct {
@@ -1202,7 +1346,7 @@ func (s SetChatAdministratorCustomTitle[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetChatAdministratorCustomTitle[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setChatAdministratorCustomTitle", s)
+	return MakePostRequest[bool](telego.GetToken(), "setChatAdministratorCustomTitle", s)
 }
 
 type BanChatSenderChat[T int | string] struct {
@@ -1232,7 +1376,7 @@ func (b BanChatSenderChat[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (b BanChatSenderChat[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "banChatSenderChat", b)
+	return MakePostRequest[bool](telego.GetToken(), "banChatSenderChat", b)
 }
 
 type UnbanChatSenderChat[T int | string] struct {
@@ -1262,7 +1406,7 @@ func (b UnbanChatSenderChat[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (b UnbanChatSenderChat[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "unbanChatSenderChat", b)
+	return MakePostRequest[bool](telego.GetToken(), "unbanChatSenderChat", b)
 }
 
 type SetChatPermissions[T int | string] struct {
@@ -1290,7 +1434,7 @@ func (s SetChatPermissions[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetChatPermissions[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setChatPermissions", s)
+	return MakePostRequest[bool](telego.GetToken(), "setChatPermissions", s)
 }
 
 type ExportChatInviteLink[T int | string] struct {
@@ -1316,7 +1460,7 @@ func (e ExportChatInviteLink[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e ExportChatInviteLink[T]) Execute() (*string, error) {
-	return internal.MakePostRequest[string](telego.GetToken(), "exportChatInviteLink", e)
+	return MakePostRequest[string](telego.GetToken(), "exportChatInviteLink", e)
 }
 
 type CreateInviteLink[T int | string] struct {
@@ -1356,7 +1500,7 @@ func (c CreateInviteLink[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (c CreateInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
-	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "createInviteLink", c)
+	return MakePostRequest[types.ChatInviteLink](telego.GetToken(), "createInviteLink", c)
 }
 
 type EditInviteLink[T int | string] struct {
@@ -1397,7 +1541,7 @@ func (c EditInviteLink[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (c EditInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
-	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "editInviteLink", c)
+	return MakePostRequest[types.ChatInviteLink](telego.GetToken(), "editInviteLink", c)
 }
 
 type CreateChatSubscriptionInviteLink[T int | string] struct {
@@ -1437,7 +1581,7 @@ func (c CreateChatSubscriptionInviteLink[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (c CreateChatSubscriptionInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
-	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "createChatSubscriptionInviteLink", c)
+	return MakePostRequest[types.ChatInviteLink](telego.GetToken(), "createChatSubscriptionInviteLink", c)
 }
 
 type EditChatSubscriptionInviteLink[T int | string] struct {
@@ -1473,7 +1617,7 @@ func (c EditChatSubscriptionInviteLink[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (c EditChatSubscriptionInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
-	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "editChatSubscriptionInviteLink", c)
+	return MakePostRequest[types.ChatInviteLink](telego.GetToken(), "editChatSubscriptionInviteLink", c)
 }
 
 type RevokeInviteLink[T int | string] struct {
@@ -1506,7 +1650,7 @@ func (c RevokeInviteLink[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (c RevokeInviteLink[T]) Execute() (*types.ChatInviteLink, error) {
-	return internal.MakePostRequest[types.ChatInviteLink](telego.GetToken(), "revokeInviteLink", c)
+	return MakePostRequest[types.ChatInviteLink](telego.GetToken(), "revokeInviteLink", c)
 }
 
 type ApproveChatJoinRequest[T int | string] struct {
@@ -1536,7 +1680,7 @@ func (s ApproveChatJoinRequest[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s ApproveChatJoinRequest[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "approveChatJoinRequest", s)
+	return MakePostRequest[bool](telego.GetToken(), "approveChatJoinRequest", s)
 }
 
 type DeclineChatJoinRequest[T int | string] struct {
@@ -1567,7 +1711,7 @@ func (s DeclineChatJoinRequest[T]) ToRequestBody() ([]byte, error) {
 
 func (s DeclineChatJoinRequest[T]) Execute() (*bool, error) {
 	// NOTE: maybe there's a better way to get token?
-	return internal.MakePostRequest[bool](telego.GetToken(), "declineChatJoinRequest", s)
+	return MakePostRequest[bool](telego.GetToken(), "declineChatJoinRequest", s)
 }
 
 type SetChatPhoto[T int | string] struct {
@@ -1597,7 +1741,7 @@ func (s SetChatPhoto[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetChatPhoto[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setChatPhoto", s)
+	return MakePostRequest[bool](telego.GetToken(), "setChatPhoto", s)
 }
 
 type DeleteChatPhoto[T int | string] struct {
@@ -1623,7 +1767,7 @@ func (d DeleteChatPhoto[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (d DeleteChatPhoto[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "deleteChatPhoto", d)
+	return MakePostRequest[bool](telego.GetToken(), "deleteChatPhoto", d)
 }
 
 type SetChatTitle[T int | string] struct {
@@ -1653,7 +1797,7 @@ func (s SetChatTitle[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetChatTitle[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setChatTitle", s)
+	return MakePostRequest[bool](telego.GetToken(), "setChatTitle", s)
 }
 
 type SetChatDescription[T int | string] struct {
@@ -1683,7 +1827,7 @@ func (s SetChatDescription[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetChatDescription[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setChatTitle", s)
+	return MakePostRequest[bool](telego.GetToken(), "setChatTitle", s)
 }
 
 type PinChatMessage[T int | string] struct {
@@ -1715,7 +1859,7 @@ func (p PinChatMessage[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (p PinChatMessage[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "pinChatMessage", p)
+	return MakePostRequest[bool](telego.GetToken(), "pinChatMessage", p)
 }
 
 type UnpinChatMessage[T int | string] struct {
@@ -1746,7 +1890,7 @@ func (p UnpinChatMessage[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (p UnpinChatMessage[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "unpinChatMessage", p)
+	return MakePostRequest[bool](telego.GetToken(), "unpinChatMessage", p)
 }
 
 type UnpinAllChatMessages[T int | string] struct {
@@ -1772,7 +1916,7 @@ func (p UnpinAllChatMessages[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (p UnpinAllChatMessages[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "unpinAllChatMessages", p)
+	return MakePostRequest[bool](telego.GetToken(), "unpinAllChatMessages", p)
 }
 
 type LeaveChat[T int | string] struct {
@@ -1798,7 +1942,115 @@ func (p LeaveChat[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (p LeaveChat[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "leaveChat", p)
+	return MakePostRequest[bool](telego.GetToken(), "leaveChat", p)
+}
+
+type GetChat[T int | string] struct {
+	ChatId T
+}
+
+func (p GetChat[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (p GetChat[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p GetChat[T]) Execute() (*types.ChatFullInfo, error) {
+	return MakeGetRequest[types.ChatFullInfo](telego.GetToken(), "getChat", p)
+}
+
+type GetChatAdministrators[T int | string] struct {
+	ChatId T
+}
+
+func (p GetChatAdministrators[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (p GetChatAdministrators[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p GetChatAdministrators[T]) Execute() (*[]types.ChatMember, error) {
+	return MakeGetRequest[[]types.ChatMember](telego.GetToken(), "getChatAdministrators", p)
+}
+
+type GetChatMemberCount[T int | string] struct {
+	ChatId T
+}
+
+func (p GetChatMemberCount[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (p GetChatMemberCount[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p GetChatMemberCount[T]) Execute() (*int, error) {
+	return MakeGetRequest[int](telego.GetToken(), "getChatMemberCount", p)
+}
+
+type GetChatMember[T int | string] struct {
+	ChatId T
+	UserId int
+}
+
+func (p GetChatMember[T]) Validate() error {
+	if c, ok := any(p.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(p.ChatId).(int); ok {
+		if c < 1 {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if p.UserId < 1 {
+		return types.ErrInvalidParam("user_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (p GetChatMember[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p GetChatMember[T]) Execute() (*types.ChatMember, error) {
+	return MakeGetRequest[types.ChatMember](telego.GetToken(), "getChatMember", p)
 }
 
 type SetChatStickerSet[T int | string] struct {
@@ -1828,7 +2080,7 @@ func (p SetChatStickerSet[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (p SetChatStickerSet[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setChatStickerSet", p)
+	return MakePostRequest[bool](telego.GetToken(), "setChatStickerSet", p)
 }
 
 type DeleteChatStickerSet[T int | string] struct {
@@ -1854,7 +2106,24 @@ func (p DeleteChatStickerSet[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (p DeleteChatStickerSet[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "deleteChatStickerSet", p)
+	return MakePostRequest[bool](telego.GetToken(), "deleteChatStickerSet", p)
+}
+
+type GetForumTopicIconStickers struct {
+}
+
+// always nil
+func (g GetForumTopicIconStickers) Validate() error {
+	return nil
+}
+
+// alwways empty json
+func (g GetForumTopicIconStickers) ToRequestBody() ([]byte, error) {
+	return json.Marshal(struct{}{})
+}
+
+func (g GetForumTopicIconStickers) Execute() (*[]types.Sticker, error) {
+	return MakeGetRequest[[]types.Sticker](telego.GetToken(), "getForumTopicStickers", g)
 }
 
 var validIconColors = map[int]struct{}{
@@ -1900,7 +2169,7 @@ func (c CreateForumTopic[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (c CreateForumTopic[T]) Execute() (*types.ForumTopic, error) {
-	return internal.MakePostRequest[types.ForumTopic](telego.GetToken(), "createForumTopic", c)
+	return MakePostRequest[types.ForumTopic](telego.GetToken(), "createForumTopic", c)
 }
 
 type EditForumTopic[T int | string] struct {
@@ -1937,7 +2206,7 @@ func (e EditForumTopic[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e EditForumTopic[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "editForumTopic", e)
+	return MakePostRequest[bool](telego.GetToken(), "editForumTopic", e)
 }
 
 type CloseForumTopic[T int | string] struct {
@@ -1967,7 +2236,7 @@ func (e CloseForumTopic[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e CloseForumTopic[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "closeForumTopic", e)
+	return MakePostRequest[bool](telego.GetToken(), "closeForumTopic", e)
 }
 
 type ReopenForumTopic[T int | string] struct {
@@ -1997,7 +2266,7 @@ func (e ReopenForumTopic[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e ReopenForumTopic[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "reopenForumTopic", e)
+	return MakePostRequest[bool](telego.GetToken(), "reopenForumTopic", e)
 }
 
 type DeleteForumTopic[T int | string] struct {
@@ -2027,7 +2296,7 @@ func (e DeleteForumTopic[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e DeleteForumTopic[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "deleteForumTopic", e)
+	return MakePostRequest[bool](telego.GetToken(), "deleteForumTopic", e)
 }
 
 type UnpinAllForumTopicMessages[T int | string] struct {
@@ -2057,7 +2326,7 @@ func (e UnpinAllForumTopicMessages[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e UnpinAllForumTopicMessages[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "unpinAllForumTopicMessages", e)
+	return MakePostRequest[bool](telego.GetToken(), "unpinAllForumTopicMessages", e)
 }
 
 type EditGeneralForumTopic[T int | string] struct {
@@ -2087,7 +2356,7 @@ func (e EditGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e EditGeneralForumTopic[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "editGeneralForumTopic", e)
+	return MakePostRequest[bool](telego.GetToken(), "editGeneralForumTopic", e)
 }
 
 type CloseGeneralForumTopic[T int | string] struct {
@@ -2113,7 +2382,7 @@ func (e CloseGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e CloseGeneralForumTopic[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "closeGeneralForumTopic", e)
+	return MakePostRequest[bool](telego.GetToken(), "closeGeneralForumTopic", e)
 }
 
 type ReopenGeneralForumTopic[T int | string] struct {
@@ -2139,7 +2408,7 @@ func (e ReopenGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e ReopenGeneralForumTopic[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "reopenGeneralForumTopic", e)
+	return MakePostRequest[bool](telego.GetToken(), "reopenGeneralForumTopic", e)
 }
 
 type HideGeneralForumTopic[T int | string] struct {
@@ -2165,7 +2434,7 @@ func (e HideGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e HideGeneralForumTopic[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "hideGeneralForumTopic", e)
+	return MakePostRequest[bool](telego.GetToken(), "hideGeneralForumTopic", e)
 }
 
 type UnhideGeneralForumTopic[T int | string] struct {
@@ -2191,7 +2460,7 @@ func (e UnhideGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e UnhideGeneralForumTopic[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "unhideGeneralForumTopic", e)
+	return MakePostRequest[bool](telego.GetToken(), "unhideGeneralForumTopic", e)
 }
 
 type UnpinAllGeneralForumTopicMessages[T int | string] struct {
@@ -2217,7 +2486,7 @@ func (e UnpinAllGeneralForumTopicMessages[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (e UnpinAllGeneralForumTopicMessages[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "unpinAllGeneralForumTopicMessages", e)
+	return MakePostRequest[bool](telego.GetToken(), "unpinAllGeneralForumTopicMessages", e)
 }
 
 type AnswerCallbackQuery struct {
@@ -2238,6 +2507,63 @@ func (a AnswerCallbackQuery) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (a AnswerCallbackQuery) ToRequestBody() ([]byte, error) {
+	return json.Marshal(a)
+}
+
+func (a AnswerCallbackQuery) Execute() (*bool, error) {
+	return MakePostRequest[bool](telego.GetToken(), "answerCallbackQuery", a)
+}
+
+type GetUserChatBoosts[T int | string] struct {
+	ChatId T
+	UserId int
+}
+
+func (g GetUserChatBoosts[T]) Validate() error {
+	if c, ok := any(g.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(g.ChatId).(int); ok {
+		if c < 1 {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if g.UserId < 1 {
+		return types.ErrInvalidParam("user_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (g GetUserChatBoosts[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(g)
+}
+
+func (g GetUserChatBoosts[T]) Execute() (*types.UserChatBoosts, error) {
+	return MakeGetRequest[types.UserChatBoosts](telego.GetToken(), "getUserChatBoosts", g)
+}
+
+type GetBusinessConnection struct {
+	BusinessConnectionId string
+}
+
+func (g GetBusinessConnection) Validate() error {
+	if strings.TrimSpace(g.BusinessConnectionId) == "" {
+		return types.ErrInvalidParam("business_connection_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (g GetBusinessConnection) ToRequestBody() ([]byte, error) {
+	return json.Marshal(g)
+}
+
+func (g GetBusinessConnection) Execute() (*types.BusinessConnection, error) {
+	return MakeGetRequest[types.BusinessConnection](telego.GetToken(), "getBusinessConnection", g)
 }
 
 type SetMyCommands struct {
@@ -2267,7 +2593,7 @@ func (s SetMyCommands) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetMyCommands) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setMyCommands", s)
+	return MakePostRequest[bool](telego.GetToken(), "setMyCommands", s)
 }
 
 type DeleteMyCommands struct {
@@ -2289,7 +2615,29 @@ func (s DeleteMyCommands) ToRequestBody() ([]byte, error) {
 }
 
 func (s DeleteMyCommands) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "deleteMyCommands", s)
+	return MakePostRequest[bool](telego.GetToken(), "deleteMyCommands", s)
+}
+
+type GetMyCommands struct {
+	Scope        *types.BotCommandScope
+	LanguageCode *string
+}
+
+func (s GetMyCommands) Validate() error {
+	if s.LanguageCode != nil && *s.LanguageCode != "" {
+		if !iso6391.ValidCode(*s.LanguageCode) {
+			return types.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	return nil
+}
+
+func (s GetMyCommands) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s GetMyCommands) Execute() (*[]types.BotCommand, error) {
+	return MakeGetRequest[[]types.BotCommand](telego.GetToken(), "getMyCommands", s)
 }
 
 type SetMyName struct {
@@ -2316,7 +2664,28 @@ func (s SetMyName) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetMyName) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setMyName", s)
+	return MakePostRequest[bool](telego.GetToken(), "setMyName", s)
+}
+
+type GetMyName struct {
+	LanguageCode *string
+}
+
+func (s GetMyName) Validate() error {
+	if s.LanguageCode != nil && *s.LanguageCode != "" {
+		if !iso6391.ValidCode(*s.LanguageCode) {
+			return types.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	return nil
+}
+
+func (s GetMyName) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s GetMyName) Execute() (*types.BotName, error) {
+	return MakeGetRequest[types.BotName](telego.GetToken(), "getMyName", s)
 }
 
 type SetMyDescription struct {
@@ -2343,7 +2712,28 @@ func (s SetMyDescription) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetMyDescription) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setMyDescription", s)
+	return MakePostRequest[bool](telego.GetToken(), "setMyDescription", s)
+}
+
+type GetMyDescription struct {
+	LanguageCode *string
+}
+
+func (s GetMyDescription) Validate() error {
+	if s.LanguageCode != nil && *s.LanguageCode != "" {
+		if !iso6391.ValidCode(*s.LanguageCode) {
+			return types.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	return nil
+}
+
+func (s GetMyDescription) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s GetMyDescription) Execute() (*types.BotDescription, error) {
+	return MakeGetRequest[types.BotDescription](telego.GetToken(), "getMyDescription", s)
 }
 
 type SetMyShortDescription struct {
@@ -2370,12 +2760,33 @@ func (s SetMyShortDescription) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetMyShortDescription) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setMyShortDescription", s)
+	return MakePostRequest[bool](telego.GetToken(), "setMyShortDescription", s)
+}
+
+type GetMyShortDescription struct {
+	LanguageCode *string
+}
+
+func (s GetMyShortDescription) Validate() error {
+	if s.LanguageCode != nil && *s.LanguageCode != "" {
+		if !iso6391.ValidCode(*s.LanguageCode) {
+			return types.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	return nil
+}
+
+func (s GetMyShortDescription) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s GetMyShortDescription) Execute() (*bool, error) {
+	return MakeGetRequest[bool](telego.GetToken(), "getMyShortDescription", s)
 }
 
 type SetChatMenuButton[T int | string] struct {
 	ChatId     *T
-	MenuButton *types.MenuButton
+	MenuButton types.MenuButton
 }
 
 func (s SetChatMenuButton[T]) Validate() error {
@@ -2404,7 +2815,28 @@ func (s SetChatMenuButton[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetChatMenuButton[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setChatMenuButton", s)
+	return MakePostRequest[bool](telego.GetToken(), "setChatMenuButton", s)
+}
+
+type GetChatMenuButton struct {
+	ChatId *int
+}
+
+func (s GetChatMenuButton) Validate() error {
+	if s.ChatId != nil {
+		if *s.ChatId < 1 {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (s GetChatMenuButton) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s GetChatMenuButton) Execute() (*types.MenuButtonResponse, error) {
+	return MakeGetRequest[types.MenuButtonResponse](telego.GetToken(), "setChatMenuButton", s)
 }
 
 type SetMyDefaultAdministratorRights struct {
@@ -2422,103 +2854,22 @@ func (s SetMyDefaultAdministratorRights) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetMyDefaultAdministratorRights) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setMyDefaultAdministratorRights", s)
+	return MakePostRequest[bool](telego.GetToken(), "setMyDefaultAdministratorRights", s)
 }
 
-type StopPoll[T int | string] struct {
-	ChatId               T
-	MessageId            int
-	BusinessConnectionId *string
-	ReplyMarkup          *types.InlineKeyboardMarkup
+type GetMyDefaultAdministratorRights struct {
+	ForChannels *bool
 }
 
-func (s StopPoll[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return types.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return types.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if s.MessageId < 1 {
-		return types.ErrInvalidParam("message_id parameter can't be empty")
-	}
-	if s.ReplyMarkup != nil {
-		if err := s.ReplyMarkup.Validate(); err != nil {
-			return err
-		}
-	}
+// always nil
+func (s GetMyDefaultAdministratorRights) Validate() error {
 	return nil
 }
 
-func (s StopPoll[T]) ToRequestBody() ([]byte, error) {
+func (s GetMyDefaultAdministratorRights) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s StopPoll[T]) Execute() (*types.Poll, error) {
-	return internal.MakePostRequest[types.Poll](telego.GetToken(), "stopPoll", s)
-}
-
-type DeleteMessage[T int | string] struct {
-	ChatId    T
-	MessageId int
-}
-
-func (d DeleteMessage[T]) Validate() error {
-	if c, ok := any(d.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return types.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(d.ChatId).(int); ok {
-		if c < 1 {
-			return types.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if d.MessageId < 1 {
-		return types.ErrInvalidParam("message_id parameter can't be empty")
-	}
-	return nil
-}
-
-func (d DeleteMessage[T]) ToRequestBody() ([]byte, error) {
-	return json.Marshal(d)
-}
-
-func (d DeleteMessage[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "deleteMessage", d)
-}
-
-type DeleteMessages[T int | string] struct {
-	ChatId     T
-	MessageIds []int
-}
-
-func (d DeleteMessages[T]) Validate() error {
-	if c, ok := any(d.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return types.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(d.ChatId).(int); ok {
-		if c < 1 {
-			return types.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if len(d.MessageIds) < 1 || len(d.MessageIds) > 100 {
-		return types.ErrInvalidParam("message_ids parameter must be between 1 and 100")
-	}
-
-	return nil
-}
-
-func (d DeleteMessages[T]) ToRequestBody() ([]byte, error) {
-	return json.Marshal(d)
-}
-
-func (d DeleteMessages[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "deleteMessages", d)
+func (s GetMyDefaultAdministratorRights) Execute() (*types.ChatAdministratorRights, error) {
+	return MakePostRequest[types.ChatAdministratorRights](telego.GetToken(), "getMyDefaultAdministratorRights", s)
 }

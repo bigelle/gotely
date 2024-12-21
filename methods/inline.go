@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -45,7 +44,7 @@ func (a AnswerInlineQuery) ToRequestBody() ([]byte, error) {
 }
 
 func (a AnswerInlineQuery) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "answerInlineQuery", a)
+	return MakePostRequest[bool](telego.GetToken(), "answerInlineQuery", a)
 }
 
 type AnswerWebAppQuery struct {
@@ -68,7 +67,7 @@ func (a AnswerWebAppQuery) ToRequestBody() ([]byte, error) {
 }
 
 func (a AnswerWebAppQuery) Execute() (*types.SentWebAppMessage, error) {
-	return internal.MakePostRequest[types.SentWebAppMessage](telego.GetToken(), "answerWebAppQuery", a)
+	return MakePostRequest[types.SentWebAppMessage](telego.GetToken(), "answerWebAppQuery", a)
 }
 
 type SavePreparedInlineMessage struct {
@@ -95,5 +94,5 @@ func (s SavePreparedInlineMessage) ToRequestBody() ([]byte, error) {
 }
 
 func (s SavePreparedInlineMessage) Execute() (*types.PreparedInlineMessage, error) {
-	return internal.MakePostRequest[types.PreparedInlineMessage](telego.GetToken(), "savePreparedInlineMessage", s)
+	return MakePostRequest[types.PreparedInlineMessage](telego.GetToken(), "savePreparedInlineMessage", s)
 }

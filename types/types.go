@@ -1,8 +1,6 @@
 package types
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -17,6 +15,15 @@ type ErrInvalidParam string
 
 func (e ErrInvalidParam) Error() string {
 	return string(e)
+}
+
+type ErrInvalidSubtypeConversion struct {
+	Expected string
+	Got      string
+}
+
+func (e ErrInvalidSubtypeConversion) Error() string {
+	return fmt.Sprintf("failed subtype conversion; expected: %s, got: %s", e.Expected, e.Got)
 }
 
 // This object represents an incoming update.
@@ -490,8 +497,6 @@ type Message struct {
 	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
-func (m Message) maybeInaccessibleMessageContract() {}
-
 func (m Message) IsCommand() bool {
 	if len(*m.Text) != 0 && m.Entities != nil {
 		for _, en := range *m.Entities {
@@ -515,22 +520,134 @@ type MessageId struct {
 // This object describes a message that was deleted or is otherwise inaccessible to the bot.
 type InaccesibleMessage struct {
 	//Chat the message belonged to
-	Chat *Chat `json:"chat"`
+	Chat Chat `json:"chat"`
 	//Unique message identifier inside the chat
 	MessageId int `json:"message_id"`
 	//Always 0. The field can be used to differentiate regular and inaccessible messages.
 	Date int `json:"date"`
 }
 
-func (i InaccesibleMessage) maybeInaccessibleMessageContract() {}
-
 // This object describes a message that can be inaccessible to the bot. It can be one of:
 //
 // - Message
 //
 // - InaccessibleMessage
-type MaybeInaccessibleMessage interface {
-	maybeInaccessibleMessageContract()
+type MaybeInaccessibleMessage struct {
+	MessageId                     int                            `json:"message_id"`
+	MessageThreadId               *int                           `json:"message_thread_id,omitempty"`
+	From                          *User                          `json:"from,omitempty"`
+	SenderChat                    *Chat                          `json:"sender_chat,omitempty"`
+	SenderBoostCount              *int                           `json:"sender_boost_count,omitempty"`
+	SenderBusinessBot             *User                          `json:"sender_business_bot,omitempty"`
+	Date                          int                            `json:"date"`
+	BusinessConnectionId          *string                        `json:"business_connection_id,omitempty"`
+	Chat                          Chat                           `json:"chat"`
+	ForwardOrigin                 *MessageOrigin                 `json:"forward_origin,omitempty"`
+	IsTopicMessage                *bool                          `json:"is_topic_message,omitempty"`
+	IsAutomaticForward            *bool                          `json:"is_automatic_forward,omitempty"`
+	ReplyToMessage                *Message                       `json:"reply_to_message,omitempty"`
+	ExternalReply                 *ExternalReplyInfo             `json:"external_reply,omitempty"`
+	Quote                         *TextQuote                     `json:"quote,omitempty"`
+	ReplyToStory                  *Story                         `json:"reply_to_story,omitempty"`
+	ViaBot                        *User                          `json:"via_bot,omitempty"`
+	EditDate                      *int                           `json:"edit_date,omitempty"`
+	HasProtectedContent           *bool                          `json:"has_protected_content,omitempty"`
+	IsFromOffline                 *bool                          `json:"is_from_offline,omitempty"`
+	MediaGroupId                  *string                        `json:"media_group_id,omitempty"`
+	AuthorSignature               *string                        `json:"author_signature,omitempty"`
+	Text                          *string                        `json:"text,omitempty"`
+	Entities                      *[]MessageEntity               `json:"entities,omitempty"`
+	LinkPreviewOptions            *LinkPreviewOptions            `json:"link_preview_options,omitempty"`
+	EffectId                      *string                        `json:"effect_id,omitempty"`
+	Animation                     *Animation                     `json:"animation,omitempty"`
+	Audio                         *Audio                         `json:"audio,omitempty"`
+	Document                      *Document                      `json:"document,omitempty"`
+	PaidMedia                     *PaidMediaInfo                 `json:"paid_media,omitempty"`
+	Photo                         *[]PhotoSize                   `json:"photo,omitempty"`
+	Sticker                       *Sticker                       `json:"sticker,omitempty"`
+	Story                         *Story                         `json:"story,omitempty"`
+	Video                         *Video                         `json:"video,omitempty"`
+	VideoNote                     *VideoNote                     `json:"video_note,omitempty"`
+	Voice                         *Voice                         `json:"voice,omitempty"`
+	Caption                       *string                        `json:"caption,omitempty"`
+	CaptionEntities               *[]MessageEntity               `json:"caption_entities,omitempty"`
+	ShowCaptionAboveMedia         *bool                          `json:"show_caption_above_media,omitempty"`
+	HasMediaSpoiler               *bool                          `json:"has_media_spoiler,omitempty"`
+	Contact                       *Contact                       `json:"contact,omitempty"`
+	Dice                          *Dice                          `json:"dice,omitempty"`
+	Game                          *Game                          `json:"game,omitempty"`
+	Poll                          *Poll                          `json:"poll,omitempty"`
+	Venue                         *Venue                         `json:"venue,omitempty"`
+	Location                      *Location                      `json:"location,omitempty"`
+	NewChatMembers                *[]User                        `json:"new_chat_members,omitempty"`
+	LeftChatMember                *User                          `json:"left_chat_member,omitempty"`
+	NewChatTitle                  *string                        `json:"new_chat_title,omitempty"`
+	NewChatPhoto                  *[]PhotoSize                   `json:"new_chat_photo,omitempty"`
+	DeleteChatPhoto               *bool                          `json:"delete_chat_photo,omitempty"`
+	GroupChatCreated              *bool                          `json:"group_chat_created,omitempty"`
+	SuperGroupCreated             *bool                          `json:"super_group_created,omitempty"`
+	ChannelChatCreated            *bool                          `json:"channel_chat_created"`
+	MessageAutoDeleteTimerChanged *MessageAutoDeleteTimerChanged `json:"message_auto_delete_timer_changed,omitempty"`
+	MigrateToChatId               *int64                         `json:"migrate_to_chat_id,omitempty"`
+	MigrateFromChatId             *int64                         `json:"migrate_from_chat_id,omitempty"`
+	PinnedMessage                 *MaybeInaccessibleMessage      `json:"pinned_message,omitempty"`
+	Invoice                       *Invoice                       `json:"invoice,omitempty"`
+	SuccessfulPayment             *SuccessfulPayment             `json:"successful_payment,omitempty"`
+	RefundedPayment               *RefundedPayment               `json:"refunded_payment,omitempty"`
+	UsersShared                   *UsersShared                   `json:"users_shared,omitempty"`
+	ChatShared                    *ChatShared                    `json:"chat_shared,omitempty"`
+	ConnectedWebsite              *string                        `json:"connected_website,omitempty"`
+	WriteAccessAllowed            *WriteAccessAllowed            `json:"write_access_allowed,omitempty"`
+	PassportData                  *PassportData                  `json:"passport_data,omitempty"`
+	ProximityAlertTriggered       *ProximityAlertTriggered       `json:"proximity_alert_triggered,omitempty"`
+	ForwardFrom                   *User                          `json:"forward_from,omitempty"`
+	BoostAdded                    *ChatBoostAdded                `json:"boost_added,omitempty"`
+	ChatBackgroundSet             *ChatBackground                `json:"chat_background_set,omitempty"`
+	ForumTopicCreated             *ForumTopicCreated             `json:"forum_topic_created,omitempty"`
+	ForumTopicEdited              *ForumTopicEdited              `json:"forum_topic_edited,omitempty"`
+	ForumTopicClosed              *ForumTopicClosed              `json:"forum_topic_closed,omitempty"`
+	ForumTopicReopened            *ForumTopicReopened            `json:"forum_topic_reopened,omitempty"`
+	GeneralForumTopicHidden       *GeneralForumTopicHidden       `json:"general_forum_topic_hidden,omitempty"`
+	GeneralForumTopicUnhidden     *GeneralForumTopicUnhidden     `json:"general_forum_topic_unhidden,omitempty"`
+	GiveawayCreated               *GiveawayCreated               `json:"giveaway_created,omitempty"`
+	Giveaway                      *Giveaway                      `json:"giveaway,omitempty"`
+	GiveawayWinners               *GiveawayWinners               `json:"giveaway_winners,omitempty"`
+	GiveawayCompleted             *GiveawayCompleted             `json:"giveaway_completed,omitempty"`
+	VideoChatScheduled            *VideoChatScheduled            `json:"video_chat_scheduled,omitempty"`
+	VideoChatStarted              *VideoChatStarted              `json:"video_chat_started,omitempty"`
+	VideoChatEnded                *VideoChatEnded                `json:"video_chat_ended,omitempty"`
+	VideoChatParticipantsInvited  *VideoChatParticipantsInvited  `json:"video_chat_participants_invited,omitempty"`
+	WebAppData                    *WebAppData                    `json:"web_app_data,omitempty"`
+	ReplyMarkup                   *InlineKeyboardMarkup          `json:"reply_markup,omitempty"`
+}
+
+func (m MaybeInaccessibleMessage) IsAccessible() bool {
+	return m.Date != 0
+}
+
+func (m MaybeInaccessibleMessage) MessageType() (*Message, error) {
+	if !m.IsAccessible() {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "message",
+			Got:      "inaccesible_message",
+		}
+	}
+	msg := Message(m)
+	return &msg, nil
+}
+
+func (m MaybeInaccessibleMessage) InaccesibleMessageType() (*InaccesibleMessage, error) {
+	if m.IsAccessible() {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "inaccesible_message",
+			Got:      "message",
+		}
+	}
+	return &InaccesibleMessage{
+		Chat:      m.Chat,
+		MessageId: m.MessageId,
+		Date:      m.Date,
+	}, nil
 }
 
 type MessageEntity struct {
@@ -673,53 +790,73 @@ func (r ReplyParameters) Validate() error {
 //
 // -MessageOriginChannel
 type MessageOrigin struct {
-	MessageOriginInterface
+	Type            string  `json:"type"`
+	Date            *int    `json:"date,omitempty"`
+	SenderUser      *User   `json:"sender_user,omitempty"`
+	SenderUserName  *string `json:"sender_user_name,omitempty"`
+	SenderChat      *Chat   `json:"sender_chat,omitempty"`
+	AuthorSignature *string `json:"author_signature,omitempty"`
+	Chat            *Chat   `json:"chat,omitempty"`
+	MessageId       *int    `json:"message_id,omitempty"`
 }
 
-type MessageOriginInterface interface {
-	GetMessageOriginType() string
+func (m MessageOrigin) UserType() (*MessageOriginUser, error) {
+	if m.Type != "user" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "user",
+			Got:      m.Type,
+		}
+	}
+	return &MessageOriginUser{
+		Type:       m.Type,
+		Date:       *m.Date,
+		SenderUser: *m.SenderUser,
+	}, nil
 }
 
-func (m *MessageOrigin) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Type string
+func (m MessageOrigin) HiddenUserType() (*MessageOriginHiddenUser, error) {
+	if m.Type != "hidden_user" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "user",
+			Got:      m.Type,
+		}
 	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
+	return &MessageOriginHiddenUser{
+		Type:           m.Type,
+		Date:           *m.Date,
+		SenderUsername: *m.SenderUserName,
+	}, nil
+}
 
-	switch raw.Type {
-	case "user":
-		tmp := MessageOriginUser{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
+func (m MessageOrigin) ChatType() (*MessageOriginChat, error) {
+	if m.Type != "chat" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "chat",
+			Got:      m.Type,
 		}
-		m.MessageOriginInterface = tmp
-		return nil
-	case "hidden_user":
-		tmp := MessageOriginHiddenUser{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		m.MessageOriginInterface = tmp
-		return nil
-	case "chat":
-		tmp := MessageOriginChat{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		m.MessageOriginInterface = tmp
-		return nil
-	case "channel":
-		tmp := MessageOriginChannel{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		m.MessageOriginInterface = tmp
-		return nil
-	default:
-		return errors.New("type must be user, hidden_user, chat or channel")
 	}
+	return &MessageOriginChat{
+		Type:            m.Type,
+		Date:            *m.Date,
+		SenderChat:      *m.SenderChat,
+		AuthorSignature: m.AuthorSignature,
+	}, nil
+}
+
+func (m MessageOrigin) ChannelType() (*MessageOriginChannel, error) {
+	if m.Type != "channel" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "channel",
+			Got:      m.Type,
+		}
+	}
+	return &MessageOriginChannel{
+		Type:            m.Type,
+		Date:            *m.Date,
+		Chat:            *m.Chat,
+		MessageId:       *m.MessageId,
+		AuthorSignature: m.AuthorSignature,
+	}, nil
 }
 
 // The message was originally sent by a known user.
@@ -732,10 +869,6 @@ type MessageOriginUser struct {
 	SenderUser User `json:"sender_user"`
 }
 
-func (m MessageOriginUser) GetMessageOriginType() string {
-	return "user"
-}
-
 // The message was originally sent by an unknown user.
 type MessageOriginHiddenUser struct {
 	//Type of the message origin, always “hidden_user”
@@ -744,10 +877,6 @@ type MessageOriginHiddenUser struct {
 	Date int `json:"date"`
 	//Name of the user that sent the message originally
 	SenderUsername string `json:"sender_username"`
-}
-
-func (m MessageOriginHiddenUser) GetMessageOriginType() string {
-	return "hidden_user"
 }
 
 // The message was originally sent on behalf of a chat to a group chat.
@@ -762,10 +891,6 @@ type MessageOriginChat struct {
 	AuthorSignature *string `json:"author_signature,omitempty"`
 }
 
-func (m MessageOriginChat) GetMessageOriginType() string {
-	return "chat"
-}
-
 // The message was originally sent to a channel chat.
 type MessageOriginChannel struct {
 	//Type of the message origin, always “channel”
@@ -778,10 +903,6 @@ type MessageOriginChannel struct {
 	MessageId int `json:"message_id"`
 	//Optional. Signature of the original post author
 	AuthorSignature *string `json:"author_signature,omitempty"`
-}
-
-func (m MessageOriginChannel) GetMessageOriginType() string {
-	return "channel"
 }
 
 // This object represents one size of a photo or a file / sticker thumbnail.
@@ -939,45 +1060,60 @@ type PaidMediaInfo struct {
 }
 
 // This object describes paid media. Currently, it can be one of
+//
+// - PaidMediaPreview
+//
+// - PaidMediaPhoto
+//
+// - PaidMediaVideo
 type PaidMedia struct {
-	PaidMediaInterface
+	Type     string       `json:"type"`
+	Width    *int         `json:"width,omitempty"`
+	Height   *int         `json:"height,omitempty"`
+	Duration *int         `json:"duration,omitempty"`
+	Photo    *[]PhotoSize `json:"photo,omitempty"`
+	Video    *Video       `json:"video,omitempty"`
 }
 
-type PaidMediaInterface interface {
-	GetPaidMediaType() string
+func (p PaidMedia) PreviewType() (*PaidMediaPreview, error) {
+	if p.Type != "preview" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "preview",
+			Got:      p.Type,
+		}
+	}
+	return &PaidMediaPreview{
+		Type:     p.Type,
+		Width:    p.Width,
+		Height:   p.Height,
+		Duration: p.Duration,
+	}, nil
 }
 
-func (p *PaidMedia) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Type string `json:"type"`
+func (p PaidMedia) PhotoType() (*PaidMediaPhoto, error) {
+	if p.Type != "photo" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "photo",
+			Got:      p.Type,
+		}
 	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
+	return &PaidMediaPhoto{
+		Type:  p.Type,
+		Photo: *p.Photo,
+	}, nil
+}
 
-	switch raw.Type {
-	case "preview":
-		tmp := PaidMediaPreview{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
+func (p PaidMedia) VideoType() (*PaidMediaVideo, error) {
+	if p.Type != "video" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "video",
+			Got:      p.Type,
 		}
-		p.PaidMediaInterface = tmp
-	case "photo":
-		tmp := PaidMediaPhoto{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		p.PaidMediaInterface = tmp
-	case "video":
-		tmp := PaidMediaVideo{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		p.PaidMediaInterface = tmp
-	default:
-		return errors.New("type must be preview, photo, video")
 	}
-	return nil
+	return &PaidMediaVideo{
+		Type:  p.Type,
+		Video: p.Video,
+	}, nil
 }
 
 // The paid media isn't available before the payment.
@@ -992,10 +1128,6 @@ type PaidMediaPreview struct {
 	Duration *int `json:"duration,omitempty"`
 }
 
-func (p PaidMediaPreview) GetPaidMediaType() string {
-	return "preview"
-}
-
 // The paid media is a photo.
 type PaidMediaPhoto struct {
 	//Type of the paid media, always “photo”
@@ -1004,20 +1136,12 @@ type PaidMediaPhoto struct {
 	Photo []PhotoSize `json:"photo"`
 }
 
-func (p PaidMediaPhoto) GetPaidMediaType() string {
-	return "photo"
-}
-
 // The paid media is a video.
 type PaidMediaVideo struct {
 	//Type of the paid media, always “video”
 	Type string `json:"type"`
 	//The video
 	Video *Video `json:"video"`
-}
-
-func (p PaidMediaVideo) GetPaidMediaType() string {
-	return "video"
 }
 
 // This object represents a phone contact.
@@ -1198,44 +1322,53 @@ type ChatBoostAdded struct {
 //
 // - BackgroundFillFreeformGradient
 type BackgroundFill struct {
-	BackgroundFillInterface
+	Type          string `json:"type"`
+	Color         *int   `json:"color,omitempty"`
+	TopColor      *int   `json:"top_color,omitempty"`
+	BottomColor   *int   `json:"bottom_color,omitempty"`
+	RotationAngle *int   `json:"rotation_angle,omitempty"`
+	Colors        *[]int `json:"colors,omitempty"`
 }
 
-type BackgroundFillInterface interface {
-	GetBackgroundFillType() string
+func (b BackgroundFill) SolidType() (*BackgroundFillSolid, error) {
+	if b.Type != "solid" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "solid",
+			Got:      b.Type,
+		}
+	}
+	return &BackgroundFillSolid{
+		Type:  b.Type,
+		Color: *b.Color,
+	}, nil
 }
 
-func (b *BackgroundFill) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Type string `json:"type"`
+func (b BackgroundFill) GradientType() (*BackgroundFillGradient, error) {
+	if b.Type != "gradient" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "gradient",
+			Got:      b.Type,
+		}
 	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
+	return &BackgroundFillGradient{
+		Type:          b.Type,
+		TopColor:      *b.TopColor,
+		BottomColor:   *b.BottomColor,
+		RotationAngle: *b.RotationAngle,
+	}, nil
+}
 
-	switch raw.Type {
-	case "freeform_gradient":
-		tmp := BackgroundFillFreeformGradient{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
+func (b BackgroundFill) FreeformGradientType() (*BackgroundFillFreeformGradient, error) {
+	if b.Type != "freeform_gradient" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "freeform_gradient",
+			Got:      b.Type,
 		}
-		b.BackgroundFillInterface = tmp
-	case "gradient":
-		tmp := BackgroundFillGradient{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		b.BackgroundFillInterface = tmp
-	case "solid":
-		tmp := BackgroundFillSolid{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		b.BackgroundFillInterface = tmp
-	default:
-		return fmt.Errorf("unknown type: %s", raw.Type)
 	}
-	return nil
+	return &BackgroundFillFreeformGradient{
+		Type:   b.Type,
+		Colors: *b.Colors,
+	}, nil
 }
 
 // The background is filled using the selected color.
@@ -1244,10 +1377,6 @@ type BackgroundFillSolid struct {
 	Type string `json:"type"`
 	//The color of the background fill in the RGB24 format
 	Color int `json:"color"`
-}
-
-func (b BackgroundFillSolid) GetBackgroundFillType() string {
-	return "solid"
 }
 
 // The background is a gradient fill.
@@ -1262,20 +1391,12 @@ type BackgroundFillGradient struct {
 	RotationAngle int `json:"rotation_angle"`
 }
 
-func (b BackgroundFillGradient) GetBackgroundFillType() string {
-	return "gradient"
-}
-
 // The background is a freeform gradient that rotates after every message in the chat.
 type BackgroundFillFreeformGradient struct {
 	//Type of the background fill, always “freeform_gradient”
 	Type string `json:"type"`
 	//A list of the 3 or 4 base colors that are used to generate the freeform gradient in the RGB24 format
 	Colors []int `json:"colors"`
-}
-
-func (b BackgroundFillFreeformGradient) GetBackgroundFillType() string {
-	return "freeform_gradient"
 }
 
 // This object describes the type of a background. Currently, it can be one of
@@ -1288,53 +1409,75 @@ func (b BackgroundFillFreeformGradient) GetBackgroundFillType() string {
 //
 // - BackgroundTypeChatTheme
 type BackgroundType struct {
-	BackgroundTypeInterface
+	Type             string          `json:"type"`
+	Fill             *BackgroundFill `json:"fill,omitempty"`
+	DarkThemeDimming *int            `json:"dark_theme_dimming,omitempty"`
+	Document         *Document       `json:"document,omitempty"`
+	IsBlurred        *bool           `json:"is_blurred,omitempty"`
+	IsMoving         *bool           `json:"is_moving,omitempty"`
+	Intensity        *int            `json:"intensity,omitempty"`
+	IsInverted       *bool           `json:"is_inverted,omitempty"`
+	ThemeName        *string         `json:"theme_name,omitempty"`
 }
 
-type BackgroundTypeInterface interface {
-	GetBackgroundType() string
+func (b BackgroundType) FillType() (*BackgroundTypeFill, error) {
+	if b.Type != "fill" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "fill",
+			Got:      b.Type,
+		}
+	}
+	return &BackgroundTypeFill{
+		Type:             b.Type,
+		Fill:             *b.Fill,
+		DarkThemeDimming: *b.DarkThemeDimming,
+	}, nil
 }
 
-func (b BackgroundType) MarshalJSON() ([]byte, error) {
-	return json.Marshal(b.BackgroundTypeInterface)
+func (b BackgroundType) WallpaperType() (*BackgroundTypeWallpaper, error) {
+	if b.Type != "wallpaper" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "wallpaper",
+			Got:      b.Type,
+		}
+	}
+	return &BackgroundTypeWallpaper{
+		Type:             b.Type,
+		Document:         *b.Document,
+		DarkThemeDimming: *b.DarkThemeDimming,
+		IsBlurred:        b.IsBlurred,
+		IsMoving:         b.IsMoving,
+	}, nil
 }
 
-func (b *BackgroundType) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Type string `json:"type"`
+func (b BackgroundType) PatternType() (*BackgroundTypePattern, error) {
+	if b.Type != "pattern" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "pattern",
+			Got:      b.Type,
+		}
 	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
+	return &BackgroundTypePattern{
+		Type:       b.Type,
+		Document:   *b.Document,
+		Fill:       *b.Fill,
+		Intensity:  *b.Intensity,
+		IsInverted: b.IsInverted,
+		IsMoving:   b.IsMoving,
+	}, nil
+}
+
+func (b BackgroundType) ChatThemeType() (*BackgroundTypeChatTheme, error) {
+	if b.Type != "chat_theme" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "chat_theme",
+			Got:      b.Type,
+		}
 	}
-	switch raw.Type {
-	case "fill":
-		tmp := BackgroundTypeFill{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		b.BackgroundTypeInterface = tmp
-	case "chat_theme":
-		tmp := BackgroundTypeChatTheme{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		b.BackgroundTypeInterface = tmp
-	case "pattern":
-		tmp := BackgroundTypePattern{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		b.BackgroundTypeInterface = tmp
-	case "wallpaper":
-		tmp := BackgroundTypeWallpaper{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		b.BackgroundTypeInterface = tmp
-	default:
-		return fmt.Errorf("unknown type: %s", raw.Type)
-	}
-	return nil
+	return &BackgroundTypeChatTheme{
+		Type:      b.Type,
+		ThemeName: *b.ThemeName,
+	}, nil
 }
 
 // The background is automatically filled based on the selected colors.
@@ -1345,10 +1488,6 @@ type BackgroundTypeFill struct {
 	Fill BackgroundFill `json:"fill"`
 	//Dimming of the background in dark themes, as a percentage; 0-100
 	DarkThemeDimming int `json:"dark_theme_dimming"`
-}
-
-func (b BackgroundTypeFill) GetBackgroundType() string {
-	return "fill"
 }
 
 // The background is a wallpaper in the JPEG format.
@@ -1363,10 +1502,6 @@ type BackgroundTypeWallpaper struct {
 	IsBlurred *bool `json:"is_blurred,omitempty"`
 	//Optional. True, if the background moves slightly when the device is tilted
 	IsMoving *bool `json:"is_moving,omitempty"`
-}
-
-func (b BackgroundTypeWallpaper) GetBackgroundType() string {
-	return "wallpaper"
 }
 
 // The background is a PNG or TGV (gzipped subset of SVG with MIME type “application/x-tgwallpattern”)
@@ -1387,20 +1522,12 @@ type BackgroundTypePattern struct {
 	IsMoving *bool `json:"is_moving,omitempty"`
 }
 
-func (b BackgroundTypePattern) GetBackgroundType() string {
-	return "pattern"
-}
-
 // The background is taken directly from a built-in chat theme.
 type BackgroundTypeChatTheme struct {
 	//Type of the background, always “chat_theme”
 	Type string `json:"type"`
 	//Name of the chat theme, which is usually an emoji
 	ThemeName string `json:"theme_name"`
-}
-
-func (b BackgroundTypeChatTheme) GetBackgroundType() string {
-	return "chat_theme"
 }
 
 // This object represents a chat background.
@@ -2240,66 +2367,152 @@ type ChatMemberUpdated struct {
 //
 // - ChatMemberBanned
 type ChatMember struct {
-	ChatMemberInterface
+	Status                string  `json:"status"`
+	User                  *User   `json:"user,omitempty"`
+	IsAnonymous           *bool   `json:"is_anonymous,omitempty"`
+	CustomTitle           *string `json:"custom_title,omitempty"`
+	CanBeEdited           *bool   `json:"can_be_edited,omitempty"`
+	CanManageChat         *bool   `json:"can_manage_chat"`
+	CanDeleteMessages     *bool   `json:"can_delete_messages,omitempty"`
+	CanManageVideoChats   *bool   `json:"can_manage_video_chats,omitempty"`
+	CanRestrictMembers    *bool   `json:"can_restrict_members,omitempty"`
+	CanPromoteMembers     *bool   `json:"can_promote_members,omitempty"`
+	CanChangeInfo         *bool   `json:"can_change_info,omitempty"`
+	CanInviteUsers        *bool   `json:"can_invite_users,omitempty"`
+	CanPostStories        *bool   `json:"can_post_stories,omitempty"`
+	CanEditStories        *bool   `json:"can_edit_stories,omitempty"`
+	CanDeleteStories      *bool   `json:"can_delete_stories,omitempty"`
+	CanPostMessages       *bool   `json:"can_post_messages,omitempty"`
+	CanEditMessages       *bool   `json:"can_edit_messages,omitempty"`
+	CanPinMessages        *bool   `json:"can_pin_messages,omitempty"`
+	CanManageTopics       *bool   `json:"can_manage_topics,omitempty"`
+	UntilDate             *int    `json:"until_date,omitempty,"`
+	IsMember              *bool   `json:"is_member,omitempty"`
+	CanSendMessages       *bool   `json:"can_send_messages,omitempty"`
+	CanSendAudios         *bool   `json:"can_send_audios,omitempty"`
+	CanSendDocuments      *bool   `json:"can_send_documents,omitempty"`
+	CanSendPhotos         *bool   `json:"can_send_photos,omitempty"`
+	CanSendVideos         *bool   `json:"can_send_videos,omitempty"`
+	CanSendVideoNotes     *bool   `json:"can_send_video_notes,omitempty"`
+	CanSendVoiceNotes     *bool   `json:"can_send_voice_notes,omitempty"`
+	CanSendPolls          *bool   `json:"can_send_polls,omitempty"`
+	CanSendOtherMessages  *bool   `json:"can_send_other_messages,omitempty"`
+	CanAddWebpagePreviews *bool   `json:"can_add_webpage_previews,omitempty"`
 }
 
-type ChatMemberInterface interface {
-	GetChatMemberStatus() string
+func (c ChatMember) OwnerType() (*ChatMemberOwner, error) {
+	if c.Status != "creator" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "creator",
+			Got:      c.Status,
+		}
+	}
+	return &ChatMemberOwner{
+		Status:      c.Status,
+		User:        *c.User,
+		IsAnonymous: *c.IsAnonymous,
+		CustomTitle: c.CustomTitle,
+	}, nil
 }
 
-func (c *ChatMember) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Status string `json:"status"`
+func (c ChatMember) AdministratorType() (*ChatMemberAdministrator, error) {
+	if c.Status != "“administrator”" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "“administrator”",
+			Got:      c.Status,
+		}
 	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
+	return &ChatMemberAdministrator{
+		Status:              c.Status,
+		User:                *c.User,
+		CanBeEdited:         *c.CanBeEdited,
+		IsAnonymous:         *c.IsAnonymous,
+		CanManageChat:       *c.CanManageChat,
+		CanDeleteMessages:   *c.CanDeleteMessages,
+		CanManageVideoChats: *c.CanManageVideoChats,
+		CanRestrictMembers:  *c.CanRestrictMembers,
+		CanPromoteMembers:   *c.CanPromoteMembers,
+		CanChangeInfo:       *c.CanChangeInfo,
+		CanInviteUsers:      *c.CanInviteUsers,
+		CanPostStories:      *c.CanPostStories,
+		CanEditStories:      *c.CanEditStories,
+		CanDeleteStories:    *c.CanDeleteStories,
+		CanPostMessages:     c.CanPostMessages,
+		CanEditMessages:     c.CanEditMessages,
+		CanPinMessages:      c.CanPinMessages,
+		CanManageTopics:     c.CanManageTopics,
+		CustomTitle:         c.CustomTitle,
+	}, nil
+}
 
-	switch raw.Status {
-	case "administrator":
-		tmp := ChatMemberAdministrator{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
+func (c ChatMember) MemberType() (*ChatMemberMember, error) {
+	if c.Status != "member" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "member",
+			Got:      c.Status,
 		}
-		c.ChatMemberInterface = tmp
-	case "member":
-		tmp := ChatMemberMember{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		c.ChatMemberInterface = tmp
-	case "owner":
-		tmp := ChatMemberOwner{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		c.ChatMemberInterface = tmp
-	case "restricted":
-		tmp := ChatMemberRestricted{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		c.ChatMemberInterface = tmp
-	case "kicked":
-		tmp := ChatMemberBanned{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		c.ChatMemberInterface = tmp
-	case "left":
-		tmp := ChatMemberLeft{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		c.ChatMemberInterface = tmp
-	default:
-		fmt.Println(raw.Status)
-		return errors.New(
-			"status must be administrator, member, owner, restricted, banned or left",
-		)
 	}
+	return &ChatMemberMember{
+		Status:    c.Status,
+		User:      *c.User,
+		UntilDate: c.UntilDate,
+	}, nil
+}
 
-	return nil
+func (c ChatMember) RestrictedType() (*ChatMemberRestricted, error) {
+	if c.Status != "restricted" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "restricted",
+			Got:      c.Status,
+		}
+	}
+	return &ChatMemberRestricted{
+		Status:                c.Status,
+		User:                  c.User,
+		IsMember:              *c.IsMember,
+		CanSendMessages:       *c.CanSendMessages,
+		CanSendAudios:         *c.CanSendAudios,
+		CanSendDocuments:      *c.CanSendDocuments,
+		CanSendPhotos:         *c.CanSendPhotos,
+		CanSendVideos:         *c.CanSendVideos,
+		CanSendVideoNotes:     *c.CanSendVideoNotes,
+		CanSendVoiceNotes:     *c.CanSendVoiceNotes,
+		CanSendPolls:          *c.CanSendPolls,
+		CanSendOtherMessages:  *c.CanSendOtherMessages,
+		CanAddWebpagePreviews: *c.CanAddWebpagePreviews,
+		CanChangeInfo:         *c.CanChangeInfo,
+		CanInviteUsers:        *c.CanInviteUsers,
+		CanPinMessages:        *c.CanPinMessages,
+		CanManageTopics:       *c.CanManageTopics,
+		UntilDate:             *c.UntilDate,
+	}, nil
+}
+
+func (c ChatMember) LeftType() (*ChatMemberLeft, error) {
+	if c.Status != "left" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "left",
+			Got:      c.Status,
+		}
+	}
+	return &ChatMemberLeft{
+		Status: c.Status,
+		User:   c.User,
+	}, nil
+}
+
+func (c ChatMember) BannedType() (*ChatMemberBanned, error) {
+	if c.Status != "kicked" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "kicked",
+			Got:      c.Status,
+		}
+	}
+	return &ChatMemberBanned{
+		Status:    c.Status,
+		User:      *c.User,
+		UntilDate: *c.UntilDate,
+	}, nil
 }
 
 // Represents a chat member that owns the chat and has all administrator privileges.
@@ -2312,10 +2525,6 @@ type ChatMemberOwner struct {
 	IsAnonymous bool `json:"is_anonymous"`
 	//Optional. Custom title for this user
 	CustomTitle *string `json:"custom_title,omitempty"`
-}
-
-func (c ChatMemberOwner) GetChatMemberStatus() string {
-	return "creator"
 }
 
 // Represents a chat member that has some additional privileges.
@@ -2358,12 +2567,9 @@ type ChatMemberAdministrator struct {
 	//Optional. True, if the user is allowed to pin messages; for groups and supergroups only
 	CanPinMessages *bool `json:"can_pin_messages,omitempty"`
 	//Optional. True, if the user is allowed to create, rename, close, and reopen forum topics; for supergroups only
-	CanManageTopics *bool   `json:"can_manage_topics,omitempty"`
-	CustomTitle     *string `json:"custom_title,omitempty"`
-}
-
-func (c ChatMemberAdministrator) GetChatMemberStatus() string {
-	return "administrator"
+	CanManageTopics *bool `json:"can_manage_topics,omitempty"`
+	//Optional. Custom title for this user
+	CustomTitle *string `json:"custom_title,omitempty"`
 }
 
 // Represents a chat member that has no additional privileges or restrictions.
@@ -2374,10 +2580,6 @@ type ChatMemberMember struct {
 	User User `json:"user"`
 	//Optional. Date when the user's subscription will expire; Unix time
 	UntilDate *int `json:"until_date,omitempty"`
-}
-
-func (c ChatMemberMember) GetChatMemberStatus() string {
-	return "member"
 }
 
 // Represents a chat member that is under certain restrictions in the chat. Supergroups only.
@@ -2420,20 +2622,12 @@ type ChatMemberRestricted struct {
 	UntilDate int `json:"until_date"`
 }
 
-func (c ChatMemberRestricted) GetChatMemberStatus() string {
-	return "restricted"
-}
-
 // Represents a chat member that isn't currently a member of the chat, but may join it themselves.
 type ChatMemberLeft struct {
 	//The member's status in the chat, always “left”
 	Status string `json:"status"`
 	//Information about the user
 	User *User `json:"user"`
-}
-
-func (c ChatMemberLeft) GetChatMemberStatus() string {
-	return "left"
 }
 
 // Represents a chat member that was banned in the chat and can't return to the chat or view chat messages.
@@ -2444,10 +2638,6 @@ type ChatMemberBanned struct {
 	User User `json:"user"`
 	//Date when restrictions will be lifted for this user; Unix time. If 0, then the user is banned forever
 	UntilDate int `json:"until_date"`
-}
-
-func (c ChatMemberBanned) GetChatMemberStatus() string {
-	return "banned"
 }
 
 // Represents a join request sent to a chat.
@@ -2562,50 +2752,8 @@ type ChatLocation struct {
 // - ReactionTypeCustomEmoji
 //
 // - ReactionTypePaid
-type ReactionType struct {
-	ReactionTypeInterface
-}
-
-type ReactionTypeInterface interface {
-	reactionTypeEmojiContract()
-	Validate() error
-}
-
-func (r ReactionType) MarshalJSON() ([]byte, error) {
-	return json.Marshal(r.ReactionTypeInterface)
-}
-
-func (r *ReactionType) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Type string `json:"type"`
-	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
-
-	switch raw.Type {
-	case "emoji":
-		tmp := ReactionTypeEmoji{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		r.ReactionTypeInterface = tmp
-	case "custom_emoji":
-		tmp := ReactionTypeCustomEmoji{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		r.ReactionTypeInterface = tmp
-	case "paid":
-		tmp := ReactionTypePaid{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		r.ReactionTypeInterface = tmp
-	default:
-		return errors.New("type must be emoji, paid or custom_emoji")
-	}
-	return nil
+type ReactionType interface {
+	GetReactionType() string
 }
 
 // The reaction is based on an emoji.
@@ -2622,11 +2770,13 @@ type ReactionTypeEmoji struct {
 	Emoji string `json:"emoji"`
 }
 
-func (r ReactionTypeEmoji) reactionTypeEmojiContract() {}
+func (r ReactionTypeEmoji) GetReactionType() string {
+	return "emoji"
+}
 
 func (r ReactionTypeEmoji) Validate() error {
 	if strings.TrimSpace(r.Emoji) == "" {
-		return ErrInvalidParam("emoji paramter can't be empty")
+		return ErrInvalidParam("emoji parameter can't be empty")
 	}
 	if r.Type != "emoji" {
 		return ErrInvalidParam("type must be \"emoji\"")
@@ -2642,11 +2792,13 @@ type ReactionTypeCustomEmoji struct {
 	CustomEmojiId string `json:"custom_emoji_id"`
 }
 
-func (r ReactionTypeCustomEmoji) reactionTypeEmojiContract() {}
+func (r ReactionTypeCustomEmoji) GetReactionType() string {
+	return "custom_emoji"
+}
 
 func (r ReactionTypeCustomEmoji) Validate() error {
 	if strings.TrimSpace(r.CustomEmojiId) == "" {
-		return ErrInvalidParam("custom_emoji_id paramter can't be empty")
+		return ErrInvalidParam("custom_emoji_id parameter can't be empty")
 	}
 	if r.Type != "custom_emoji" {
 		return ErrInvalidParam("type must be \"custom_emoji\"")
@@ -2660,7 +2812,9 @@ type ReactionTypePaid struct {
 	Type string `json:"type"`
 }
 
-func (r ReactionTypePaid) reactionTypeEmojiContract() {}
+func (r ReactionTypePaid) GetReactionType() string {
+	return "paid"
+}
 
 func (r ReactionTypePaid) Validate() error {
 	if r.Type != "paid" {
@@ -2757,89 +2911,9 @@ func (b BotCommand) Validate() error {
 // - -BotCommandScopeChatAdministrators
 //
 // - -BotCommandScopeChatMember
-type BotCommandScope struct {
-	BotCommandScopeInterface
-}
-
-type BotCommandScopeInterface interface {
+type BotCommandScope interface {
 	GetBotCommandScopeType() string
-	Validate() error
-}
-
-func (b BotCommandScope) MarshalJSON() ([]byte, error) {
-	return json.Marshal(b.BotCommandScopeInterface)
-}
-
-func (b *BotCommandScope) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Type string `json:"type"`
-	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
-
-	switch raw.Type {
-	case "all_chat_administrators":
-		tmp := BotCommandScopeAllChatAdministrators{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		b.BotCommandScopeInterface = tmp
-	case "all_group_chats":
-		tmp := BotCommandScopeAllGroupChats{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		b.BotCommandScopeInterface = tmp
-	case "all_private_chats":
-		tmp := BotCommandScopeAllPrivateChats{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		b.BotCommandScopeInterface = tmp
-	case "chat":
-		tmp := BotCommandScopeChat[string]{}
-		if err := json.Unmarshal(data, &tmp); err == nil {
-			b.BotCommandScopeInterface = tmp
-		}
-		tmp2 := BotCommandScopeChat[int]{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		} else {
-			b.BotCommandScopeInterface = tmp2
-		}
-	case "chat_administrators":
-		tmp := BotCommandScopeChatAdministrators[string]{}
-		if err := json.Unmarshal(data, &tmp); err == nil {
-			b.BotCommandScopeInterface = tmp
-		}
-		tmp2 := BotCommandScopeChatAdministrators[int]{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		} else {
-			b.BotCommandScopeInterface = tmp2
-		}
-	case "chat_member":
-		tmp := BotCommandScopeChatMember[string]{}
-		if err := json.Unmarshal(data, &tmp); err == nil {
-			b.BotCommandScopeInterface = tmp
-		}
-		tmp2 := BotCommandScopeChatMember[int]{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		} else {
-			b.BotCommandScopeInterface = tmp2
-		}
-	case "default":
-		tmp := BotCommandScopeDefault{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		b.BotCommandScopeInterface = tmp
-	default:
-		return fmt.Errorf("unknown BotCommandScope type: %s", raw.Type)
-	}
-	return nil
+	Validable
 }
 
 // Represents the default scope of bot commands. Default commands are used if no commands with a narrower scope are specified for the user.
@@ -3030,50 +3104,68 @@ type BotShortDescription struct {
 //
 // If a menu button other than MenuButtonDefault is set for a private chat, then it is applied in the chat.
 // Otherwise the default menu button is applied. By default, the menu button opens the list of bot commands.
-type MenuButton struct {
-	MenuButtonInterface
-}
-
-type MenuButtonInterface interface {
+type MenuButton interface {
 	GetMenuButtonType() string
 	Validate() error
 }
 
-func (m MenuButton) MarshalJSON() ([]byte, error) {
-	return json.Marshal(m.MenuButtonInterface)
+// MenuButtonResponse represents the generalized form of a bot's menu button in a private chat.
+// This type is used exclusively for reading responses from the `getMenuButton` method.
+//
+// It serves as a base structure containing all possible fields of different menu button types:
+//
+// - MenuButtonCommands
+//
+// - MenuButtonWebApp
+//
+// - MenuButtonDefault
+//
+// This type provides methods to convert itself into a more specific `MenuButton` implementation
+// for further processing.
+type MenuButtonResponse struct {
+	Type   string      `json:"type"`
+	Text   *string     `json:"text,omitempty"`
+	WebApp *WebAppInfo `json:"web_app,omitempty"`
+	// NOTE: do i really need it when the only case when this conversion is making sense
+	// is when the type is web_app
 }
 
-func (m *MenuButton) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Type string
+func (m MenuButtonResponse) CommandsType() (*MenuButtonCommands, error) {
+	if m.Type != "commands" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "commands",
+			Got:      m.Type,
+		}
 	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
+	return &MenuButtonCommands{
+		Type: m.Type,
+	}, nil
+}
 
-	switch raw.Type {
-	case "commands":
-		tmp := MenuButtonCommands{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
+func (m MenuButtonResponse) WebAppType() (*MenuButtonWebApp, error) {
+	if m.Type != "web_app" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "web_app",
+			Got:      m.Type,
 		}
-		m.MenuButtonInterface = tmp
-	case "web_app":
-		tmp := MenuButtonWebApp{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		m.MenuButtonInterface = tmp
-	case "default":
-		tmp := MenuButtonDefault{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		m.MenuButtonInterface = tmp
-	default:
-		return errors.New("unknow type " + raw.Type + ", type must be commands, web_app or default")
 	}
-	return nil
+	return &MenuButtonWebApp{
+		Type:   m.Type,
+		Text:   *m.Text,
+		WebApp: *m.WebApp,
+	}, nil
+}
+
+func (m MenuButtonResponse) DefaultType() (*MenuButtonDefault, error) {
+	if m.Type != "default" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "default",
+			Got:      m.Type,
+		}
+	}
+	return &MenuButtonDefault{
+		Type: m.Type,
+	}, nil
 }
 
 // Represents a menu button, which opens the bot's list of commands.
@@ -3103,7 +3195,7 @@ type MenuButtonWebApp struct {
 	//The Web App will be able to send an arbitrary message on behalf of the user using the method answerWebAppQuery.
 	//Alternatively, a t.me link to a Web App of the bot can be specified in the object instead of the Web App's URL,
 	//in which case the Web App will be opened as if the user pressed the link.
-	WebAppInfo WebAppInfo `json:"web_app_info"`
+	WebApp WebAppInfo `json:"web_app"`
 }
 
 func (m MenuButtonWebApp) GetMenuButtonType() string {
@@ -3117,7 +3209,7 @@ func (m MenuButtonWebApp) Validate() error {
 	if strings.TrimSpace(m.Text) == "" {
 		return ErrInvalidParam("text parameter can't be empty")
 	}
-	if err := m.WebAppInfo.Validate(); err != nil {
+	if err := m.WebApp.Validate(); err != nil {
 		return err
 	}
 	return nil
@@ -3140,45 +3232,61 @@ func (m MenuButtonDefault) GetMenuButtonType() string {
 	return "default"
 }
 
+// This object describes the source of a chat boost. It can be one of
+//
+// - ChatBoostSourcePremium
+//
+// - ChatBoostSourceGiftCode
+//
+// - ChatBoostSourceGiveaway
 type ChatBoostSource struct {
-	ChatBoostSourceInterface
+	Source            string  `json:"source"`
+	User              *User   `json:"user,omitempty"`
+	GiveawayMessageId *string `json:"giveaway_message_id,omitempty"`
+	PrizeStarCount    *int    `json:"prize_star_count,omitempty"`
+	IsUnclaimed       *bool   `json:"is_unclaimed,omitempty"`
 }
 
-type ChatBoostSourceInterface interface {
-	GetChatBoostSource() string
+func (c ChatBoostSource) PremiumType() (*ChatBoostSourcePremium, error) {
+	if c.Source != "premium" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "premium",
+			Got:      c.Source,
+		}
+	}
+	return &ChatBoostSourcePremium{
+		Source: c.Source,
+		User:   *c.User,
+	}, nil
 }
 
-func (c *ChatBoostSource) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Source string
+func (c ChatBoostSource) GiftCodeType() (*ChatBoostSourceGiftCode, error) {
+	if c.Source != "gift_code" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "gift_code",
+			Got:      c.Source,
+		}
 	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
+	return &ChatBoostSourceGiftCode{
+		Source: c.Source,
+		User:   *c.User,
+	}, nil
+}
 
-	switch raw.Source {
-	case "gift_code":
-		tmp := ChatBoostSourceGiftCode{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
+func (c ChatBoostSource) GiveawayType() (*ChatBoostSourceGiveaway, error) {
+	if c.Source != "giveaway" {
+		return nil, ErrInvalidSubtypeConversion{
+			Expected: "giveaway",
+			Got:      c.Source,
 		}
-		c.ChatBoostSourceInterface = tmp
-	case "giveaway":
-		tmp := ChatBoostSourceGiveaway{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		c.ChatBoostSourceInterface = tmp
-	case "premium":
-		tmp := ChatBoostSourcePremium{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return err
-		}
-		c.ChatBoostSourceInterface = tmp
-	default:
-		return errors.New("source must be gift_code, giveaway or premium")
 	}
-	return nil
+	return &ChatBoostSourceGiveaway{
+		Source:            c.Source,
+		GiveawayMessageId: *c.GiveawayMessageId,
+		User:              c.User,
+		PrizeStarCount:    c.PrizeStarCount,
+		IsUnclaimed:       c.IsUnclaimed,
+	}, nil
 }
 
 // The boost was obtained by subscribing to Telegram Premium or by gifting a Telegram Premium subscription to another user.
@@ -3189,10 +3297,6 @@ type ChatBoostSourcePremium struct {
 	User User `json:"user"`
 }
 
-func (c ChatBoostSourcePremium) GetChatBoostSource() string {
-	return "premium"
-}
-
 // The boost was obtained by the creation of Telegram Premium gift codes to boost a chat.
 // Each such code boosts the chat 4 times for the duration of the corresponding Telegram Premium subscription.
 type ChatBoostSourceGiftCode struct {
@@ -3200,10 +3304,6 @@ type ChatBoostSourceGiftCode struct {
 	Source string `json:"source"`
 	//User for which the gift code was created
 	User User `json:"user"`
-}
-
-func (c ChatBoostSourceGiftCode) GetChatBoostSource() string {
-	return "gift_code"
 }
 
 // The boost was obtained by the creation of a Telegram Premium or a Telegram Star giveaway.
@@ -3220,10 +3320,6 @@ type ChatBoostSourceGiveaway struct {
 	PrizeStarCount *int `json:"prize_star_count,omitempty"`
 	//Optional. True, if the giveaway was completed, but there was no user to win the prize
 	IsUnclaimed *bool `json:"is_unclaimed,omitempty"`
-}
-
-func (c ChatBoostSourceGiveaway) GetChatBoostSource() string {
-	return "giveaway"
 }
 
 // This object contains information about a chat boost.
@@ -3315,17 +3411,9 @@ type ResponseParameters struct {
 // - InputMediaPhoto
 //
 // - InputMediaVideo
-type InputMedia struct {
-	InputMediaInterface
-}
-
-type InputMediaInterface interface {
+type InputMedia interface {
 	SetInputMedia(media string, isNew bool)
 	Validate() error
-}
-
-func (i InputMedia) MarshalJSON() ([]byte, error) {
-	return json.Marshal(i.InputMediaInterface)
 }
 
 var (
@@ -3677,17 +3765,9 @@ func (i InputFile) Validate() error {
 // - InputPaidMediaPhoto
 //
 // - InputPaidMediaVideo
-type InputPaidMedia struct {
-	InputPaidMediaInterface
-}
-
-type InputPaidMediaInterface interface {
+type InputPaidMedia interface {
 	SetInputPaidMedia(media string, isNew bool)
 	Validate() error
-}
-
-func (i InputPaidMedia) MarshalJSON() ([]byte, error) {
-	return json.Marshal(i.InputPaidMediaInterface)
 }
 
 // The paid media to send is a photo.

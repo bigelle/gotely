@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -85,14 +84,14 @@ func (e EditMessageText[T]) ToRequestBody() ([]byte, error) {
 func (e EditMessageText[T]) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := internal.MakePostRequest[bool](telego.GetToken(), "editMessageText", e)
+		b, err := MakePostRequest[bool](telego.GetToken(), "editMessageText", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := internal.MakePostRequest[types.Message](telego.GetToken(), "editMessageText", e)
+		msg, err := MakePostRequest[types.Message](telego.GetToken(), "editMessageText", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -164,14 +163,14 @@ func (e EditMessageCaption[T]) ToRequestBody() ([]byte, error) {
 func (e EditMessageCaption[T]) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := internal.MakePostRequest[bool](telego.GetToken(), "editMessageCaption", e)
+		b, err := MakePostRequest[bool](telego.GetToken(), "editMessageCaption", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := internal.MakePostRequest[types.Message](telego.GetToken(), "editMessageCaption", e)
+		msg, err := MakePostRequest[types.Message](telego.GetToken(), "editMessageCaption", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -236,14 +235,14 @@ func (e EditMessageMedia[T]) ToRequestBody() ([]byte, error) {
 func (e EditMessageMedia[T]) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := internal.MakePostRequest[bool](telego.GetToken(), "editMessageMedia", e)
+		b, err := MakePostRequest[bool](telego.GetToken(), "editMessageMedia", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := internal.MakePostRequest[types.Message](telego.GetToken(), "editMessageMedia", e)
+		msg, err := MakePostRequest[types.Message](telego.GetToken(), "editMessageMedia", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -325,14 +324,14 @@ func (e EditMessageLiveLocation[T]) ToRequestBody() ([]byte, error) {
 func (e EditMessageLiveLocation[T]) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := internal.MakePostRequest[bool](telego.GetToken(), "editMessageLiveLocation", e)
+		b, err := MakePostRequest[bool](telego.GetToken(), "editMessageLiveLocation", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := internal.MakePostRequest[types.Message](telego.GetToken(), "editMessageLiveLocation", e)
+		msg, err := MakePostRequest[types.Message](telego.GetToken(), "editMessageLiveLocation", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -392,14 +391,14 @@ func (e StopMessageLiveLocation[T]) ToRequestBody() ([]byte, error) {
 func (e StopMessageLiveLocation[T]) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := internal.MakePostRequest[bool](telego.GetToken(), "stopMessageMedia", e)
+		b, err := MakePostRequest[bool](telego.GetToken(), "stopMessageMedia", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := internal.MakePostRequest[types.Message](telego.GetToken(), "editMessageMedia", e)
+		msg, err := MakePostRequest[types.Message](telego.GetToken(), "editMessageMedia", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -459,17 +458,115 @@ func (e EditMessageReplyMarkup[T]) ToRequestBody() ([]byte, error) {
 func (e EditMessageReplyMarkup[T]) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := internal.MakePostRequest[bool](telego.GetToken(), "editMessageReplyMarkup", e)
+		b, err := MakePostRequest[bool](telego.GetToken(), "editMessageReplyMarkup", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := internal.MakePostRequest[types.Message](telego.GetToken(), "editMessageReplyMarkup", e)
+		msg, err := MakePostRequest[types.Message](telego.GetToken(), "editMessageReplyMarkup", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
 		}, err
 	}
+}
+
+type StopPoll[T int | string] struct {
+	ChatId               T
+	MessageId            int
+	BusinessConnectionId *string
+	ReplyMarkup          *types.InlineKeyboardMarkup
+}
+
+func (s StopPoll[T]) Validate() error {
+	if c, ok := any(s.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(s.ChatId).(int); ok {
+		if c < 1 {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if s.MessageId < 1 {
+		return types.ErrInvalidParam("message_id parameter can't be empty")
+	}
+	if s.ReplyMarkup != nil {
+		if err := s.ReplyMarkup.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s StopPoll[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s StopPoll[T]) Execute() (*types.Poll, error) {
+	return MakePostRequest[types.Poll](telego.GetToken(), "stopPoll", s)
+}
+
+type DeleteMessage[T int | string] struct {
+	ChatId    T
+	MessageId int
+}
+
+func (d DeleteMessage[T]) Validate() error {
+	if c, ok := any(d.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(d.ChatId).(int); ok {
+		if c < 1 {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if d.MessageId < 1 {
+		return types.ErrInvalidParam("message_id parameter can't be empty")
+	}
+	return nil
+}
+
+func (d DeleteMessage[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(d)
+}
+
+func (d DeleteMessage[T]) Execute() (*bool, error) {
+	return MakePostRequest[bool](telego.GetToken(), "deleteMessage", d)
+}
+
+type DeleteMessages[T int | string] struct {
+	ChatId     T
+	MessageIds []int
+}
+
+func (d DeleteMessages[T]) Validate() error {
+	if c, ok := any(d.ChatId).(string); ok {
+		if strings.TrimSpace(c) == "" {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if c, ok := any(d.ChatId).(int); ok {
+		if c < 1 {
+			return types.ErrInvalidParam("chat_id parameter can't be empty")
+		}
+	}
+	if len(d.MessageIds) < 1 || len(d.MessageIds) > 100 {
+		return types.ErrInvalidParam("message_ids parameter must be between 1 and 100")
+	}
+
+	return nil
+}
+
+func (d DeleteMessages[T]) ToRequestBody() ([]byte, error) {
+	return json.Marshal(d)
+}
+
+func (d DeleteMessages[T]) Execute() (*bool, error) {
+	return MakePostRequest[bool](telego.GetToken(), "deleteMessages", d)
 }

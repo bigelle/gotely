@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -55,7 +54,7 @@ func (s SendSticker[T, B]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendSticker[T, B]) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendSticker", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendSticker", s)
 }
 
 type GetStickerSet struct {
@@ -74,7 +73,7 @@ func (g GetStickerSet) ToRequestBody() ([]byte, error) {
 }
 
 func (g GetStickerSet) Execute() (*types.StickerSet, error) {
-	return internal.MakePostRequest[types.StickerSet](telego.GetToken(), "getStickerSet", g)
+	return MakePostRequest[types.StickerSet](telego.GetToken(), "getStickerSet", g)
 }
 
 type GetCustomEmojiStickers struct {
@@ -93,7 +92,7 @@ func (g GetCustomEmojiStickers) ToRequestBody() ([]byte, error) {
 }
 
 func (g GetCustomEmojiStickers) Execute() (*[]types.Sticker, error) {
-	return internal.MakePostRequest[[]types.Sticker](telego.GetToken(), "getCustomEmojiStickers", g)
+	return MakePostRequest[[]types.Sticker](telego.GetToken(), "getCustomEmojiStickers", g)
 }
 
 type UploadStickerFile struct {
@@ -126,7 +125,7 @@ func (u UploadStickerFile) ToRequestBody() ([]byte, error) {
 }
 
 func (u UploadStickerFile) Execute() (*types.File, error) {
-	return internal.MakePostRequest[types.File](telego.GetToken(), "uploadStickerFile", u)
+	return MakePostRequest[types.File](telego.GetToken(), "uploadStickerFile", u)
 }
 
 type CreateNewStickerSet[T types.InputFile | string] struct {
@@ -180,7 +179,7 @@ func (c CreateNewStickerSet[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (c CreateNewStickerSet[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "createNewStickerSet", c)
+	return MakePostRequest[bool](telego.GetToken(), "createNewStickerSet", c)
 }
 
 type AddStickerToSet[T types.InputFile | string] struct {
@@ -207,7 +206,7 @@ func (a AddStickerToSet[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (a AddStickerToSet[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "addStickerToSet", a)
+	return MakePostRequest[bool](telego.GetToken(), "addStickerToSet", a)
 }
 
 type SetStickerPositionInSet struct {
@@ -230,7 +229,7 @@ func (s SetStickerPositionInSet) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerPositionInSet) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setStickerPositionInSet", s)
+	return MakePostRequest[bool](telego.GetToken(), "setStickerPositionInSet", s)
 }
 
 type DeleteStickerFromSet struct {
@@ -249,7 +248,7 @@ func (d DeleteStickerFromSet) ToRequestBody() ([]byte, error) {
 }
 
 func (d DeleteStickerFromSet) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "deleteStickerFromSet", d)
+	return MakePostRequest[bool](telego.GetToken(), "deleteStickerFromSet", d)
 }
 
 type ReplaceStickerInSet[T types.InputFile | string] struct {
@@ -280,7 +279,7 @@ func (r ReplaceStickerInSet[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (r ReplaceStickerInSet[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "replaceStickerInSet", r)
+	return MakePostRequest[bool](telego.GetToken(), "replaceStickerInSet", r)
 }
 
 type SetStickerEmojiList struct {
@@ -303,7 +302,7 @@ func (s SetStickerEmojiList) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerEmojiList) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setStickerEmojiList", s)
+	return MakePostRequest[bool](telego.GetToken(), "setStickerEmojiList", s)
 }
 
 type SetStickerKeywords struct {
@@ -328,7 +327,7 @@ func (s SetStickerKeywords) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerKeywords) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setStickerKeywords", s)
+	return MakePostRequest[bool](telego.GetToken(), "setStickerKeywords", s)
 }
 
 type SetStickerMaskPosition struct {
@@ -353,7 +352,7 @@ func (s SetStickerMaskPosition) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerMaskPosition) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setStickerMaskPosition", s)
+	return MakePostRequest[bool](telego.GetToken(), "setStickerMaskPosition", s)
 }
 
 type SetStickerSetTitle struct {
@@ -376,7 +375,7 @@ func (s SetStickerSetTitle) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerSetTitle) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setStickerSetTitle", s)
+	return MakePostRequest[bool](telego.GetToken(), "setStickerSetTitle", s)
 }
 
 type SetStickerSetThumbnail[T types.InputFile | string] struct {
@@ -422,7 +421,7 @@ func (s SetStickerSetThumbnail[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerSetThumbnail[T]) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setStickerSetThumbnail", s)
+	return MakePostRequest[bool](telego.GetToken(), "setStickerSetThumbnail", s)
 }
 
 type SetCustomEmojiStickerSetThumbnail struct {
@@ -447,7 +446,7 @@ func (s SetCustomEmojiStickerSetThumbnail) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetCustomEmojiStickerSetThumbnail) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "setCustomEmojiStickerSetThumbnail", s)
+	return MakePostRequest[bool](telego.GetToken(), "setCustomEmojiStickerSetThumbnail", s)
 }
 
 type DeleteStickerSet struct {
@@ -466,7 +465,7 @@ func (d DeleteStickerSet) ToRequestBody() ([]byte, error) {
 }
 
 func (d DeleteStickerSet) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "deleteStickerSet", d)
+	return MakePostRequest[bool](telego.GetToken(), "deleteStickerSet", d)
 }
 
 type GetAvailableGifts struct {
@@ -481,7 +480,7 @@ func (g GetAvailableGifts) ToRequestBody() ([]byte, error) {
 }
 
 func (g GetAvailableGifts) Execute() (*types.Gifts, error) {
-	return internal.MakeGetRequest[types.Gifts](telego.GetToken(), "getAvailableGifts", g)
+	return MakeGetRequest[types.Gifts](telego.GetToken(), "getAvailableGifts", g)
 }
 
 type SendGift struct {
@@ -515,5 +514,5 @@ func (s SendGift) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendGift) Execute() (*bool, error) {
-	return internal.MakePostRequest[bool](telego.GetToken(), "sendGift", s)
+	return MakePostRequest[bool](telego.GetToken(), "sendGift", s)
 }

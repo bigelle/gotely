@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/internal"
 	"github.com/bigelle/tele.go/types"
 )
 
@@ -47,7 +46,7 @@ func (s SendGame) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendGame) Execute() (*types.Message, error) {
-	return internal.MakePostRequest[types.Message](telego.GetToken(), "sendGame", s)
+	return MakePostRequest[types.Message](telego.GetToken(), "sendGame", s)
 }
 
 type SetGameHighScore struct {
@@ -90,14 +89,14 @@ func (s SetGameHighScore) ToRequestBody() ([]byte, error) {
 func (s SetGameHighScore) Execute() (MessageOrBool, error) {
 	if s.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := internal.MakePostRequest[bool](telego.GetToken(), "setGameScore", s)
+		b, err := MakePostRequest[bool](telego.GetToken(), "setGameScore", s)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := internal.MakePostRequest[types.Message](telego.GetToken(), "setGameScore", s)
+		msg, err := MakePostRequest[types.Message](telego.GetToken(), "setGameScore", s)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -137,5 +136,5 @@ func (s GetGameHighScores) ToRequestBody() ([]byte, error) {
 }
 
 func (g GetGameHighScores) Execute() (*[]types.GameHighScore, error) {
-	return internal.MakePostRequest[[]types.GameHighScore](telego.GetToken(), "getGameHighScores", g)
+	return MakePostRequest[[]types.GameHighScore](telego.GetToken(), "getGameHighScores", g)
 }
