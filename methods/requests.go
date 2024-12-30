@@ -16,8 +16,6 @@ type Executable interface {
 	ToRequestBody() ([]byte, error)
 }
 
-const api_url = "https://api.telegram.org/bot%s/%s"
-
 type ErrFailedRequest struct {
 	Code    int
 	Message string
@@ -28,7 +26,8 @@ func (e ErrFailedRequest) Error() string {
 }
 
 func MakeRequest[T any](httpMethod, endpoint string, body Executable) (*T, error) {
-	token := telego.GetToken()
+	settings := telego.GetBotSettings()
+	token := settings.Token
 	if token == "" {
 		return nil, fmt.Errorf("API token can't be empty")
 	}
@@ -42,7 +41,7 @@ func MakeRequest[T any](httpMethod, endpoint string, body Executable) (*T, error
 		return nil, fmt.Errorf("can't marshal request body: %w", err)
 	}
 
-	url := fmt.Sprintf(api_url, token, endpoint)
+	url := fmt.Sprintf(settings.BaseUrl, token, endpoint)
 
 	req, err := http.NewRequest(httpMethod, url, bytes.NewReader(data))
 	if err != nil {
@@ -50,8 +49,7 @@ func MakeRequest[T any](httpMethod, endpoint string, body Executable) (*T, error
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := settings.Client.Do(req)
 	if err != nil {
 		return nil, ErrFailedRequest{
 			Code:    resp.StatusCode,

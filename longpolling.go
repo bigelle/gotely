@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"sync"
 
 	"github.com/bigelle/tele.go/objects"
@@ -21,35 +22,53 @@ func (e ErrBadBot) Error() string {
 	return fmt.Sprintf("an error at %s field: %s", e.BadField, e.Message)
 }
 
-var global_token string
+type BotSettings struct {
+	Token   string
+	Client  http.Client
+	BaseUrl string
+}
 
-func GetToken() string {
-	return global_token
+var botGlobalSettings *BotSettings
+
+func GetBotSettings() *BotSettings {
+	if botGlobalSettings == nil {
+		panic("Bot isn't initialized. Use bot.Start() first")
+	}
+	return botGlobalSettings
 }
 
 // LongPolingBot is a struct that is used to set up long-polling bot
 type LongPollingBot struct {
 	//Telegram bot API access token
 	Token string
-	// A function which is called with every incoming update
+	//A function which is called with every incoming update
 	OnUpdate func(objects.Update) error
-	// A function which is called whenever an error occurs
+	//A function which is called whenever an error occurs.
+	//Defaults to simple logging function
 	OnError func(error)
-	//Limits the number of updates to be retrieved. Values between 1-100 are accepted. Defaults to 100.
+	//Limits the number of updates to be retrieved. Values between 1-100 are accepted.
+	//Defaults to 100.
 	Limit int
 	//Timeout in seconds for long polling. Should be positive, short polling should be used for testing purposes only.
 	//Defaults to 30
 	Timeout int
 	//A list of the update types you want your bot to receive.
-	// See Update for a complete list of available update types.
+	//See https://core.telegram.org/bots/api#update for a complete list of available update types.
 	//Specify an empty list to receive all update types except chat_member, message_reaction, and message_reaction_count (default).
 	//If not specified, the previous setting will be used.
 	AllowedUpdates *[]string
-	errChan        chan error
-	updChan        chan objects.Update
-	ctx            context.Context
-	cancel         context.CancelFunc
-	offset         *int
+	//A client that will be used when making any API request.
+	//Defaults to default http.Client
+	Client *http.Client
+	//Base API URL that will be used when making any API request.
+	//Defaults to https://api.telegram.org/bot%s/%s
+	//where the first %s is API token and the second is API end point
+	ApiBaseUrl string
+	errChan    chan error
+	updChan    chan objects.Update
+	ctx        context.Context
+	cancel     context.CancelFunc
+	offset     *int
 }
 
 type LongPollingOption func(*LongPollingBot)
@@ -62,6 +81,8 @@ func NewDefaultLongPollingBot(tkn string, onUpd func(objects.Update) error, opts
 		Limit:          100,
 		Timeout:        30,
 		AllowedUpdates: nil,
+		Client:         &http.Client{},
+		ApiBaseUrl:     "https://api.telegram.org/bot%s/%s",
 	}
 	for _, opt := range opts {
 		opt(&l)
@@ -96,12 +117,32 @@ func WithOnErrFunc(onE func(error)) LongPollingOption {
 	}
 }
 
+func WithClient(cl *http.Client) LongPollingOption {
+	return func(lpb *LongPollingBot) {
+		lpb.Client = cl
+	}
+}
+
+func WithBaseUrl(url string) LongPollingOption {
+	return func(lpb *LongPollingBot) {
+		lpb.ApiBaseUrl = url
+	}
+}
+
 func defaultOnError(e error) {
 	fmt.Println(e.Error())
 }
 
+var once = &sync.Once{}
+
 func (l *LongPollingBot) Start() {
-	global_token = l.Token
+	once.Do(func() {
+		botGlobalSettings = &BotSettings{
+			Token:   l.Token,
+			BaseUrl: l.ApiBaseUrl,
+			Client:  *l.Client,
+		}
+	})
 
 	l.updChan = make(chan objects.Update)
 	l.errChan = make(chan error)
@@ -201,6 +242,21 @@ func (l LongPollingBot) Validate() error {
 			}
 		}
 	}
+	if l.Client == nil {
+		return ErrBadBot{
+			BadField: "Client",
+			Message:  "it can't be nil",
+		}
+	}
+
+	testURL := fmt.Sprintf(l.ApiBaseUrl, "dummy_token", "dummy_endpoint")
+	_, err := url.ParseRequestURI(testURL)
+	if err != nil {
+		return ErrBadBot{
+			BadField: "ApiBaseUrl",
+			Message:  "invalid URL",
+		}
+	}
 	return nil
 }
 
@@ -225,7 +281,7 @@ func (l *LongPollingBot) poll() {
 		case <-l.ctx.Done():
 			return
 		default:
-			url := fmt.Sprintf("https://api.telegram.org/bot%s/getUpdates", l.Token)
+			url := fmt.Sprintf(l.ApiBaseUrl, l.Token, "getUpdates")
 
 			payload := getUpdates{
 				Offset:         l.offset,
@@ -246,8 +302,7 @@ func (l *LongPollingBot) poll() {
 			}
 			req.Header.Set("Content-Type", "application/json")
 
-			client := &http.Client{}
-			resp, err := client.Do(req)
+			resp, err := l.Client.Do(req)
 			if err != nil {
 				l.errChan <- err
 				continue
@@ -289,9 +344,6 @@ func (l *LongPollingBot) handle_updates() {
 		case <-l.ctx.Done():
 			return
 		case upd := <-l.updChan:
-			if l.offset != nil {
-				fmt.Printf("Processing update with UpdateId: %d, current offset: %d\n", upd.UpdateId, *l.offset)
-			}
 			err := l.OnUpdate(upd)
 			if err != nil {
 				l.errChan <- err
