@@ -24,17 +24,17 @@ func (e ErrBadBot) Error() string {
 
 type BotSettings struct {
 	Token   string
-	Client  http.Client
+	Client  *http.Client
 	BaseUrl string
 }
 
 var botGlobalSettings *BotSettings
 
-func GetBotSettings() *BotSettings {
+func GetBotSettings() BotSettings {
 	if botGlobalSettings == nil {
 		panic("Bot isn't initialized. Use bot.Start() first")
 	}
-	return botGlobalSettings
+	return *botGlobalSettings
 }
 
 // LongPolingBot is a struct that is used to set up long-polling bot
@@ -93,15 +93,15 @@ func NewDefaultLongPollingBot(tkn string, onUpd func(objects.Update) error, opts
 	return &l, nil
 }
 
-func WithLimit(l int) LongPollingOption {
+func WithLimit(lim int) LongPollingOption {
 	return func(lpb *LongPollingBot) {
-		lpb.Limit = l
+		lpb.Limit = lim
 	}
 }
 
-func WithAllowedUpdates(au []string) LongPollingOption {
+func WithAllowedUpdates(au *[]string) LongPollingOption {
 	return func(lpb *LongPollingBot) {
-		lpb.AllowedUpdates = &au
+		lpb.AllowedUpdates = au
 	}
 }
 
@@ -111,9 +111,9 @@ func WithTimeout(t int) LongPollingOption {
 	}
 }
 
-func WithOnErrFunc(onE func(error)) LongPollingOption {
+func WithOnErrFunc(onErr func(error)) LongPollingOption {
 	return func(lpb *LongPollingBot) {
-		lpb.OnError = onE
+		lpb.OnError = onErr
 	}
 }
 
@@ -140,7 +140,7 @@ func (l *LongPollingBot) Start() {
 		botGlobalSettings = &BotSettings{
 			Token:   l.Token,
 			BaseUrl: l.ApiBaseUrl,
-			Client:  *l.Client,
+			Client:  l.Client,
 		}
 	})
 
@@ -254,7 +254,7 @@ func (l LongPollingBot) Validate() error {
 	if err != nil {
 		return ErrBadBot{
 			BadField: "ApiBaseUrl",
-			Message:  "invalid URL",
+			Message:  fmt.Sprintf("invalid URL: %s", err.Error()),
 		}
 	}
 	return nil
