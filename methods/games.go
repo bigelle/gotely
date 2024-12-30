@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/types"
+	"github.com/bigelle/tele.go/objects"
 )
 
 type SendGame struct {
@@ -17,16 +16,16 @@ type SendGame struct {
 	ProtectContent       *bool
 	AllowPaidBroadcast   *bool
 	MessageEffectId      *string
-	ReplyParameters      *types.ReplyParameters
-	ReplyMarkup          *types.InlineKeyboardMarkup
+	ReplyParameters      *objects.ReplyParameters
+	ReplyMarkup          *objects.InlineKeyboardMarkup
 }
 
 func (s SendGame) Validate() error {
 	if s.ChatId == 0 {
-		return types.ErrInvalidParam("chat_id parameter can't be empty")
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.GameShortName) == "" {
-		return types.ErrInvalidParam("game_short_name parameter can't be empty")
+		return objects.ErrInvalidParam("game_short_name parameter can't be empty")
 	}
 	if s.ReplyMarkup != nil {
 		if err := s.ReplyMarkup.Validate(); err != nil {
@@ -45,8 +44,8 @@ func (s SendGame) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendGame) Execute() (*types.Message, error) {
-	return MakePostRequest[types.Message](telego.GetToken(), "sendGame", s)
+func (s SendGame) Execute() (*objects.Message, error) {
+	return MakePostRequest[objects.Message]("sendGame", s)
 }
 
 type SetGameHighScore struct {
@@ -61,22 +60,22 @@ type SetGameHighScore struct {
 
 func (s SetGameHighScore) Validate() error {
 	if s.UserId == 0 {
-		return types.ErrInvalidParam("user_id parameter can't be empty")
+		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if s.Score < 0 {
-		return types.ErrInvalidParam("score parameter must be non-negative")
+		return objects.ErrInvalidParam("score parameter must be non-negative")
 	}
 	if s.InlineMessageId == nil {
 		if s.ChatId == nil {
-			return types.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if s.MessageId == nil {
-			return types.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if s.ChatId == nil && s.MessageId == nil {
 		if s.InlineMessageId == nil {
-			return types.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
+			return objects.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
 		}
 	}
 	return nil
@@ -89,14 +88,14 @@ func (s SetGameHighScore) ToRequestBody() ([]byte, error) {
 func (s SetGameHighScore) Execute() (MessageOrBool, error) {
 	if s.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := MakePostRequest[bool](telego.GetToken(), "setGameScore", s)
+		b, err := MakePostRequest[bool]("setGameScore", s)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := MakePostRequest[types.Message](telego.GetToken(), "setGameScore", s)
+		msg, err := MakePostRequest[objects.Message]("setGameScore", s)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -113,19 +112,19 @@ type GetGameHighScores struct {
 
 func (s GetGameHighScores) Validate() error {
 	if s.UserId == 0 {
-		return types.ErrInvalidParam("user_id parameter can't be empty")
+		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if s.InlineMessageId == nil {
 		if s.ChatId == nil {
-			return types.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if s.MessageId == nil {
-			return types.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if s.ChatId == nil && s.MessageId == nil {
 		if s.InlineMessageId == nil {
-			return types.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
+			return objects.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
 		}
 	}
 	return nil
@@ -135,6 +134,6 @@ func (s GetGameHighScores) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (g GetGameHighScores) Execute() (*[]types.GameHighScore, error) {
-	return MakePostRequest[[]types.GameHighScore](telego.GetToken(), "getGameHighScores", g)
+func (g GetGameHighScores) Execute() (*[]objects.GameHighScore, error) {
+	return MakePostRequest[[]objects.GameHighScore]("getGameHighScores", g)
 }

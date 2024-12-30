@@ -7,11 +7,12 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/bigelle/tele.go/types"
+	telego "github.com/bigelle/tele.go"
+	"github.com/bigelle/tele.go/objects"
 )
 
 type Executable interface {
-	types.Validable
+	objects.Validable
 	ToRequestBody() ([]byte, error)
 }
 
@@ -26,9 +27,10 @@ func (e ErrFailedRequest) Error() string {
 	return fmt.Sprintf("request failed with code %d: %s", e.Code, e.Message)
 }
 
-func MakeRequest[T any](httpMethod, token, endpoint string, body Executable) (*T, error) {
+func MakeRequest[T any](httpMethod, endpoint string, body Executable) (*T, error) {
+	token := telego.GetToken()
 	if token == "" {
-		return nil, types.ErrInvalidParam("token can't be empty. did you connect the bot?")
+		return nil, fmt.Errorf("API token can't be empty")
 	}
 
 	if err := body.Validate(); err != nil {
@@ -76,18 +78,18 @@ func MakeRequest[T any](httpMethod, token, endpoint string, body Executable) (*T
 	return &apiResp.Result, nil
 }
 
-func MakeGetRequest[T any](token, endnpoint string, body Executable) (*T, error) {
-	return MakeRequest[T]("GET", token, endnpoint, body)
+func MakeGetRequest[T any](endnpoint string, body Executable) (*T, error) {
+	return MakeRequest[T]("GET", endnpoint, body)
 }
 
-func MakePostRequest[T any](token, endpoint string, body Executable) (*T, error) {
-	return MakeRequest[T]("POST", token, endpoint, body)
+func MakePostRequest[T any](endpoint string, body Executable) (*T, error) {
+	return MakeRequest[T]("POST", endpoint, body)
 }
 
 type ApiResponse[T any] struct {
-	Ok          bool                      `json:"ok"`
-	ErrorCode   int                       `json:"error_code"`
-	Description *string                   `json:"description,omitempty"`
-	Parameters  *types.ResponseParameters `json:"parameters,omitempty"`
-	Result      T                         `json:"result"`
+	Ok          bool                        `json:"ok"`
+	ErrorCode   int                         `json:"error_code"`
+	Description *string                     `json:"description,omitempty"`
+	Parameters  *objects.ResponseParameters `json:"parameters,omitempty"`
+	Result      T                           `json:"result"`
 }

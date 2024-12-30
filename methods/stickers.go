@@ -7,11 +7,10 @@ import (
 	"slices"
 	"strings"
 
-	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/types"
+	"github.com/bigelle/tele.go/objects"
 )
 
-type SendSticker[T int | string, B types.InputFile | string] struct {
+type SendSticker[T int | string, B objects.InputFile | string] struct {
 	ChatId               T
 	Sticker              B
 	BusinessConnectionId *string
@@ -21,29 +20,29 @@ type SendSticker[T int | string, B types.InputFile | string] struct {
 	ProtectContent       *bool
 	AllowPaidBroadcast   *bool
 	MessageEffectId      *string
-	ReplyParameters      *types.ReplyParameters
-	ReplyMarkup          *types.ReplyMarkup
+	ReplyParameters      *objects.ReplyParameters
+	ReplyMarkup          *objects.ReplyMarkup
 }
 
 func (s SendSticker[T, B]) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return types.ErrInvalidParam("chat_id parameter can't be empty")
+			return objects.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(s.ChatId).(int); ok {
 		if c < 1 {
-			return types.ErrInvalidParam("chat_id parameter can't be empty")
+			return objects.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
-	if p, ok := any(s.Sticker).(types.InputFile); ok {
+	if p, ok := any(s.Sticker).(objects.InputFile); ok {
 		if err := p.Validate(); err != nil {
 			return fmt.Errorf("invalid photo parameter: %w", err)
 		}
 	}
 	if p, ok := any(s.Sticker).(string); ok {
 		if strings.TrimSpace(p) == "" {
-			return types.ErrInvalidParam("photo parameter can't be empty")
+			return objects.ErrInvalidParam("photo parameter can't be empty")
 		}
 	}
 	return nil
@@ -53,8 +52,8 @@ func (s SendSticker[T, B]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendSticker[T, B]) Execute() (*types.Message, error) {
-	return MakePostRequest[types.Message](telego.GetToken(), "sendSticker", s)
+func (s SendSticker[T, B]) Execute() (*objects.Message, error) {
+	return MakePostRequest[objects.Message]("sendSticker", s)
 }
 
 type GetStickerSet struct {
@@ -63,7 +62,7 @@ type GetStickerSet struct {
 
 func (g GetStickerSet) Validate() error {
 	if strings.TrimSpace(g.Name) == "" {
-		return types.ErrInvalidParam("name parameter can't be empty")
+		return objects.ErrInvalidParam("name parameter can't be empty")
 	}
 	return nil
 }
@@ -72,8 +71,8 @@ func (g GetStickerSet) ToRequestBody() ([]byte, error) {
 	return json.Marshal(g)
 }
 
-func (g GetStickerSet) Execute() (*types.StickerSet, error) {
-	return MakePostRequest[types.StickerSet](telego.GetToken(), "getStickerSet", g)
+func (g GetStickerSet) Execute() (*objects.StickerSet, error) {
+	return MakePostRequest[objects.StickerSet]("getStickerSet", g)
 }
 
 type GetCustomEmojiStickers struct {
@@ -82,7 +81,7 @@ type GetCustomEmojiStickers struct {
 
 func (g GetCustomEmojiStickers) Validate() error {
 	if len(g.CustomEmojiIds) == 0 {
-		return types.ErrInvalidParam("custom_emoji_ids parameter can't be empty")
+		return objects.ErrInvalidParam("custom_emoji_ids parameter can't be empty")
 	}
 	return nil
 }
@@ -91,13 +90,13 @@ func (g GetCustomEmojiStickers) ToRequestBody() ([]byte, error) {
 	return json.Marshal(g)
 }
 
-func (g GetCustomEmojiStickers) Execute() (*[]types.Sticker, error) {
-	return MakePostRequest[[]types.Sticker](telego.GetToken(), "getCustomEmojiStickers", g)
+func (g GetCustomEmojiStickers) Execute() (*[]objects.Sticker, error) {
+	return MakePostRequest[[]objects.Sticker]("getCustomEmojiStickers", g)
 }
 
 type UploadStickerFile struct {
 	UserId        int
-	Sticker       types.InputFile
+	Sticker       objects.InputFile
 	StickerFormat string
 }
 
@@ -109,13 +108,13 @@ var allowed_formats = []string{
 
 func (u UploadStickerFile) Validate() error {
 	if u.UserId < 1 {
-		return types.ErrInvalidParam("user_id parameter can't be empty")
+		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if err := u.Sticker.Validate(); err != nil {
 		return err
 	}
 	if !slices.Contains(allowed_formats, u.StickerFormat) {
-		return types.ErrInvalidParam("sticker_format must be one of \"static\", \"animated\", \"video\"")
+		return objects.ErrInvalidParam("sticker_format must be one of \"static\", \"animated\", \"video\"")
 	}
 	return nil
 }
@@ -124,22 +123,22 @@ func (u UploadStickerFile) ToRequestBody() ([]byte, error) {
 	return json.Marshal(u)
 }
 
-func (u UploadStickerFile) Execute() (*types.File, error) {
-	return MakePostRequest[types.File](telego.GetToken(), "uploadStickerFile", u)
+func (u UploadStickerFile) Execute() (*objects.File, error) {
+	return MakePostRequest[objects.File]("uploadStickerFile", u)
 }
 
-type CreateNewStickerSet[T types.InputFile | string] struct {
+type CreateNewStickerSet[T objects.InputFile | string] struct {
 	UserId          int
 	Name            string
 	Title           string
-	Stickers        []types.InputSticker[T]
+	Stickers        []objects.InputSticker[T]
 	StickerType     *string
 	NeedsRepainting *bool
 }
 
 var valid_stickerset_name = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*$`)
 var consecutive_underscores = regexp.MustCompile(`__+`)
-var valid_stickertypes = []string{
+var valid_stickerobjects = []string{
 	"regular",
 	"mask",
 	"custom_emoji",
@@ -147,19 +146,19 @@ var valid_stickertypes = []string{
 
 func (c CreateNewStickerSet[T]) Validate() error {
 	if c.UserId < 1 {
-		return types.ErrInvalidParam("user_id parameter can't be empty")
+		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if len(c.Name) < 1 || len(c.Name) > 64 {
-		return types.ErrInvalidParam("name parameter must be between 1 and 64 characters")
+		return objects.ErrInvalidParam("name parameter must be between 1 and 64 characters")
 	}
 	if !valid_stickerset_name.MatchString(c.Name) {
-		return types.ErrInvalidParam("name parameter can contain only English letters, digits and underscores")
+		return objects.ErrInvalidParam("name parameter can contain only English letters, digits and underscores")
 	}
 	if consecutive_underscores.MatchString(c.Name) {
-		return types.ErrInvalidParam("name parameter can't contain consecutive underscores")
+		return objects.ErrInvalidParam("name parameter can't contain consecutive underscores")
 	}
 	if len(c.Title) < 1 || len(c.Title) > 64 {
-		return types.ErrInvalidParam("title parameter must be between 1 and 64 characters")
+		return objects.ErrInvalidParam("title parameter must be between 1 and 64 characters")
 	}
 	for _, sticker := range c.Stickers {
 		if err := sticker.Validate(); err != nil {
@@ -167,8 +166,8 @@ func (c CreateNewStickerSet[T]) Validate() error {
 		}
 	}
 	if c.StickerType != nil {
-		if !slices.Contains(valid_stickertypes, *c.StickerType) {
-			return types.ErrInvalidParam("sticker_type must be \"regular\", \"mask\" or \"custom_emoji\"")
+		if !slices.Contains(valid_stickerobjects, *c.StickerType) {
+			return objects.ErrInvalidParam("sticker_type must be \"regular\", \"mask\" or \"custom_emoji\"")
 		}
 	}
 	return nil
@@ -179,21 +178,21 @@ func (c CreateNewStickerSet[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (c CreateNewStickerSet[T]) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "createNewStickerSet", c)
+	return MakePostRequest[bool]("createNewStickerSet", c)
 }
 
-type AddStickerToSet[T types.InputFile | string] struct {
+type AddStickerToSet[T objects.InputFile | string] struct {
 	UserId  int
 	Name    string
-	Sticker types.InputSticker[T]
+	Sticker objects.InputSticker[T]
 }
 
 func (a AddStickerToSet[T]) Validate() error {
 	if a.UserId < 1 {
-		return types.ErrInvalidParam("user_id parameter can't be empty")
+		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(a.Name) == "" {
-		return types.ErrInvalidParam("name parameter can't be empty")
+		return objects.ErrInvalidParam("name parameter can't be empty")
 	}
 	if err := a.Sticker.Validate(); err != nil {
 		return err
@@ -206,7 +205,7 @@ func (a AddStickerToSet[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (a AddStickerToSet[T]) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "addStickerToSet", a)
+	return MakePostRequest[bool]("addStickerToSet", a)
 }
 
 type SetStickerPositionInSet struct {
@@ -216,10 +215,10 @@ type SetStickerPositionInSet struct {
 
 func (s SetStickerPositionInSet) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return types.ErrInvalidParam("sticker parameter can't be empty")
+		return objects.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if s.Position < 0 {
-		return types.ErrInvalidParam("position parameter must be positive")
+		return objects.ErrInvalidParam("position parameter must be positive")
 	}
 	return nil
 }
@@ -229,7 +228,7 @@ func (s SetStickerPositionInSet) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerPositionInSet) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "setStickerPositionInSet", s)
+	return MakePostRequest[bool]("setStickerPositionInSet", s)
 }
 
 type DeleteStickerFromSet struct {
@@ -238,7 +237,7 @@ type DeleteStickerFromSet struct {
 
 func (d DeleteStickerFromSet) Validate() error {
 	if strings.TrimSpace(d.Sticker) == "" {
-		return types.ErrInvalidParam("sticker parameter can't be empty")
+		return objects.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	return nil
 }
@@ -248,25 +247,25 @@ func (d DeleteStickerFromSet) ToRequestBody() ([]byte, error) {
 }
 
 func (d DeleteStickerFromSet) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "deleteStickerFromSet", d)
+	return MakePostRequest[bool]("deleteStickerFromSet", d)
 }
 
-type ReplaceStickerInSet[T types.InputFile | string] struct {
+type ReplaceStickerInSet[T objects.InputFile | string] struct {
 	UserId     int
 	Name       string
 	OldSticker string
-	Sticker    types.InputSticker[T]
+	Sticker    objects.InputSticker[T]
 }
 
 func (r ReplaceStickerInSet[T]) Validate() error {
 	if r.UserId < 1 {
-		return types.ErrInvalidParam("user_id parameter can't be empty")
+		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(r.OldSticker) == "" {
-		return types.ErrInvalidParam("old_sticker parameter can't be empty")
+		return objects.ErrInvalidParam("old_sticker parameter can't be empty")
 	}
 	if strings.TrimSpace(r.Name) == "" {
-		return types.ErrInvalidParam("name parameter can't be empty")
+		return objects.ErrInvalidParam("name parameter can't be empty")
 	}
 	if err := r.Sticker.Validate(); err != nil {
 		return err
@@ -279,7 +278,7 @@ func (r ReplaceStickerInSet[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (r ReplaceStickerInSet[T]) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "replaceStickerInSet", r)
+	return MakePostRequest[bool]("replaceStickerInSet", r)
 }
 
 type SetStickerEmojiList struct {
@@ -289,10 +288,10 @@ type SetStickerEmojiList struct {
 
 func (s SetStickerEmojiList) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return types.ErrInvalidParam("sticker parameter can't be empty")
+		return objects.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if len(s.EmojiList) < 1 || len(s.EmojiList) > 20 {
-		return types.ErrInvalidParam("emoji_list parameter can contain only 1-20 elements")
+		return objects.ErrInvalidParam("emoji_list parameter can contain only 1-20 elements")
 	}
 	return nil
 }
@@ -302,7 +301,7 @@ func (s SetStickerEmojiList) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerEmojiList) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "setStickerEmojiList", s)
+	return MakePostRequest[bool]("setStickerEmojiList", s)
 }
 
 type SetStickerKeywords struct {
@@ -312,11 +311,11 @@ type SetStickerKeywords struct {
 
 func (s SetStickerKeywords) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return types.ErrInvalidParam("sticker parameter can't be empty")
+		return objects.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if s.Keywords != nil {
 		if len(*s.Keywords) > 20 {
-			return types.ErrInvalidParam("keywords parameter can't be longer than 20")
+			return objects.ErrInvalidParam("keywords parameter can't be longer than 20")
 		}
 	}
 	return nil
@@ -327,17 +326,17 @@ func (s SetStickerKeywords) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerKeywords) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "setStickerKeywords", s)
+	return MakePostRequest[bool]("setStickerKeywords", s)
 }
 
 type SetStickerMaskPosition struct {
 	Sticker      string
-	MaskPosition *types.MaskPosition
+	MaskPosition *objects.MaskPosition
 }
 
 func (s SetStickerMaskPosition) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return types.ErrInvalidParam("sticker parameter can't be empty")
+		return objects.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if s.MaskPosition != nil {
 		if err := s.MaskPosition.Validate(); err != nil {
@@ -352,7 +351,7 @@ func (s SetStickerMaskPosition) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerMaskPosition) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "setStickerMaskPosition", s)
+	return MakePostRequest[bool]("setStickerMaskPosition", s)
 }
 
 type SetStickerSetTitle struct {
@@ -362,10 +361,10 @@ type SetStickerSetTitle struct {
 
 func (s SetStickerSetTitle) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return types.ErrInvalidParam("name parameter can't be empty")
+		return objects.ErrInvalidParam("name parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Title) == "" {
-		return types.ErrInvalidParam("title parameter can't be empty")
+		return objects.ErrInvalidParam("title parameter can't be empty")
 	}
 	return nil
 }
@@ -375,10 +374,10 @@ func (s SetStickerSetTitle) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerSetTitle) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "setStickerSetTitle", s)
+	return MakePostRequest[bool]("setStickerSetTitle", s)
 }
 
-type SetStickerSetThumbnail[T types.InputFile | string] struct {
+type SetStickerSetThumbnail[T objects.InputFile | string] struct {
 	Name      string
 	UserId    int
 	Thumbnail *T
@@ -393,25 +392,25 @@ var valid_stickerset_thumbnail = []string{
 
 func (s SetStickerSetThumbnail[T]) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return types.ErrInvalidParam("name parameter can't be empty")
+		return objects.ErrInvalidParam("name parameter can't be empty")
 	}
 	if s.UserId < 1 {
-		return types.ErrInvalidParam("user_id parameter can't be empty")
+		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if s.Thumbnail != nil {
-		if t, ok := any(*s.Thumbnail).(types.InputFile); ok {
+		if t, ok := any(*s.Thumbnail).(objects.InputFile); ok {
 			if err := t.Validate(); err != nil {
 				return err
 			}
 		}
 		if t, ok := any(*s.Thumbnail).(string); ok {
 			if strings.TrimSpace(t) == "" {
-				return types.ErrInvalidParam("thumbnail file id can't be empty")
+				return objects.ErrInvalidParam("thumbnail file id can't be empty")
 			}
 		}
 	}
 	if !slices.Contains(valid_stickerset_thumbnail, s.Format) {
-		return types.ErrInvalidParam("format parameter must be one of “static”, “animated” or “video”")
+		return objects.ErrInvalidParam("format parameter must be one of “static”, “animated” or “video”")
 	}
 	return nil
 }
@@ -421,7 +420,7 @@ func (s SetStickerSetThumbnail[T]) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetStickerSetThumbnail[T]) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "setStickerSetThumbnail", s)
+	return MakePostRequest[bool]("setStickerSetThumbnail", s)
 }
 
 type SetCustomEmojiStickerSetThumbnail struct {
@@ -431,11 +430,11 @@ type SetCustomEmojiStickerSetThumbnail struct {
 
 func (s SetCustomEmojiStickerSetThumbnail) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return types.ErrInvalidParam("name parameter can't be empty")
+		return objects.ErrInvalidParam("name parameter can't be empty")
 	}
 	if s.CustomEmojiId != nil {
 		if strings.TrimSpace(*s.CustomEmojiId) == "" {
-			return types.ErrInvalidParam("custom_emoji_id parameter can't be empty")
+			return objects.ErrInvalidParam("custom_emoji_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -446,7 +445,7 @@ func (s SetCustomEmojiStickerSetThumbnail) ToRequestBody() ([]byte, error) {
 }
 
 func (s SetCustomEmojiStickerSetThumbnail) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "setCustomEmojiStickerSetThumbnail", s)
+	return MakePostRequest[bool]("setCustomEmojiStickerSetThumbnail", s)
 }
 
 type DeleteStickerSet struct {
@@ -455,7 +454,7 @@ type DeleteStickerSet struct {
 
 func (d DeleteStickerSet) Validate() error {
 	if strings.TrimSpace(d.Name) == "" {
-		return types.ErrInvalidParam("name parameter can't be empty")
+		return objects.ErrInvalidParam("name parameter can't be empty")
 	}
 	return nil
 }
@@ -465,7 +464,7 @@ func (d DeleteStickerSet) ToRequestBody() ([]byte, error) {
 }
 
 func (d DeleteStickerSet) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "deleteStickerSet", d)
+	return MakePostRequest[bool]("deleteStickerSet", d)
 }
 
 type GetAvailableGifts struct {
@@ -479,8 +478,8 @@ func (g GetAvailableGifts) ToRequestBody() ([]byte, error) {
 	return json.Marshal(struct{}{})
 }
 
-func (g GetAvailableGifts) Execute() (*types.Gifts, error) {
-	return MakeGetRequest[types.Gifts](telego.GetToken(), "getAvailableGifts", g)
+func (g GetAvailableGifts) Execute() (*objects.Gifts, error) {
+	return MakeGetRequest[objects.Gifts]("getAvailableGifts", g)
 }
 
 type SendGift struct {
@@ -488,23 +487,23 @@ type SendGift struct {
 	GiftId        string
 	Text          *string
 	TextParseMode *string
-	TextEntities  *[]types.MessageEntity
+	TextEntities  *[]objects.MessageEntity
 }
 
 func (s SendGift) Validate() error {
 	if s.UserId < 1 {
-		return types.ErrInvalidParam("user_id parameter can't be empty")
+		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.GiftId) == "" {
-		return types.ErrInvalidParam("gift_id parameter can't be empty")
+		return objects.ErrInvalidParam("gift_id parameter can't be empty")
 	}
 	if s.Text != nil {
 		if len(*s.Text) > 255 {
-			return types.ErrInvalidParam("text parameter must not be longer than 255 characters")
+			return objects.ErrInvalidParam("text parameter must not be longer than 255 characters")
 		}
 	}
 	if s.TextParseMode != nil && s.TextEntities != nil {
-		return types.ErrInvalidParam("parse_mode can't be used if entities are provided")
+		return objects.ErrInvalidParam("parse_mode can't be used if entities are provided")
 	}
 	return nil
 }
@@ -514,5 +513,5 @@ func (s SendGift) ToRequestBody() ([]byte, error) {
 }
 
 func (s SendGift) Execute() (*bool, error) {
-	return MakePostRequest[bool](telego.GetToken(), "sendGift", s)
+	return MakePostRequest[bool]("sendGift", s)
 }

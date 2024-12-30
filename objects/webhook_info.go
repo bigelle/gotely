@@ -1,4 +1,4 @@
-package types
+package objects
 
 type WebHookInfo struct {
 	Url                          string    `json:"url"`
