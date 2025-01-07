@@ -1,7 +1,11 @@
 package objects
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -3482,7 +3486,7 @@ func (i InputMediaPhoto) Validate() error {
 // IMPORTANT: It is strongly recommended to use the SetInputMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
-type InputMediaVideo[T InputFile | string] struct {
+type InputMediaVideo struct {
 	//Type of the result, must be video
 	Type string `json:"type"`
 	//File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
@@ -3496,7 +3500,7 @@ type InputMediaVideo[T InputFile | string] struct {
 	//Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	//the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	//More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail *T `json:"thumbnail,omitempty"`
+	Thumbnail *InputFile `json:"thumbnail,omitempty"`
 	//Optional. Caption of the video to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	//Optional. Mode for parsing entities in the video caption. See https://core.telegram.org/bots/api#formatting-options for more details.
@@ -3518,7 +3522,7 @@ type InputMediaVideo[T InputFile | string] struct {
 	isNew      bool  `json:"-"`
 }
 
-func (i *InputMediaVideo[T]) SetInputMedia(media string, isNew bool) {
+func (i *InputMediaVideo) SetInputMedia(media string, isNew bool) {
 	if isNew {
 		if url_regex.MatchString(media) {
 			i.Media = media
@@ -3531,7 +3535,7 @@ func (i *InputMediaVideo[T]) SetInputMedia(media string, isNew bool) {
 	}
 }
 
-func (i InputMediaVideo[t]) Validate() error {
+func (i InputMediaVideo) Validate() error {
 	if i.Type != "video" {
 		return ErrInvalidParam("type must be video")
 	}
@@ -3553,7 +3557,7 @@ func (i InputMediaVideo[t]) Validate() error {
 // IMPORTANT: It is strongly recommended to use the SetInputMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
-type InputMediaAnimation[T InputFile | string] struct {
+type InputMediaAnimation struct {
 	//Type of the result, must be animation
 	Type string `json:"type"`
 	//File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
@@ -3567,7 +3571,7 @@ type InputMediaAnimation[T InputFile | string] struct {
 	//Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	//the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	//More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail *T `json:"thumbnail,omitempty"`
+	Thumbnail *InputFile `json:"thumbnail,omitempty"`
 	//Optional. Caption of the animation to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	//Optional. Mode for parsing entities in the animation caption. See https://core.telegram.org/bots/api#formatting-options for more details.
@@ -3587,7 +3591,7 @@ type InputMediaAnimation[T InputFile | string] struct {
 	isNew      bool  `json:"-"`
 }
 
-func (i *InputMediaAnimation[T]) SetInputMedia(media string, isNew bool) {
+func (i *InputMediaAnimation) SetInputMedia(media string, isNew bool) {
 	if isNew {
 		if url_regex.MatchString(media) {
 			i.Media = media
@@ -3600,7 +3604,7 @@ func (i *InputMediaAnimation[T]) SetInputMedia(media string, isNew bool) {
 	}
 }
 
-func (i InputMediaAnimation[T]) Validate() error {
+func (i InputMediaAnimation) Validate() error {
 	if i.Type != "animation" {
 		return ErrInvalidParam("type must be animation")
 	}
@@ -3742,22 +3746,89 @@ func (i InputMediaDocument) Validate() error {
 	return nil
 }
 
-// FIXME: should be a struct and there is should be a method to send multipart requests
-type InputFile string
+// FIXME: should be an interface with 3 implementations:
+// 1. a byte slice
+// 2. a file path
+// 3. a file id
+type InputFile interface {
+	Validable
+	Name() string
+	Reader() (io.Reader, error)
+	IsLocal() bool
+}
 
-func (i InputFile) Validate() error {
-	urlRegex := regexp.MustCompile(`^https?://`)
-	attachmentRegex := regexp.MustCompile(`^attach://[\w-]+$`)
-	switch {
-	case urlRegex.MatchString(string(i)):
-		return nil
-	case attachmentRegex.MatchString(string(i)):
-		return nil
-	default:
-		return ErrInvalidParam(
-			"invalid media parameter. Please refer to: https://core.telegram.org/bots/api#sending-files",
-		)
+type InputFileFromPath struct {
+	FilePath string
+}
+
+func (i InputFileFromPath) Name() string {
+	return filepath.Base(i.FilePath)
+}
+
+func (i InputFileFromPath) Reader() (io.Reader, error) {
+	return os.Open(i.FilePath)
+}
+
+func (i InputFileFromPath) Validate() error {
+	if i.FilePath == "" {
+		return ErrInvalidParam("file path can't be empty")
 	}
+	if _, err := os.Stat(i.FilePath); os.IsNotExist(err) {
+		return fmt.Errorf("file does not exist at path: %s", i.FilePath)
+	}
+	return nil
+}
+
+func (i InputFileFromPath) IsLocal() bool {
+	return true
+}
+
+type InputFileFromBytes struct {
+	FileName string
+	Data     []byte
+}
+
+func (i InputFileFromBytes) Name() string {
+	return i.FileName
+}
+
+func (i InputFileFromBytes) Reader() (io.Reader, error) {
+	return bytes.NewReader(i.Data), nil
+}
+
+func (i InputFileFromBytes) Validate() error {
+	if i.FileName == "" {
+		return ErrInvalidParam("file name can't be empty")
+	}
+	if len(i.Data) == 0 {
+		return ErrInvalidParam("data can't be empty")
+	}
+	return nil
+}
+
+func (i InputFileFromBytes) IsLocal() bool {
+	return true
+}
+
+type InputFileFromString string
+
+func (i InputFileFromString) Validate() error {
+	if i == "" {
+		return ErrInvalidParam("file id or url can't be empty")
+	}
+	return nil
+}
+
+func (i InputFileFromString) Name() string {
+	return ""
+}
+
+func (i InputFileFromString) Reader() (io.Reader, error) {
+	return nil, fmt.Errorf("remote file can't have reader")
+}
+
+func (i InputFileFromString) IsLocal() bool {
+	return false
 }
 
 // This object describes the paid media to be sent. Currently, it can be one of

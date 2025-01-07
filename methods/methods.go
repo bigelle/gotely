@@ -1,8 +1,11 @@
 package methods
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"slices"
 	"strings"
 
@@ -205,7 +208,7 @@ func (f ForwardMessages[T]) Execute() (*[]objects.MessageId, error) {
 // Use this method to copy messages of any kind.
 // Service messages, paid media messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied.
 // A quiz poll can be copied only if the value of the field correct_option_id is known to the bot.
-// The method is analogous to the method forwardMessage, but the copied message doesn't have a link to the original message.
+// The method is analogous to the method forwardMessageut the copied message doesn't have a link to the original message.
 // Returns the MessageId of the sent message on success.
 type CopyMessage[T int | string] struct {
 	//Required.
@@ -281,7 +284,6 @@ func (c CopyMessage[T]) Validate() error {
 }
 
 func (c CopyMessage[T]) ToRequestBody() ([]byte, error) {
-
 	return json.Marshal(c)
 }
 
@@ -289,18 +291,31 @@ func (c CopyMessage[T]) Execute() (*objects.MessageId, error) {
 	return MakePostRequest[objects.MessageId]("copyMessage", c)
 }
 
+// Use this method to copy messages of any kind.
+// If some of the specified messages can't be found or copied, they are skipped.
+// Service messages, paid media messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied.
+// A quiz poll can be copied only if the value of the field correct_option_id is known to the bot.
+// The method is analogous to the method forwardMessagesut the copied messages don't have a link to the original message.
+// Album grouping is kept for copied messages. On success, an array of MessageId of the sent messages is returned.
 type CopyMessages[T int | string] struct {
-	ChatId              T
-	FromChatId          T
-	MessageIds          []int
-	MessageThreadId     *int
-	DisableNotification *bool
-	ProtectContent      *bool
-	RemoveCaption       *bool
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	//Unique identifier for the chat where the original messages were sent (or channel username in the format @channelusername)
+	FromChatId T `json:"from_chat_id"`
+	//A JSON-serialized list of 1-100 identifiers of messages in the chat from_chat_id to copy.
+	//The identifiers must be specified in a strictly increasing order.
+	MessageIds []int `json:"message_ids"`
+	//Sends the messages silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent messages from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to copy the messages without their captions
+	RemoveCaption *bool `json:"remove_caption,omitempty"`
 }
 
 func (c CopyMessages[T]) ToRequestBody() ([]byte, error) {
-
 	return json.Marshal(c)
 }
 
@@ -335,25 +350,50 @@ func (c CopyMessages[T]) Execute() (*[]objects.MessageId, error) {
 	return MakePostRequest[[]objects.MessageId]("copyMessages", c)
 }
 
-type SendPhoto[T int | string, B objects.InputFile | string] struct {
-	ChatId                T
-	Photo                 B
-	BusinessConnectionId  *string
-	MessageThreadId       *int
-	Caption               *string
-	ParseMode             *string
-	CaptionEntities       *[]objects.MessageEntity
-	ShowCaptionAboveMedia *bool
-	HasSpoiler            *bool
-	DisableNotification   *bool
-	ProtectContent        *bool
-	AllowPaidBroadcast    *bool
-	MessageEffectId       *string
-	ReplyParameters       *objects.ReplyParameters
-	ReplyMarkup           *objects.ReplyMarkup
+// Use this method to send photos. On success, the sent Message is returned.
+type SendPhoto[T int | string] struct {
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel
+	//(in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	//Photo to send. Pass a file_id as String to send a photo that exists on the Telegram servers (recommended),
+	//pass an HTTP URL as a String for Telegram to get a photo from the Internet,
+	//or upload a new photo using multipart/form-data.
+	//The photo must be at most 10 MB in size. The photo's width and height must not exceed 10000 in total.
+	//Width and height ratio must be at most 20.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Photo objects.InputFile `json:"photo"`
+	//Photo caption (may also be used when resending photos by file_id), 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Mode for parsing entities in the photo caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]objects.MessageEntity `json:"caption_entities,omitempty"`
+	//Pass True, if the caption must be shown above the message media
+	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
+	//Pass True if the photo needs to be covered with a spoiler animation
+	HasSpoiler *bool `json:"has_spoiler,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard,
+	//custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendPhoto[T, B]) Validate() error {
+func (s SendPhoto[T]) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -377,35 +417,170 @@ func (s SendPhoto[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendPhoto[T, B]) ToRequestBody() ([]byte, error) {
+func (s SendPhoto[T]) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
+	buf := &bytes.Buffer{}
+	w := multipart.NewWriter(buf)
+
+	//writing text fields
+	if err := w.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
+		return nil, nil, err
+	}
+	if s.BusinessConnectionId != nil {
+		if err := w.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageThreadId != nil {
+		if err := w.WriteField("message_thread_id", fmt.Sprint(*s.MessageThreadId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Caption != nil {
+		if err := w.WriteField("caption", fmt.Sprint(*s.Caption)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ParseMode != nil {
+		if err := w.WriteField("parse_mode", fmt.Sprint(*s.ParseMode)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.CaptionEntities != nil {
+		b, err := json.Marshal(s.CaptionEntities)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("caption_entities", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ShowCaptionAboveMedia != nil {
+		if err := w.WriteField("show_caption_above_media", fmt.Sprint(*s.ShowCaptionAboveMedia)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.DisableNotification != nil {
+		if err := w.WriteField("disable_notification", fmt.Sprint(*s.DisableNotification)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ProtectContent != nil {
+		if err := w.WriteField("protect_content", fmt.Sprint(*s.ProtectContent)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.AllowPaidBroadcast != nil {
+		if err := w.WriteField("allow_paid_broadcast", fmt.Sprint(*s.AllowPaidBroadcast)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageEffectId != nil {
+		if err := w.WriteField("message_effect_id", fmt.Sprint(*s.MessageEffectId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyParameters != nil {
+		b, err := json.Marshal(s.ReplyParameters)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_parameters", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyMarkup != nil {
+		b, err := json.Marshal(s.ReplyMarkup)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_markup", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	//writing file
+	part, err := w.CreateFormFile("photo", s.Photo.Name())
+	if err != nil {
+		return nil, nil, err
+	}
+	reader, err := s.Photo.Reader()
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = io.Copy(part, reader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	w.Close()
+	return buf, w, nil
+}
+
+func (s SendPhoto[T]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendPhoto[T, B]) Execute() (*objects.Message, error) {
+func (s SendPhoto[T]) Execute() (*objects.Message, error) {
+	if s.Photo.IsLocal() {
+		return MakeMultipartRequest[objects.Message]("sendPhoto", s)
+	}
 	return MakePostRequest[objects.Message]("sendPhoto", s)
 }
 
-type SendAudio[T int | string, B objects.InputFile | string] struct {
-	ChatId               T
-	Audio                B
-	BusinessConnectionId *string
-	MessageThreadId      *int
-	Caption              *string
-	ParseMode            *string
-	CaptionEntities      *[]objects.MessageEntity
-	Duration             *int
-	Performer            *string
-	Title                *string
-	Thumbnail            *B
-	DisableNotification  *bool
-	ProtectContent       *bool
-	AllowPaidBroadcast   *bool
-	MessageEffectId      *string
-	ReplyParameters      *objects.ReplyParameters
-	ReplyMarkup          *objects.ReplyMarkup
+// Use this method to send audio files, if you want Telegram clients to display them in the music player.
+// Your audio must be in the .MP3 or .M4A format. On success, the sent Message is returned.
+// Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future.
+//
+// For sending voice messages, use the sendVoice method instead.
+type SendAudio[T int | string] struct {
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	//Audio file to send. Pass a file_id as String to send an audio file that exists on the Telegram servers (recommended),
+	//pass an HTTP URL as a String for Telegram to get an audio file from the Internet,
+	//or upload a new one using multipart/form-data.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Audio objects.InputFile `json:"audio"`
+	//Audio caption, 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Mode for parsing entities in the audio caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]objects.MessageEntity `json:"caption_entities,omitempty"`
+	//Duration of the audio in seconds
+	Duration *int `json:"duration,omitempty"`
+	//Performer
+	Performer *string `json:"performer,omitempty"`
+	//Track name
+	Title *string `json:"title,omitempty"`
+	//Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
+	//The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320.
+	//Ignored if the file is not uploaded using multipart/form-data.
+	//Thumbnails can't be reused and can be only uploaded as a new file,
+	//so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendAudio[T, B]) Validate() error {
+func (s SendAudio[T]) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -429,33 +604,59 @@ func (s SendAudio[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendAudio[T, B]) ToRequestBody() ([]byte, error) {
+func (s SendAudio[T]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendAudio[T, B]) Execute() (*objects.Message, error) {
+func (s SendAudio[T]) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendAudio", s)
 }
 
-type SendDocument[T int | string, B objects.InputFile | string] struct {
-	ChatId                      T
-	Document                    B
-	BusinessConnectionId        *string
-	MessageThreadId             *int
-	Caption                     *string
-	ParseMode                   *string
-	CaptionEntities             *[]objects.MessageEntity
-	DisableContentTypeDetection *bool
-	Thumbnail                   *B
-	DisableNotification         *bool
-	ProtectContent              *bool
-	AllowPaidBroadcast          *bool
-	MessageEffectId             *string
-	ReplyParameters             *objects.ReplyParameters
-	ReplyMarkup                 *objects.ReplyMarkup
+// Use this method to send general files. On success, the sent Message is returned.
+// Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future.
+type SendDocument[T int | string] struct {
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	//File to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended),
+	//pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Document objects.InputFile `json:"document"`
+	//Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
+	//The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320.
+	//Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file,
+	//so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	//Document caption (may also be used when resending documents by file_id), 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Mode for parsing entities in the document caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]objects.MessageEntity `json:"caption_entities,omitempty"`
+	//Disables automatic server-side content type detection for files uploaded using multipart/form-data
+	DisableContentTypeDetection *bool `json:"disable_content_type_detection,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendDocument[T, B]) Validate() error {
+func (s SendDocument[T]) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -479,38 +680,70 @@ func (s SendDocument[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendDocument[T, B]) ToRequestBody() ([]byte, error) {
+func (s SendDocument[T]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendDocument[T, B]) Execute() (*objects.Message, error) {
+func (s SendDocument[T]) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendDocument", s)
 }
 
-type SendVideo[T int | string, B objects.InputFile | string] struct {
-	ChatId                T
-	Video                 B
-	BusinessConnectionId  *string
-	MessageThreadId       *int
-	Duration              *int
-	Width                 *int
-	Height                *int
-	Caption               *string
-	ParseMode             *string
-	CaptionEntities       *[]objects.MessageEntity
-	ShowCaptionAboveMedia *bool
-	HasSpoiler            *bool
-	SupportsStreaming     *bool
-	Thumbnail             *B
-	DisableNotification   *bool
-	ProtectContent        *bool
-	AllowPaidBroadcast    *bool
-	MessageEffectId       *string
-	ReplyParameters       *objects.ReplyParameters
-	ReplyMarkup           *objects.ReplyMarkup
+// Use this method to send video files, Telegram clients support MPEG4 videos (other formats may be sent as Document).
+// On success, the sent Message is returned.
+// Bots can currently send video files of up to 50 MB in size, this limit may be changed in the future.
+type SendVideo[T int | string] struct {
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	//Video to send. Pass a file_id as String to send a video that exists on the Telegram servers (recommended),
+	//pass an HTTP URL as a String for Telegram to get a video from the Internet, or upload a new video using multipart/form-data.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Video objects.InputFile `json:"video"`
+	//Duration of sent video in seconds
+	Duration *int `json:"duration,omitempty"`
+	//Video width
+	Width *int `json:"width,omitempty"`
+	//Video height
+	Height *int `json:"height,omitempty"`
+	//Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
+	//The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320.
+	//Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file,
+	//so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	//Video caption (may also be used when resending videos by file_id), 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Mode for parsing entities in the video caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]objects.MessageEntity `json:"caption_entities,omitempty"`
+	//Pass True, if the caption must be shown above the message media
+	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
+	//Pass True if the video needs to be covered with a spoiler animation
+	HasSpoiler *bool `json:"has_spoiler,omitempty"`
+	//Pass True if the uploaded video is suitable for streaming
+	SupportsStreaming *bool `json:"supports_streaming,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendVideo[T, B]) Validate() error {
+func (s SendVideo[T]) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -534,37 +767,67 @@ func (s SendVideo[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendVideo[T, B]) ToRequestBody() ([]byte, error) {
+func (s SendVideo[T]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendVideo[T, B]) Execute() (*objects.Message, error) {
+func (s SendVideo[T]) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendVideo", s)
 }
 
-type SendAnimation[T int | string, B objects.InputFile | string] struct {
-	ChatId                T
-	Animation             B
-	BusinessConnectionId  *string
-	MessageThreadId       *int
-	Duration              *int
-	Width                 *int
-	Height                *int
-	Thumbnail             *B
-	Caption               *string
-	ParseMode             *string
-	CaptionEntities       *[]objects.MessageEntity
-	ShowCaptionAboveMedia *bool
-	HasSpoiler            *bool
-	DisableNotification   *bool
-	ProtectContent        *bool
-	AllowPaidBroadcast    *bool
-	MessageEffectId       *string
-	ReplyParameters       *objects.ReplyParameters
-	ReplyMarkup           *objects.ReplyMarkup
+// Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound). On success, the sent Message is returned.
+// Bots can currently send animation files of up to 50 MB in size, this limit may be changed in the future.
+type SendAnimation[T int | string] struct {
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	//Animation to send. Pass a file_id as String to send an animation that exists on the Telegram servers (recommended),
+	//pass an HTTP URL as a String for Telegram to get an animation from the Internet, or upload a new animation using multipart/form-data.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Animation objects.InputFile `json:"animation"`
+	//Duration of sent animation in seconds
+	Duration *int `json:"duration,omitempty"`
+	//Animation width
+	Width *int `json:"width,omitempty"`
+	//Animation height
+	Height *int `json:"height,omitempty"`
+	//Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
+	//The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320.
+	//Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file,
+	//so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	//Animation caption (may also be used when resending animation by file_id), 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Mode for parsing entities in the animation caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]objects.MessageEntity `json:"caption_entities,omitempty"`
+	//Pass True, if the caption must be shown above the message media
+	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
+	//Pass True if the animation needs to be covered with a spoiler animation
+	HasSpoiler *bool `json:"has_spoiler,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendAnimation[T, B]) Validate() error {
+func (s SendAnimation[T]) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -588,33 +851,58 @@ func (s SendAnimation[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendAnimation[T, B]) ToRequestBody() ([]byte, error) {
+func (s SendAnimation[T]) ToRequestBody() ([]byte, error) {
+	//FIXME should use multipart and write every field one by one
+	//also probably should be called ToMultipart() as a part of a new multipart interface
 	return json.Marshal(s)
 }
 
-func (s SendAnimation[T, B]) Execute() (*objects.Message, error) {
+func (s SendAnimation[T]) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendAnimation", s)
 }
 
-type SendVoice[T int | string, B objects.InputFile | string] struct {
-	ChatId               T
-	Voice                B
-	BusinessConnectionId *string
-	MessageThreadId      *int
-	Duration             *int
-	Thumbnail            *B
-	Caption              *string
-	ParseMode            *string
-	CaptionEntities      *[]objects.MessageEntity
-	DisableNotification  *bool
-	ProtectContent       *bool
-	AllowPaidBroadcast   *bool
-	MessageEffectId      *string
-	ReplyParameters      *objects.ReplyParameters
-	ReplyMarkup          *objects.ReplyMarkup
+// Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message.
+// For this to work, your audio must be in an .OGG file encoded with OPUS, or in .MP3 format, or in .M4A format
+// (other formats may be sent as Audio or Document).
+// On success, the sent Message is returned. Bots can currently send voice messages of up to 50 MB in size,
+// this limit may be changed in the future.
+type SendVoice[T int | string] struct {
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	//Audio file to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended),
+	//pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Voice objects.InputFile `json:"voice"`
+	//Voice message caption, 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Mode for parsing entities in the voice message caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]objects.MessageEntity `json:"caption_entities"`
+	//Duration of the voice message in seconds
+	Duration *int `json:"duration,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendVoice[T, B]) Validate() error {
+func (s SendVoice[T]) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -638,33 +926,56 @@ func (s SendVoice[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendVoice[T, B]) ToRequestBody() ([]byte, error) {
+func (s SendVoice[T]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendVoice[T, B]) Execute() (*objects.Message, error) {
+func (s SendVoice[T]) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendVoice", s)
 }
 
-type SendVideoNote[T int | string, B objects.InputFile | string] struct {
-	ChatId               T
-	VideoNote            B
-	BusinessConnectionId *string
-	MessageThreadId      *int
-	Duration             *int
-	Length               *int
-	Caption              *string
-	ParseMode            *string
-	CaptionEntities      *[]objects.MessageEntity
-	DisableNotification  *bool
-	ProtectContent       *bool
-	AllowPaidBroadcast   *bool
-	MessageEffectId      *string
-	ReplyParameters      *objects.ReplyParameters
-	ReplyMarkup          *objects.ReplyMarkup
+// As of v.4.0, Telegram clients support rounded square MPEG4 videos of up to 1 minute long.
+// Use this method to send video messages. On success, the sent Message is returned.
+type SendVideoNote[T int | string] struct {
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	//Video note to send. Pass a file_id as String to send a video note that exists on the Telegram servers (recommended) or
+	//upload a new video using multipart/form-data.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files.
+	//Sending video notes by a URL is currently unsupported
+	VideoNote objects.InputFile `json:"video_note"`
+	//Duration of sent video in seconds
+	Duration *int `json:"duration,omitempty"`
+	//Video width and height, i.e. diameter of the video message
+	Length *int `json:"length,omitempty"`
+	//Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
+	//The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320.
+	//Ignored if the file is not uploaded using multipart/form-data.
+	//Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
+	//the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
+	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendVideoNote[T, B]) Validate() error {
+func (s SendVideoNote[T]) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -685,33 +996,52 @@ func (s SendVideoNote[T, B]) Validate() error {
 			return objects.ErrInvalidParam("video_note parameter can't be empty")
 		}
 	}
-	// TODO: validate non-nill thumbnails
 	return nil
 }
 
-func (s SendVideoNote[T, B]) ToRequestBody() ([]byte, error) {
+func (s SendVideoNote[T]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendVideoNote[T, B]) Execute() (*objects.Message, error) {
+func (s SendVideoNote[T]) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendVideoNote", s)
 }
 
+// Use this method to send paid media. On success, the sent Message is returned.
 type SendPaidMedia[T int | string] struct {
-	ChatId                T
-	Media                 []objects.InputPaidMedia
-	StarCount             int
-	BusinessConnectionId  *string
-	Payload               *string
-	Caption               *string
-	ParseMode             *string
-	CaptionEntities       *[]objects.MessageEntity
-	ShowCaptionAboveMedia *bool
-	DisableNotification   *bool
-	ProtectContent        *bool
-	AllowPaidBroadcast    *bool
-	ReplyParameters       *objects.ReplyParameters
-	ReplyMarkup           *objects.ReplyMarkup
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername).
+	//If the chat is a channel, all Telegram Star proceeds from this media will be credited to the chat's balance.
+	//Otherwise, they will be credited to the bot's balance.
+	ChatId T `json:"chat_id"`
+	//The number of Telegram Stars that must be paid to buy access to the media; 1-2500
+	StarCount int `json:"star_count"`
+	//An array describing the media to be sent; up to 10 items
+	Media []objects.InputPaidMedia `json:"media"`
+	//Bot-defined paid media payload, 0-128 bytes. This will not be displayed to the user, use it for your internal processes.
+	Payload *string `json:"payload,omitempty"`
+	//Media caption, 0-1024 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	//Mode for parsing entities in the media caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]objects.MessageEntity `json:"caption_entities,omitempty"`
+	//Pass True, if the caption must be shown above the message media
+	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 func (s SendPaidMedia[T]) Validate() error {
@@ -750,16 +1080,29 @@ func (s SendPaidMedia[T]) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendPaidMedia", s)
 }
 
+// Use this method to send a group of photos, videos, documents or audios as an album.
+// Documents and audio files can be only grouped in an album with messages of the same type.
+// On success, an array of Messages that were sent is returned.
 type SendMediaGroup[T int | string] struct {
-	ChatId               T
-	Media                []objects.InputMedia
-	BusinessConnectionId *string
-	MessageThreadId      *string
-	DisableNotification  *bool
-	ProtectContent       *bool
-	AllowPaidBroadcast   *bool
-	MessageEffectId      *string
-	ReplyParameters      *objects.ReplyParameters
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *string `json:"message_thread_id,omitempty"`
+	//An array describing messages to be sent, must include 2-10 items
+	Media []objects.InputMedia `json:"media"`
+	//Sends messages silently. Users will receive a notif,omitemptyication with no sound.
+	DisableNotification *bool `json:"disable_notification"`
+	//Protects the contents of the sent messages from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	// /Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
 }
 
 func (s SendMediaGroup[T]) Validate() error {
@@ -795,22 +1138,43 @@ func (s SendMediaGroup[T]) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendMediaGroup", s)
 }
 
+// Use this method to send point on the map. On success, the sent Message is returned.
 type SendLocation[T int | string] struct {
-	ChatId               T
-	Latitude             *float64
-	Longtitude           *float64
-	HorizontalAccuracy   *float64
-	BusinessConnectionId *string
-	MessageThreadId      *string
-	LivePeriod           *int
-	Heading              *int
-	ProximityAlertRadius *int
-	DisableNotification  *bool
-	ProtectContent       *bool
-	AllowPaidBroadcast   *bool
-	MessageEffectId      *string
-	ReplyParameters      *objects.ReplyParameters
-	ReplyMarkup          *objects.ReplyMarkup
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *string `json:"message_thread_id,omitempty"`
+	//Latitude of the location
+	Latitude *float64 `json:"latitude"`
+	//Longitude of the location
+	Longtitude *float64 `json:"longtitude"`
+	//The radius of uncertainty for the location, measured in meters; 0-1500
+	HorizontalAccuracy *float64 `json:"horizontal_accuracy,omitempty"`
+	//Period in seconds during which the location will be updated
+	//(see https://telegram.org/blog/live-locations), should be between 60 and 86400,
+	//or 0x7FFFFFFF for live locations that can be edited indefinitely.
+	LivePeriod *int `json:"live_period,omitempty"`
+	//For live locations, a direction in which the user is moving, in degrees. Must be between 1 and 360 if specified.
+	Heading *int `json:"heading,omitempty"`
+	//For live locations, a maximum distance for proximity alerts about approaching another chat member, in meters.
+	//Must be between 1 and 100000 if specified.
+	ProximityAlertRadius *int `json:"proximity_alert_radius,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 func (s SendLocation[T]) Validate() error {
@@ -842,24 +1206,44 @@ func (s SendLocation[T]) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendLocation", s)
 }
 
+// Use this method to send information about a venue. On success, the sent Message is returned.
 type SendVenue[T int | string] struct {
-	ChatId               T
-	Latitude             *float64
-	Longtitude           *float64
-	Title                string
-	Address              string
-	FoursquareId         *string
-	FoursquareType       *string
-	GooglePlaceId        *string
-	GooglePlaceType      *string
-	BusinessConnectionId *string
-	MessageThreadId      *string
-	DisableNotification  *bool
-	ProtectContent       *bool
-	AllowPaidBroadcast   *bool
-	MessageEffectId      *string
-	ReplyParameters      *objects.ReplyParameters
-	ReplyMarkup          *objects.ReplyMarkup
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId T `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *string `json:"message_thread_id,omitempty"`
+	//Latitude of the venue
+	Latitude *float64 `json:"latitude"`
+	//Longitude of the venue
+	Longtitude *float64 `json:"longtitude"`
+	//Name of the venue
+	Title string `json:"title"`
+	//Address of the venue
+	Address string `json:"address"`
+	//Foursquare identifier of the venue
+	FoursquareId *string `json:"foursquare_id,omitempty"`
+	//Foursquare type of the venue, if known. (For example, “arts_entertainment/default”, “arts_entertainment/aquarium” or “food/icecream”.)
+	FoursquareType *string `json:"foursquare_type,omitempty"`
+	//Google Places identifier of the venue
+	GooglePlaceId *string `json:"google_place_id,omitempty"`
+	//Google Places type of the venue. (See https://developers.google.com/places/web-service/supported_types)
+	GooglePlaceType *string `json:"google_place_type,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 func (s SendVenue[T]) Validate() error {

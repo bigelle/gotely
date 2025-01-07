@@ -10,9 +10,9 @@ import (
 	"github.com/bigelle/tele.go/objects"
 )
 
-type SendSticker[T int | string, B objects.InputFile | string] struct {
+type SendSticker[T int | string] struct {
 	ChatId               T
-	Sticker              B
+	Sticker              objects.InputFile
 	BusinessConnectionId *string
 	MessageThreadId      *int
 	Emoji                *string
@@ -24,7 +24,7 @@ type SendSticker[T int | string, B objects.InputFile | string] struct {
 	ReplyMarkup          *objects.ReplyMarkup
 }
 
-func (s SendSticker[T, B]) Validate() error {
+func (s SendSticker[T]) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -48,11 +48,11 @@ func (s SendSticker[T, B]) Validate() error {
 	return nil
 }
 
-func (s SendSticker[T, B]) ToRequestBody() ([]byte, error) {
+func (s SendSticker[T]) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendSticker[T, B]) Execute() (*objects.Message, error) {
+func (s SendSticker[T]) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendSticker", s)
 }
 
@@ -127,11 +127,11 @@ func (u UploadStickerFile) Execute() (*objects.File, error) {
 	return MakePostRequest[objects.File]("uploadStickerFile", u)
 }
 
-type CreateNewStickerSet[T objects.InputFile | string] struct {
+type CreateNewStickerSet struct {
 	UserId          int
 	Name            string
 	Title           string
-	Stickers        []objects.InputSticker[T]
+	Stickers        []objects.InputSticker
 	StickerType     *string
 	NeedsRepainting *bool
 }
@@ -144,7 +144,7 @@ var valid_stickerobjects = []string{
 	"custom_emoji",
 }
 
-func (c CreateNewStickerSet[T]) Validate() error {
+func (c CreateNewStickerSet) Validate() error {
 	if c.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
@@ -173,21 +173,21 @@ func (c CreateNewStickerSet[T]) Validate() error {
 	return nil
 }
 
-func (c CreateNewStickerSet[T]) ToRequestBody() ([]byte, error) {
+func (c CreateNewStickerSet) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CreateNewStickerSet[T]) Execute() (*bool, error) {
+func (c CreateNewStickerSet) Execute() (*bool, error) {
 	return MakePostRequest[bool]("createNewStickerSet", c)
 }
 
-type AddStickerToSet[T objects.InputFile | string] struct {
+type AddStickerToSet struct {
 	UserId  int
 	Name    string
-	Sticker objects.InputSticker[T]
+	Sticker objects.InputSticker
 }
 
-func (a AddStickerToSet[T]) Validate() error {
+func (a AddStickerToSet) Validate() error {
 	if a.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
@@ -200,11 +200,11 @@ func (a AddStickerToSet[T]) Validate() error {
 	return nil
 }
 
-func (a AddStickerToSet[T]) ToRequestBody() ([]byte, error) {
+func (a AddStickerToSet) ToRequestBody() ([]byte, error) {
 	return json.Marshal(a)
 }
 
-func (a AddStickerToSet[T]) Execute() (*bool, error) {
+func (a AddStickerToSet) Execute() (*bool, error) {
 	return MakePostRequest[bool]("addStickerToSet", a)
 }
 
@@ -250,14 +250,14 @@ func (d DeleteStickerFromSet) Execute() (*bool, error) {
 	return MakePostRequest[bool]("deleteStickerFromSet", d)
 }
 
-type ReplaceStickerInSet[T objects.InputFile | string] struct {
+type ReplaceStickerInSet struct {
 	UserId     int
 	Name       string
 	OldSticker string
-	Sticker    objects.InputSticker[T]
+	Sticker    objects.InputSticker
 }
 
-func (r ReplaceStickerInSet[T]) Validate() error {
+func (r ReplaceStickerInSet) Validate() error {
 	if r.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
@@ -273,11 +273,11 @@ func (r ReplaceStickerInSet[T]) Validate() error {
 	return nil
 }
 
-func (r ReplaceStickerInSet[T]) ToRequestBody() ([]byte, error) {
+func (r ReplaceStickerInSet) ToRequestBody() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func (r ReplaceStickerInSet[T]) Execute() (*bool, error) {
+func (r ReplaceStickerInSet) Execute() (*bool, error) {
 	return MakePostRequest[bool]("replaceStickerInSet", r)
 }
 
@@ -377,10 +377,10 @@ func (s SetStickerSetTitle) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setStickerSetTitle", s)
 }
 
-type SetStickerSetThumbnail[T objects.InputFile | string] struct {
+type SetStickerSetThumbnail struct {
 	Name      string
 	UserId    int
-	Thumbnail *T
+	Thumbnail *objects.InputFile
 	Format    string
 }
 
@@ -390,7 +390,7 @@ var valid_stickerset_thumbnail = []string{
 	"video",
 }
 
-func (s SetStickerSetThumbnail[T]) Validate() error {
+func (s SetStickerSetThumbnail) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
 		return objects.ErrInvalidParam("name parameter can't be empty")
 	}
@@ -415,11 +415,11 @@ func (s SetStickerSetThumbnail[T]) Validate() error {
 	return nil
 }
 
-func (s SetStickerSetThumbnail[T]) ToRequestBody() ([]byte, error) {
+func (s SetStickerSetThumbnail) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetStickerSetThumbnail[T]) Execute() (*bool, error) {
+func (s SetStickerSetThumbnail) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setStickerSetThumbnail", s)
 }
 
