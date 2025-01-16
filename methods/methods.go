@@ -14,10 +14,10 @@ import (
 )
 
 // Use this method to send text messages. On success, the sent Message is returned.
-type SendMessage[T int | string] struct {
+type SendMessage struct {
 	//Required
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Required
 	//Text of the message to be sent, 1-4096 characters after entities parsing
 	Text string `json:"text"`
@@ -59,75 +59,55 @@ type SendMessage[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty,"`
 }
 
-func (s SendMessage[T]) Validate() error {
+func (s SendMessage) Validate() error {
 	if strings.TrimSpace(s.Text) == "" {
 		return objects.ErrInvalidParam("text parameter can't be empty")
 	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c == 0 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (s SendMessage[T]) ToRequestBody() ([]byte, error) {
+func (s SendMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendMessage[T]) Execute() (*objects.Message, error) {
+func (s SendMessage) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendMessage", s)
 }
 
 // Use this method to forward messages of any kind.
 // Service messages and messages with protected content can't be forwarded.
 // On success, the sent Message is returned.
-type ForwardMessage[T int | string] struct {
+type ForwardMessage struct {
 	//Required.
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T
+	ChatId string `json:"chat_id"`
 	//Required.
 	//Unique identifier for the chat where the original message was sent (or channel username in the format @channelusername
-	FromChatId T
+	FromChatId string `json:"from_chat_id"`
 	//Required.
 	//Message identifier in the chat specified in from_chat_id
-	MessageId int
+	MessageId int `json:"message_id"`
 	//Optional.
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
-	MessageThreadId *int
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	//Optional.
 	//Sends the message silently. Users will receive a notification with no sound.
-	DisableNotification *bool
+	DisableNotification *bool `json:"disable_notification,omitempty"`
 	//Optional.
 	//Protects the contents of the forwarded message from forwarding and saving
-	ProtectContent *bool
+	ProtectContent *bool `json:"protect_content,omitempty"`
 }
 
-func (f ForwardMessage[T]) Validate() error {
-	if c, ok := any(f.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (f ForwardMessage) Validate() error {
+	if strings.TrimSpace(f.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if c, ok := any(f.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(f.FromChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(f.FromChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
-		}
+	if strings.TrimSpace(f.FromChatId) == "" {
+		return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
 	}
 	if f.MessageId < 1 {
 		return objects.ErrInvalidParam("message_id parameter can't be empty")
@@ -135,11 +115,11 @@ func (f ForwardMessage[T]) Validate() error {
 	return nil
 }
 
-func (f ForwardMessage[T]) ToRequestBody() ([]byte, error) {
+func (f ForwardMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(f)
 }
 
-func (f ForwardMessage[T]) Execute() (*objects.Message, error) {
+func (f ForwardMessage) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("forwardMessage", f)
 }
 
@@ -148,48 +128,34 @@ func (f ForwardMessage[T]) Execute() (*objects.Message, error) {
 // Service messages and messages with protected content can't be forwarded.
 // Album grouping is kept for forwarded messages.
 // On success, an array of MessageId of the sent messages is returned.
-type ForwardMessages[T int | string] struct {
+type ForwardMessages struct {
 	//Required.
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T
+	ChatId string `json:"chat_id"`
 	//Required.
 	//Unique identifier for the chat where the original messages were sent (or channel username in the format @channelusername)
-	FromChatId T
+	FromChatId string `json:"from_chat_id"`
 	//Required.
 	//A JSON-serialized list of 1-100 identifiers of messages in the chat from_chat_id to forward.
 	//The identifiers must be specified in a strictly increasing order.
-	MessageIds []int
+	MessageIds []int `json:"message_ids"`
 	//Optional.
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
-	MessageThreadId *int
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	//Optional.
 	//Sends the messages silently. Users will receive a notification with no sound.
-	DisableNotification *bool
+	DisableNotification *bool `json:"disable_notification,omitempty"`
 	//Optional.
 	//Protects the contents of the forwarded messages from forwarding and saving
-	ProtectContent *bool
+	ProtectContent *bool `json:"protect_content,omitempty"`
 }
 
-func (f ForwardMessages[T]) Validate() error {
-	if c, ok := any(f.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (f ForwardMessages) Validate() error {
+	if strings.TrimSpace(f.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if c, ok := any(f.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(f.FromChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(f.FromChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
-		}
+	if strings.TrimSpace(f.FromChatId) == "" {
+		return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
 	}
 	if len(f.MessageIds) < 1 {
 		return objects.ErrInvalidParam("message_ids parameter can't be empty")
@@ -197,11 +163,11 @@ func (f ForwardMessages[T]) Validate() error {
 	return nil
 }
 
-func (f ForwardMessages[T]) ToRequestBody() ([]byte, error) {
+func (f ForwardMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(f)
 }
 
-func (f ForwardMessages[T]) Execute() (*[]objects.MessageId, error) {
+func (f ForwardMessages) Execute() (*[]objects.MessageId, error) {
 	return MakePostRequest[[]objects.MessageId]("forwardMessages", f)
 }
 
@@ -210,13 +176,13 @@ func (f ForwardMessages[T]) Execute() (*[]objects.MessageId, error) {
 // A quiz poll can be copied only if the value of the field correct_option_id is known to the bot.
 // The method is analogous to the method forwardMessageut the copied message doesn't have a link to the original message.
 // Returns the MessageId of the sent message on success.
-type CopyMessage[T int | string] struct {
+type CopyMessage struct {
 	//Required.
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Required.
 	//Unique identifier for the chat where the original message was sent (or channel username in the format @channelusername)
-	FromChatId T `json:"from_chat_id"`
+	FromChatId string `json:"from_chat_id"`
 	//Required.
 	//Message identifier in the chat specified in from_chat_id
 	MessageId int `json:"message_id"`
@@ -256,26 +222,12 @@ type CopyMessage[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (c CopyMessage[T]) Validate() error {
-	if i, ok := any(c.ChatId).(string); ok {
-		if strings.TrimSpace(i) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (c CopyMessage) Validate() error {
+	if strings.TrimSpace(c.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if i, ok := any(c.ChatId).(int); ok {
-		if i < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if i, ok := any(c.FromChatId).(string); ok {
-		if strings.TrimSpace(i) == "" {
-			return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
-		}
-	}
-	if i, ok := any(c.FromChatId).(int); ok {
-		if i < 1 {
-			return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
-		}
+	if strings.TrimSpace(c.FromChatId) == "" {
+		return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
 	}
 	if c.MessageId < 1 {
 		return objects.ErrInvalidParam("message_ids parameter can't be empty")
@@ -283,11 +235,11 @@ func (c CopyMessage[T]) Validate() error {
 	return nil
 }
 
-func (c CopyMessage[T]) ToRequestBody() ([]byte, error) {
+func (c CopyMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CopyMessage[T]) Execute() (*objects.MessageId, error) {
+func (c CopyMessage) Execute() (*objects.MessageId, error) {
 	return MakePostRequest[objects.MessageId]("copyMessage", c)
 }
 
@@ -297,13 +249,13 @@ func (c CopyMessage[T]) Execute() (*objects.MessageId, error) {
 // A quiz poll can be copied only if the value of the field correct_option_id is known to the bot.
 // The method is analogous to the method forwardMessagesut the copied messages don't have a link to the original message.
 // Album grouping is kept for copied messages. On success, an array of MessageId of the sent messages is returned.
-type CopyMessages[T int | string] struct {
+type CopyMessages struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	//Unique identifier for the chat where the original messages were sent (or channel username in the format @channelusername)
-	FromChatId T `json:"from_chat_id"`
+	FromChatId string `json:"from_chat_id"`
 	//A JSON-serialized list of 1-100 identifiers of messages in the chat from_chat_id to copy.
 	//The identifiers must be specified in a strictly increasing order.
 	MessageIds []int `json:"message_ids"`
@@ -315,30 +267,16 @@ type CopyMessages[T int | string] struct {
 	RemoveCaption *bool `json:"remove_caption,omitempty"`
 }
 
-func (c CopyMessages[T]) ToRequestBody() ([]byte, error) {
+func (c CopyMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CopyMessages[T]) Validate() error {
-	if i, ok := any(c.ChatId).(string); ok {
-		if strings.TrimSpace(i) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (c CopyMessages) Validate() error {
+	if strings.TrimSpace(c.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if i, ok := any(c.ChatId).(int); ok {
-		if i < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if i, ok := any(c.FromChatId).(string); ok {
-		if strings.TrimSpace(i) == "" {
-			return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
-		}
-	}
-	if i, ok := any(c.FromChatId).(int); ok {
-		if i < 1 {
-			return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
-		}
+	if strings.TrimSpace(c.FromChatId) == "" {
+		return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
 	}
 	if len(c.MessageIds) < 1 {
 		return objects.ErrInvalidParam("message_ids parameter can't be empty")
@@ -346,17 +284,17 @@ func (c CopyMessages[T]) Validate() error {
 	return nil
 }
 
-func (c CopyMessages[T]) Execute() (*[]objects.MessageId, error) {
+func (c CopyMessages) Execute() (*[]objects.MessageId, error) {
 	return MakePostRequest[[]objects.MessageId]("copyMessages", c)
 }
 
 // Use this method to send photos. On success, the sent Message is returned.
-type SendPhoto[T int | string] struct {
+type SendPhoto struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel
 	//(in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	//Photo to send. Pass a file_id as String to send a photo that exists on the Telegram servers (recommended),
@@ -393,31 +331,17 @@ type SendPhoto[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendPhoto[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendPhoto) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if p, ok := any(s.Photo).(objects.InputFile); ok {
-		if err := p.Validate(); err != nil {
-			return fmt.Errorf("invalid photo parameter: %w", err)
-		}
-	}
-	if p, ok := any(s.Photo).(string); ok {
-		if strings.TrimSpace(p) == "" {
-			return objects.ErrInvalidParam("photo parameter can't be empty")
-		}
+	if err := s.Photo.Validate(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (s SendPhoto[T]) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
+func (s SendPhoto) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
 	buf := &bytes.Buffer{}
 	w := multipart.NewWriter(buf)
 
@@ -516,11 +440,11 @@ func (s SendPhoto[T]) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error
 	return buf, w, nil
 }
 
-func (s SendPhoto[T]) ToRequestBody() ([]byte, error) {
+func (s SendPhoto) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendPhoto[T]) Execute() (*objects.Message, error) {
+func (s SendPhoto) Execute() (*objects.Message, error) {
 	if s.Photo.IsLocal() {
 		return MakeMultipartRequest[objects.Message]("sendPhoto", s)
 	}
@@ -532,11 +456,11 @@ func (s SendPhoto[T]) Execute() (*objects.Message, error) {
 // Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future.
 //
 // For sending voice messages, use the sendVoice method instead.
-type SendAudio[T int | string] struct {
+type SendAudio struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	//Audio file to send. Pass a file_id as String to send an audio file that exists on the Telegram servers (recommended),
@@ -563,7 +487,7 @@ type SendAudio[T int | string] struct {
 	//Thumbnails can't be reused and can be only uploaded as a new file,
 	//so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
-	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	Thumbnail objects.InputFile `json:"thumbnail,omitempty"`
 	//Sends the message silently. Users will receive a notification with no sound.
 	DisableNotification *bool `json:"disable_notification,omitempty"`
 	//Protects the contents of the sent message from forwarding and saving
@@ -580,45 +504,163 @@ type SendAudio[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendAudio[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendAudio) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if p, ok := any(s.Audio).(objects.InputFile); ok {
-		if err := p.Validate(); err != nil {
-			return fmt.Errorf("invalid audio parameter: %w", err)
-		}
-	}
-	if p, ok := any(s.Audio).(string); ok {
-		if strings.TrimSpace(p) == "" {
-			return objects.ErrInvalidParam("audio parameter can't be empty")
-		}
+	if err := s.Audio.Validate(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (s SendAudio[T]) ToRequestBody() ([]byte, error) {
+func (s SendAudio) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
+	buf := &bytes.Buffer{}
+	w := multipart.NewWriter(buf)
+
+	if err := w.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
+		return nil, nil, err
+	}
+	if s.BusinessConnectionId != nil {
+		if err := w.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageThreadId != nil {
+		if err := w.WriteField("message_thread_id", fmt.Sprint(*s.MessageThreadId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Caption != nil {
+		if err := w.WriteField("caption", fmt.Sprint(*s.Caption)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ParseMode != nil {
+		if err := w.WriteField("parse_mode", fmt.Sprint(*s.ParseMode)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.CaptionEntities != nil {
+		b, err := json.Marshal(s.CaptionEntities)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("caption_entities", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Duration != nil {
+		if err := w.WriteField("duration", fmt.Sprint(*s.Duration)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Title != nil {
+		if err := w.WriteField("title", fmt.Sprint(*s.Title)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Performer != nil {
+		if err := w.WriteField("performer", fmt.Sprint(*s.Performer)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.DisableNotification != nil {
+		if err := w.WriteField("disable_notification", fmt.Sprint(*s.DisableNotification)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ProtectContent != nil {
+		if err := w.WriteField("protect_content", fmt.Sprint(*s.ProtectContent)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.AllowPaidBroadcast != nil {
+		if err := w.WriteField("allow_paid_broadcast", fmt.Sprint(*s.AllowPaidBroadcast)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageEffectId != nil {
+		if err := w.WriteField("message_effect_id", fmt.Sprint(*s.MessageEffectId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyParameters != nil {
+		b, err := json.Marshal(s.ReplyParameters)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_parameters", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyMarkup != nil {
+		b, err := json.Marshal(s.ReplyMarkup)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_markup", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	part, err := w.CreateFormFile("audio", s.Audio.Name())
+	if err != nil {
+		return nil, nil, err
+	}
+	reader, err := s.Audio.Reader()
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = io.Copy(part, reader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if s.Thumbnail != nil {
+		switch (s.Thumbnail).(type) {
+		case objects.InputFileFromRemote:
+			if err := w.WriteField("thumbnail", fmt.Sprint(s.Thumbnail)); err != nil {
+				return nil, nil, err
+			}
+		default:
+			part, err := w.CreateFormFile("thumbnail", s.Thumbnail.Name())
+			if err != nil {
+				return nil, nil, err
+			}
+			reader, err := s.Thumbnail.Reader()
+			if err != nil {
+				return nil, nil, err
+			}
+			_, err = io.Copy(part, reader)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	w.Close()
+	return buf, w, nil
+}
+
+func (s SendAudio) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendAudio[T]) Execute() (*objects.Message, error) {
+func (s SendAudio) Execute() (*objects.Message, error) {
+	if s.Audio.IsLocal() {
+		return MakeMultipartRequest[objects.Message]("sendAudio", s)
+	}
 	return MakePostRequest[objects.Message]("sendAudio", s)
 }
 
 // Use this method to send general files. On success, the sent Message is returned.
 // Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future.
-type SendDocument[T int | string] struct {
+type SendDocument struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	//File to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended),
@@ -630,7 +672,7 @@ type SendDocument[T int | string] struct {
 	//Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file,
 	//so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
-	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	Thumbnail objects.InputFile `json:"thumbnail,omitempty"`
 	//Document caption (may also be used when resending documents by file_id), 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	//Mode for parsing entities in the document caption.
@@ -656,46 +698,155 @@ type SendDocument[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendDocument[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendDocument) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if p, ok := any(s.Document).(objects.InputFile); ok {
-		if err := p.Validate(); err != nil {
-			return fmt.Errorf("invalid document parameter: %w", err)
-		}
-	}
-	if p, ok := any(s.Document).(string); ok {
-		if strings.TrimSpace(p) == "" {
-			return objects.ErrInvalidParam("document parameter can't be empty")
-		}
+
+	if err := s.Document.Validate(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (s SendDocument[T]) ToRequestBody() ([]byte, error) {
+func (s SendDocument) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
+	buf := &bytes.Buffer{}
+	w := multipart.NewWriter(buf)
+
+	if err := w.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
+		return nil, nil, err
+	}
+	if s.BusinessConnectionId != nil {
+		if err := w.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageThreadId != nil {
+		if err := w.WriteField("message_thread_id", fmt.Sprint(*s.MessageThreadId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Caption != nil {
+		if err := w.WriteField("caption", fmt.Sprint(*s.Caption)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ParseMode != nil {
+		if err := w.WriteField("parse_mode", fmt.Sprint(*s.ParseMode)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.CaptionEntities != nil {
+		b, err := json.Marshal(s.CaptionEntities)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("caption_entities", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.DisableContentTypeDetection != nil {
+		if err := w.WriteField("disable_content_type_detection", fmt.Sprint(*s.DisableContentTypeDetection)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.DisableNotification != nil {
+		if err := w.WriteField("disable_notification", fmt.Sprint(*s.DisableNotification)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ProtectContent != nil {
+		if err := w.WriteField("protect_content", fmt.Sprint(*s.ProtectContent)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.AllowPaidBroadcast != nil {
+		if err := w.WriteField("allow_paid_broadcast", fmt.Sprint(*s.AllowPaidBroadcast)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageEffectId != nil {
+		if err := w.WriteField("message_effect_id", fmt.Sprint(*s.MessageEffectId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyParameters != nil {
+		b, err := json.Marshal(s.ReplyParameters)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_parameters", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyMarkup != nil {
+		b, err := json.Marshal(s.ReplyMarkup)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_markup", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	part, err := w.CreateFormFile("document", s.Document.Name())
+	if err != nil {
+		return nil, nil, err
+	}
+	reader, err := s.Document.Reader()
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = io.Copy(part, reader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if s.Thumbnail != nil {
+		switch (s.Thumbnail).(type) {
+		case objects.InputFileFromRemote:
+			if err := w.WriteField("thumbnail", fmt.Sprint(s.Thumbnail)); err != nil {
+				return nil, nil, err
+			}
+		default:
+			part, err := w.CreateFormFile("thumbnail", s.Thumbnail.Name())
+			if err != nil {
+				return nil, nil, err
+			}
+			reader, err := s.Thumbnail.Reader()
+			if err != nil {
+				return nil, nil, err
+			}
+			_, err = io.Copy(part, reader)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	w.Close()
+	return buf, w, nil
+}
+
+func (s SendDocument) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendDocument[T]) Execute() (*objects.Message, error) {
+func (s SendDocument) Execute() (*objects.Message, error) {
+	if s.Document.IsLocal() {
+		return MakeMultipartRequest[objects.Message]("sendDocument", s)
+	}
 	return MakePostRequest[objects.Message]("sendDocument", s)
 }
 
 // Use this method to send video files, Telegram clients support MPEG4 videos (other formats may be sent as Document).
 // On success, the sent Message is returned.
 // Bots can currently send video files of up to 50 MB in size, this limit may be changed in the future.
-type SendVideo[T int | string] struct {
+type SendVideo struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	//Video to send. Pass a file_id as String to send a video that exists on the Telegram servers (recommended),
@@ -713,7 +864,7 @@ type SendVideo[T int | string] struct {
 	//Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file,
 	//so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
-	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	Thumbnail objects.InputFile `json:"thumbnail,omitempty"`
 	//Video caption (may also be used when resending videos by file_id), 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	//Mode for parsing entities in the video caption.
@@ -743,45 +894,173 @@ type SendVideo[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendVideo[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendVideo) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if p, ok := any(s.Video).(objects.InputFile); ok {
-		if err := p.Validate(); err != nil {
-			return fmt.Errorf("invalid video parameter: %w", err)
-		}
-	}
-	if p, ok := any(s.Video).(string); ok {
-		if strings.TrimSpace(p) == "" {
-			return objects.ErrInvalidParam("video parameter can't be empty")
-		}
+	if err := s.Video.Validate(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (s SendVideo[T]) ToRequestBody() ([]byte, error) {
+func (s SendVideo) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
+	buf := &bytes.Buffer{}
+	w := multipart.NewWriter(buf)
+
+	if err := w.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
+		return nil, nil, err
+	}
+	if s.BusinessConnectionId != nil {
+		if err := w.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageThreadId != nil {
+		if err := w.WriteField("message_thread_id", fmt.Sprint(*s.MessageThreadId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Duration != nil {
+		if err := w.WriteField("duration", fmt.Sprint(*s.Duration)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Height != nil {
+		if err := w.WriteField("height", fmt.Sprint(*s.Height)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Width != nil {
+		if err := w.WriteField("width", fmt.Sprint(*s.Width)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Caption != nil {
+		if err := w.WriteField("caption", fmt.Sprint(*s.Caption)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ParseMode != nil {
+		if err := w.WriteField("parse_mode", fmt.Sprint(*s.ParseMode)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.CaptionEntities != nil {
+		b, err := json.Marshal(s.CaptionEntities)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("caption_entities", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.HasSpoiler != nil {
+		if err := w.WriteField("has_spoiler", fmt.Sprint(*s.HasSpoiler)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.SupportsStreaming != nil {
+		if err := w.WriteField("supports_streaming", fmt.Sprint(*s.SupportsStreaming)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.DisableNotification != nil {
+		if err := w.WriteField("disable_notification", fmt.Sprint(*s.DisableNotification)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ProtectContent != nil {
+		if err := w.WriteField("protect_content", fmt.Sprint(*s.ProtectContent)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.AllowPaidBroadcast != nil {
+		if err := w.WriteField("allow_paid_broadcast", fmt.Sprint(*s.AllowPaidBroadcast)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageEffectId != nil {
+		if err := w.WriteField("message_effect_id", fmt.Sprint(*s.MessageEffectId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyParameters != nil {
+		b, err := json.Marshal(s.ReplyParameters)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_parameters", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyMarkup != nil {
+		b, err := json.Marshal(s.ReplyMarkup)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_markup", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	part, err := w.CreateFormFile("video", s.Video.Name())
+	if err != nil {
+		return nil, nil, err
+	}
+	reader, err := s.Video.Reader()
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = io.Copy(part, reader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if s.Thumbnail != nil {
+		switch (s.Thumbnail).(type) {
+		case objects.InputFileFromRemote:
+			if err := w.WriteField("thumbnail", fmt.Sprint(s.Thumbnail)); err != nil {
+				return nil, nil, err
+			}
+		default:
+			part, err := w.CreateFormFile("thumbnail", s.Thumbnail.Name())
+			if err != nil {
+				return nil, nil, err
+			}
+			reader, err := s.Thumbnail.Reader()
+			if err != nil {
+				return nil, nil, err
+			}
+			_, err = io.Copy(part, reader)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	w.Close()
+	return buf, w, nil
+}
+
+func (s SendVideo) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendVideo[T]) Execute() (*objects.Message, error) {
+func (s SendVideo) Execute() (*objects.Message, error) {
+	if s.Video.IsLocal() {
+		return MakeMultipartRequest[objects.Message]("sendVideo", s)
+	}
 	return MakePostRequest[objects.Message]("sendVideo", s)
 }
 
 // Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound). On success, the sent Message is returned.
 // Bots can currently send animation files of up to 50 MB in size, this limit may be changed in the future.
-type SendAnimation[T int | string] struct {
+type SendAnimation struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	//Animation to send. Pass a file_id as String to send an animation that exists on the Telegram servers (recommended),
@@ -799,7 +1078,7 @@ type SendAnimation[T int | string] struct {
 	//Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file,
 	//so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
-	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	Thumbnail objects.InputFile `json:"thumbnail,omitempty"`
 	//Animation caption (may also be used when resending animation by file_id), 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	//Mode for parsing entities in the animation caption.
@@ -827,37 +1106,158 @@ type SendAnimation[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendAnimation[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendAnimation) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if p, ok := any(s.Animation).(objects.InputFile); ok {
-		if err := p.Validate(); err != nil {
-			return fmt.Errorf("invalid photo parameter: %w", err)
-		}
-	}
-	if p, ok := any(s.Animation).(string); ok {
-		if strings.TrimSpace(p) == "" {
-			return objects.ErrInvalidParam("photo parameter can't be empty")
-		}
+	if err := s.Animation.Validate(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (s SendAnimation[T]) ToRequestBody() ([]byte, error) {
-	//FIXME should use multipart and write every field one by one
-	//also probably should be called ToMultipart() as a part of a new multipart interface
+func (s SendAnimation) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
+	buf := &bytes.Buffer{}
+	w := multipart.NewWriter(buf)
+
+	if err := w.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
+		return nil, nil, err
+	}
+	if s.BusinessConnectionId != nil {
+		if err := w.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageThreadId != nil {
+		if err := w.WriteField("message_thread_id", fmt.Sprint(*s.MessageThreadId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Duration != nil {
+		if err := w.WriteField("duration", fmt.Sprint(*s.Duration)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Height != nil {
+		if err := w.WriteField("height", fmt.Sprint(*s.Height)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Width != nil {
+		if err := w.WriteField("width", fmt.Sprint(*s.Width)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Caption != nil {
+		if err := w.WriteField("caption", fmt.Sprint(*s.Caption)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ParseMode != nil {
+		if err := w.WriteField("parse_mode", fmt.Sprint(*s.ParseMode)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.CaptionEntities != nil {
+		b, err := json.Marshal(s.CaptionEntities)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("caption_entities", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.HasSpoiler != nil {
+		if err := w.WriteField("has_spoiler", fmt.Sprint(*s.HasSpoiler)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.DisableNotification != nil {
+		if err := w.WriteField("disable_notification", fmt.Sprint(*s.DisableNotification)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ProtectContent != nil {
+		if err := w.WriteField("protect_content", fmt.Sprint(*s.ProtectContent)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.AllowPaidBroadcast != nil {
+		if err := w.WriteField("allow_paid_broadcast", fmt.Sprint(*s.AllowPaidBroadcast)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageEffectId != nil {
+		if err := w.WriteField("message_effect_id", fmt.Sprint(*s.MessageEffectId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyParameters != nil {
+		b, err := json.Marshal(s.ReplyParameters)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_parameters", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyMarkup != nil {
+		b, err := json.Marshal(s.ReplyMarkup)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_markup", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	part, err := w.CreateFormFile("animation", s.Animation.Name())
+	if err != nil {
+		return nil, nil, err
+	}
+	reader, err := s.Animation.Reader()
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = io.Copy(part, reader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if s.Thumbnail != nil {
+		switch (s.Thumbnail).(type) {
+		case objects.InputFileFromRemote:
+			if err := w.WriteField("thumbnail", fmt.Sprint(s.Thumbnail)); err != nil {
+				return nil, nil, err
+			}
+		default:
+			part, err := w.CreateFormFile("thumbnail", s.Thumbnail.Name())
+			if err != nil {
+				return nil, nil, err
+			}
+			reader, err := s.Thumbnail.Reader()
+			if err != nil {
+				return nil, nil, err
+			}
+			_, err = io.Copy(part, reader)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	w.Close()
+	return buf, w, nil
+}
+
+func (s SendAnimation) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendAnimation[T]) Execute() (*objects.Message, error) {
+func (s SendAnimation) Execute() (*objects.Message, error) {
+	if s.Animation.IsLocal() {
+		return MakeMultipartRequest[objects.Message]("sendAnimation", s)
+	}
 	return MakePostRequest[objects.Message]("sendAnimation", s)
 }
 
@@ -866,11 +1266,11 @@ func (s SendAnimation[T]) Execute() (*objects.Message, error) {
 // (other formats may be sent as Audio or Document).
 // On success, the sent Message is returned. Bots can currently send voice messages of up to 50 MB in size,
 // this limit may be changed in the future.
-type SendVoice[T int | string] struct {
+type SendVoice struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	//Audio file to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended),
@@ -902,45 +1302,131 @@ type SendVoice[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendVoice[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendVoice) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if p, ok := any(s.Voice).(objects.InputFile); ok {
-		if err := p.Validate(); err != nil {
-			return fmt.Errorf("invalid voice parameter: %w", err)
-		}
-	}
-	if p, ok := any(s.Voice).(string); ok {
-		if strings.TrimSpace(p) == "" {
-			return objects.ErrInvalidParam("voice parameter can't be empty")
-		}
+	if err := s.Voice.Validate(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (s SendVoice[T]) ToRequestBody() ([]byte, error) {
+func (s SendVoice) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendVoice[T]) Execute() (*objects.Message, error) {
+func (s SendVoice) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
+	buf := &bytes.Buffer{}
+	w := multipart.NewWriter(buf)
+
+	if err := w.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
+		return nil, nil, err
+	}
+	if s.BusinessConnectionId != nil {
+		if err := w.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageThreadId != nil {
+		if err := w.WriteField("message_thread_id", fmt.Sprint(*s.MessageThreadId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Duration != nil {
+		if err := w.WriteField("duration", fmt.Sprint(*s.Duration)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Caption != nil {
+		if err := w.WriteField("caption", fmt.Sprint(*s.Caption)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ParseMode != nil {
+		if err := w.WriteField("parse_mode", fmt.Sprint(*s.ParseMode)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.CaptionEntities != nil {
+		b, err := json.Marshal(s.CaptionEntities)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("caption_entities", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.DisableNotification != nil {
+		if err := w.WriteField("disable_notification", fmt.Sprint(*s.DisableNotification)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ProtectContent != nil {
+		if err := w.WriteField("protect_content", fmt.Sprint(*s.ProtectContent)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.AllowPaidBroadcast != nil {
+		if err := w.WriteField("allow_paid_broadcast", fmt.Sprint(*s.AllowPaidBroadcast)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageEffectId != nil {
+		if err := w.WriteField("message_effect_id", fmt.Sprint(*s.MessageEffectId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyParameters != nil {
+		b, err := json.Marshal(s.ReplyParameters)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_parameters", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyMarkup != nil {
+		b, err := json.Marshal(s.ReplyMarkup)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_markup", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	part, err := w.CreateFormFile("voice", s.Voice.Name())
+	if err != nil {
+		return nil, nil, err
+	}
+	reader, err := s.Voice.Reader()
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = io.Copy(part, reader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	w.Close()
+	return buf, w, nil
+}
+
+func (s SendVoice) Execute() (*objects.Message, error) {
+	if s.Voice.IsLocal() {
+		return MakeMultipartRequest[objects.Message]("sendVoice", s)
+	}
 	return MakePostRequest[objects.Message]("sendVoice", s)
 }
 
 // As of v.4.0, Telegram clients support rounded square MPEG4 videos of up to 1 minute long.
 // Use this method to send video messages. On success, the sent Message is returned.
-type SendVideoNote[T int | string] struct {
+type SendVideoNote struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	//Video note to send. Pass a file_id as String to send a video note that exists on the Telegram servers (recommended) or
@@ -958,7 +1444,7 @@ type SendVideoNote[T int | string] struct {
 	//Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	//the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	//More information on Sending Files: https://core.telegram.org/bots/api#sending-files
-	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	Thumbnail objects.InputFile `json:"thumbnail,omitempty"`
 	//Sends the message silently. Users will receive a notification with no sound.
 	DisableNotification *bool `json:"disable_notification,omitempty"`
 	//Protects the contents of the sent message from forwarding and saving
@@ -975,46 +1461,140 @@ type SendVideoNote[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendVideoNote[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendVideoNote) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if p, ok := any(s.VideoNote).(objects.InputFile); ok {
-		if err := p.Validate(); err != nil {
-			return fmt.Errorf("invalid video_note parameter: %w", err)
-		}
-	}
-	if p, ok := any(s.VideoNote).(string); ok {
-		if strings.TrimSpace(p) == "" {
-			return objects.ErrInvalidParam("video_note parameter can't be empty")
-		}
+	if err := s.VideoNote.Validate(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (s SendVideoNote[T]) ToRequestBody() ([]byte, error) {
+func (s SendVideoNote) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
+	buf := &bytes.Buffer{}
+	w := multipart.NewWriter(buf)
+
+	if err := w.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
+		return nil, nil, err
+	}
+	if s.BusinessConnectionId != nil {
+		if err := w.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageThreadId != nil {
+		if err := w.WriteField("message_thread_id", fmt.Sprint(*s.MessageThreadId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Duration != nil {
+		if err := w.WriteField("duration", fmt.Sprint(*s.Duration)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.Length != nil {
+		if err := w.WriteField("length", fmt.Sprint(*s.Duration)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.DisableNotification != nil {
+		if err := w.WriteField("disable_notification", fmt.Sprint(*s.DisableNotification)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ProtectContent != nil {
+		if err := w.WriteField("protect_content", fmt.Sprint(*s.ProtectContent)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.AllowPaidBroadcast != nil {
+		if err := w.WriteField("allow_paid_broadcast", fmt.Sprint(*s.AllowPaidBroadcast)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageEffectId != nil {
+		if err := w.WriteField("message_effect_id", fmt.Sprint(*s.MessageEffectId)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyParameters != nil {
+		b, err := json.Marshal(s.ReplyParameters)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_parameters", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyMarkup != nil {
+		b, err := json.Marshal(s.ReplyMarkup)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_markup", string(b)); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	part, err := w.CreateFormFile("video_note", s.VideoNote.Name())
+	if err != nil {
+		return nil, nil, err
+	}
+	reader, err := s.VideoNote.Reader()
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = io.Copy(part, reader)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if s.Thumbnail != nil {
+		switch (s.Thumbnail).(type) {
+		case objects.InputFileFromRemote:
+			if err := w.WriteField("thumbnail", fmt.Sprint(s.Thumbnail)); err != nil {
+				return nil, nil, err
+			}
+		default:
+			part, err := w.CreateFormFile("thumbnail", s.Thumbnail.Name())
+			if err != nil {
+				return nil, nil, err
+			}
+			reader, err := s.Thumbnail.Reader()
+			if err != nil {
+				return nil, nil, err
+			}
+			_, err = io.Copy(part, reader)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	w.Close()
+	return buf, w, nil
+}
+
+func (s SendVideoNote) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendVideoNote[T]) Execute() (*objects.Message, error) {
+func (s SendVideoNote) Execute() (*objects.Message, error) {
+	if s.VideoNote.IsLocal() {
+		return MakeMultipartRequest[objects.Message]("sendVideoNote", s)
+	}
 	return MakePostRequest[objects.Message]("sendVideoNote", s)
 }
 
 // Use this method to send paid media. On success, the sent Message is returned.
-type SendPaidMedia[T int | string] struct {
+type SendPaidMedia struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername).
 	//If the chat is a channel, all Telegram Star proceeds from this media will be credited to the chat's balance.
 	//Otherwise, they will be credited to the bot's balance.
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//The number of Telegram Stars that must be paid to buy access to the media; 1-2500
 	StarCount int `json:"star_count"`
 	//An array describing the media to be sent; up to 10 items
@@ -1044,16 +1624,9 @@ type SendPaidMedia[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendPaidMedia[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendPaidMedia) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.StarCount < 1 || s.StarCount > 2500 {
 		return objects.ErrInvalidParam("star_count parameter must be between 1 and 2500")
@@ -1072,22 +1645,22 @@ func (s SendPaidMedia[T]) Validate() error {
 	return nil
 }
 
-func (s SendPaidMedia[T]) ToRequestBody() ([]byte, error) {
+func (s SendPaidMedia) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendPaidMedia[T]) Execute() (*objects.Message, error) {
+func (s SendPaidMedia) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendPaidMedia", s)
 }
 
 // Use this method to send a group of photos, videos, documents or audios as an album.
 // Documents and audio files can be only grouped in an album with messages of the same type.
 // On success, an array of Messages that were sent is returned.
-type SendMediaGroup[T int | string] struct {
+type SendMediaGroup struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *string `json:"message_thread_id,omitempty"`
 	//An array describing messages to be sent, must include 2-10 items
@@ -1105,16 +1678,9 @@ type SendMediaGroup[T int | string] struct {
 	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
 }
 
-func (s SendMediaGroup[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendMediaGroup) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(s.Media) < 1 {
 		return objects.ErrInvalidParam("media parameter can't be empty")
@@ -1130,20 +1696,20 @@ func (s SendMediaGroup[T]) Validate() error {
 	return nil
 }
 
-func (s SendMediaGroup[T]) ToRequestBody() ([]byte, error) {
+func (s SendMediaGroup) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendMediaGroup[T]) Execute() (*objects.Message, error) {
+func (s SendMediaGroup) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendMediaGroup", s)
 }
 
 // Use this method to send point on the map. On success, the sent Message is returned.
-type SendLocation[T int | string] struct {
+type SendLocation struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *string `json:"message_thread_id,omitempty"`
 	//Latitude of the location
@@ -1177,16 +1743,9 @@ type SendLocation[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendLocation[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendLocation) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.Latitude == nil {
 		return objects.ErrInvalidParam("latitude parameter can't be empty")
@@ -1198,20 +1757,20 @@ func (s SendLocation[T]) Validate() error {
 	return nil
 }
 
-func (s SendLocation[T]) ToRequestBody() ([]byte, error) {
+func (s SendLocation) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendLocation[T]) Execute() (*objects.Message, error) {
+func (s SendLocation) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendLocation", s)
 }
 
 // Use this method to send information about a venue. On success, the sent Message is returned.
-type SendVenue[T int | string] struct {
+type SendVenue struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *string `json:"message_thread_id,omitempty"`
 	//Latitude of the venue
@@ -1246,16 +1805,9 @@ type SendVenue[T int | string] struct {
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
-func (s SendVenue[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendVenue) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.Latitude == nil {
 		return objects.ErrInvalidParam("latitude parameter can't be empty")
@@ -1266,40 +1818,36 @@ func (s SendVenue[T]) Validate() error {
 	return nil
 }
 
-func (s SendVenue[T]) ToRequestBody() ([]byte, error) {
+func (s SendVenue) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendVenue[T]) Execute() (*objects.Message, error) {
+func (s SendVenue) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendVenue", s)
 }
 
-type SendContact[T int | string] struct {
-	ChatId               T
-	PhoneNumber          string
-	FirstName            string
-	LastName             *string
-	Vcard                *string
-	BusinessConnectionId *string
-	MessageThreadId      *string
-	DisableNotification  *bool
-	ProtectContent       *bool
-	AllowPaidBroadcast   *bool
-	MessageEffectId      *string
-	ReplyParameters      *objects.ReplyParameters
-	ReplyMarkup          *objects.ReplyMarkup
+// Use this method to send phone contacts. On success, the sent Message is returned.
+type SendContact struct {
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId              string                   `json:"chat_id"`
+	PhoneNumber         string                   `json:"phone_number"`
+	FirstName           string                   `json:"first_name"`
+	LastName            *string                  `json:"last_name,omitempty"`
+	Vcard               *string                  `json:"vcard,omitempty"`
+	MessageThreadId     *string                  `json:"message_thread_id,omitempty"`
+	DisableNotification *bool                    `json:"disable_notification,omitempty"`
+	ProtectContent      *bool                    `json:"protect_content,omitempty"`
+	AllowPaidBroadcast  *bool                    `json:"allow_paid_broadcast,omitempty"`
+	MessageEffectId     *string                  `json:"message_effect_id,omitempty"`
+	ReplyParameters     *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	ReplyMarkup         *objects.ReplyMarkup     `json:"reply_markup,omitempty"`
 }
 
-func (s SendContact[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendContact) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.PhoneNumber) == "" {
 		return objects.ErrInvalidParam("phone_number parameter can't be empty")
@@ -1310,17 +1858,16 @@ func (s SendContact[T]) Validate() error {
 	return nil
 }
 
-// NOTE: do i need it?
-func (s SendContact[T]) ToRequestBody() ([]byte, error) {
+func (s SendContact) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendContact[T]) Execute() (*objects.Message, error) {
+func (s SendContact) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendContact", s)
 }
 
-type SendPoll[T int | string] struct {
-	ChatId               T
+type SendPoll struct {
+	ChatId               string
 	Question             string
 	Options              []objects.InputPollOption
 	QuestionParseMode    *string
@@ -1345,16 +1892,9 @@ type SendPoll[T int | string] struct {
 	ReplyMarkup          *objects.ReplyMarkup
 }
 
-func (s SendPoll[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendPoll) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Question) == "" {
 		return objects.ErrInvalidParam("question parameter can't be empty")
@@ -1365,16 +1905,16 @@ func (s SendPoll[T]) Validate() error {
 	return nil
 }
 
-func (s SendPoll[T]) ToRequestBody() ([]byte, error) {
+func (s SendPoll) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendPoll[T]) Execute() (*objects.Message, error) {
+func (s SendPoll) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendPoll", s)
 }
 
-type SendDice[T int | string] struct {
-	ChatId               T
+type SendDice struct {
+	ChatId               string
 	Emoji                string
 	BusinessConnectionId *string
 	MessageThreadId      *string
@@ -1386,16 +1926,9 @@ type SendDice[T int | string] struct {
 	ReplyMarkup          *objects.ReplyMarkup
 }
 
-func (s SendDice[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendDice) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Emoji) == "" {
 		return objects.ErrInvalidParam("emoji parameter can't be empty")
@@ -1403,31 +1936,24 @@ func (s SendDice[T]) Validate() error {
 	return nil
 }
 
-func (s SendDice[T]) ToRequestBody() ([]byte, error) {
+func (s SendDice) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendDice[T]) Execute() (*objects.Message, error) {
+func (s SendDice) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendPoll", s)
 }
 
-type SendChatAction[T int | string] struct {
-	ChatId               T
+type SendChatAction struct {
+	ChatId               string
 	Action               string
 	BusinessConnectionId *string
 	MessageThreadId      *string
 }
 
-func (s SendChatAction[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SendChatAction) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Action) == "" {
 		return objects.ErrInvalidParam("action parameter can't be empty")
@@ -1451,23 +1977,16 @@ func (s SendChatAction[T]) Validate() error {
 	return nil
 }
 
-type SetMessageReaction[T int | string] struct {
-	ChatId    T
+type SetMessageReaction struct {
+	ChatId    string
 	MessageId int
 	Reaction  *[]objects.ReactionType
 	IsBig     *bool
 }
 
-func (s SetMessageReaction[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SetMessageReaction) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.MessageId < 1 {
 		return objects.ErrInvalidParam("message_id parameter can't be empty")
@@ -1475,11 +1994,11 @@ func (s SetMessageReaction[T]) Validate() error {
 	return nil
 }
 
-func (s SetMessageReaction[T]) ToRequestBody() ([]byte, error) {
+func (s SetMessageReaction) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetMessageReaction[T]) Execute() (*bool, error) {
+func (s SetMessageReaction) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setMessageReaction", s)
 }
 
@@ -1549,23 +2068,16 @@ func (g GetFile) Execute() (*objects.File, error) {
 	return MakeGetRequest[objects.File]("getFile", g)
 }
 
-type BanChatMember[T int | string] struct {
-	ChatId         T
+type BanChatMember struct {
+	ChatId         string
 	UserId         int
 	UntilDate      *int
 	RevokeMessages *bool
 }
 
-func (b BanChatMember[T]) Validate() error {
-	if c, ok := any(b.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(b.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (b BanChatMember) Validate() error {
+	if strings.TrimSpace(b.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if b.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
@@ -1573,30 +2085,23 @@ func (b BanChatMember[T]) Validate() error {
 	return nil
 }
 
-func (b BanChatMember[T]) ToRequestBody() ([]byte, error) {
+func (b BanChatMember) ToRequestBody() ([]byte, error) {
 	return json.Marshal(b)
 }
 
-func (b BanChatMember[T]) Execute() (*bool, error) {
+func (b BanChatMember) Execute() (*bool, error) {
 	return MakeGetRequest[bool]("banChatMember", b)
 }
 
-type UnbanChatMember[T int | string] struct {
-	ChatId       T
+type UnbanChatMember struct {
+	ChatId       string
 	UserId       int
 	OnlyIfBanned *bool
 }
 
-func (b UnbanChatMember[T]) Validate() error {
-	if c, ok := any(b.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(b.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (b UnbanChatMember) Validate() error {
+	if strings.TrimSpace(b.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if b.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
@@ -1604,32 +2109,25 @@ func (b UnbanChatMember[T]) Validate() error {
 	return nil
 }
 
-func (b UnbanChatMember[T]) ToRequestBody() ([]byte, error) {
+func (b UnbanChatMember) ToRequestBody() ([]byte, error) {
 	return json.Marshal(b)
 }
 
-func (b UnbanChatMember[T]) Execute() (*bool, error) {
+func (b UnbanChatMember) Execute() (*bool, error) {
 	return MakeGetRequest[bool]("unbanChatMember", b)
 }
 
-type RestrictChatMember[T int | string] struct {
-	ChatId                         T
+type RestrictChatMember struct {
+	ChatId                         string
 	UserId                         int
 	Permissions                    objects.ChatPermissions
 	UserIndependentChatPermissions *bool
 	UntilDate                      *int
 }
 
-func (r RestrictChatMember[T]) Validate() error {
-	if c, ok := any(r.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(r.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (r RestrictChatMember) Validate() error {
+	if strings.TrimSpace(r.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if r.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
@@ -1637,16 +2135,16 @@ func (r RestrictChatMember[T]) Validate() error {
 	return nil
 }
 
-func (r RestrictChatMember[T]) ToRequestBody() ([]byte, error) {
+func (r RestrictChatMember) ToRequestBody() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func (r RestrictChatMember[T]) Execute() (*bool, error) {
+func (r RestrictChatMember) Execute() (*bool, error) {
 	return MakePostRequest[bool]("restrictChatMember", r)
 }
 
-type PromoteChatMember[T int | string] struct {
-	ChatId              T
+type PromoteChatMember struct {
+	ChatId              string
 	UserId              int
 	IsAnonymous         *bool
 	CanManageChat       *bool
@@ -1665,16 +2163,9 @@ type PromoteChatMember[T int | string] struct {
 	CanManageTopics     *bool
 }
 
-func (p PromoteChatMember[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p PromoteChatMember) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if p.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
@@ -1682,30 +2173,23 @@ func (p PromoteChatMember[T]) Validate() error {
 	return nil
 }
 
-func (p PromoteChatMember[T]) ToRequestBody() ([]byte, error) {
+func (p PromoteChatMember) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p PromoteChatMember[T]) Execute() (*bool, error) {
+func (p PromoteChatMember) Execute() (*bool, error) {
 	return MakePostRequest[bool]("promoteChatMember", p)
 }
 
-type SetChatAdministratorCustomTitle[T int | string] struct {
-	ChatId      T
+type SetChatAdministratorCustomTitle struct {
+	ChatId      string
 	UserId      int
 	CustomTitle string
 }
 
-func (s SetChatAdministratorCustomTitle[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SetChatAdministratorCustomTitle) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
@@ -1724,29 +2208,22 @@ func (s SetChatAdministratorCustomTitle[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatAdministratorCustomTitle[T]) ToRequestBody() ([]byte, error) {
+func (s SetChatAdministratorCustomTitle) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatAdministratorCustomTitle[T]) Execute() (*bool, error) {
+func (s SetChatAdministratorCustomTitle) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatAdministratorCustomTitle", s)
 }
 
-type BanChatSenderChat[T int | string] struct {
-	ChatId       T
+type BanChatSenderChat struct {
+	ChatId       string
 	SenderChatId int
 }
 
-func (b BanChatSenderChat[T]) Validate() error {
-	if c, ok := any(b.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(b.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (b BanChatSenderChat) Validate() error {
+	if strings.TrimSpace(b.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if b.SenderChatId < 1 {
 		return objects.ErrInvalidParam("sender_chat_id parameter can't be empty")
@@ -1754,29 +2231,22 @@ func (b BanChatSenderChat[T]) Validate() error {
 	return nil
 }
 
-func (b BanChatSenderChat[T]) ToRequestBody() ([]byte, error) {
+func (b BanChatSenderChat) ToRequestBody() ([]byte, error) {
 	return json.Marshal(b)
 }
 
-func (b BanChatSenderChat[T]) Execute() (*bool, error) {
+func (b BanChatSenderChat) Execute() (*bool, error) {
 	return MakePostRequest[bool]("banChatSenderChat", b)
 }
 
-type UnbanChatSenderChat[T int | string] struct {
-	ChatId       T
+type UnbanChatSenderChat struct {
+	ChatId       string
 	SenderChatId int
 }
 
-func (b UnbanChatSenderChat[T]) Validate() error {
-	if c, ok := any(b.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(b.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (b UnbanChatSenderChat) Validate() error {
+	if strings.TrimSpace(b.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if b.SenderChatId < 1 {
 		return objects.ErrInvalidParam("sender_chat_id parameter can't be empty")
@@ -1784,86 +2254,65 @@ func (b UnbanChatSenderChat[T]) Validate() error {
 	return nil
 }
 
-func (b UnbanChatSenderChat[T]) ToRequestBody() ([]byte, error) {
+func (b UnbanChatSenderChat) ToRequestBody() ([]byte, error) {
 	return json.Marshal(b)
 }
 
-func (b UnbanChatSenderChat[T]) Execute() (*bool, error) {
+func (b UnbanChatSenderChat) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unbanChatSenderChat", b)
 }
 
-type SetChatPermissions[T int | string] struct {
-	ChatId                         T
+type SetChatPermissions struct {
+	ChatId                         string
 	Permissions                    objects.ChatPermissions
 	UserIndependentChatPermissions *bool
 }
 
-func (s SetChatPermissions[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SetChatPermissions) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (s SetChatPermissions[T]) ToRequestBody() ([]byte, error) {
+func (s SetChatPermissions) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatPermissions[T]) Execute() (*bool, error) {
+func (s SetChatPermissions) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatPermissions", s)
 }
 
-type ExportChatInviteLink[T int | string] struct {
-	ChatId T
+type ExportChatInviteLink struct {
+	ChatId string
 }
 
-func (e ExportChatInviteLink[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e ExportChatInviteLink) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (e ExportChatInviteLink[T]) ToRequestBody() ([]byte, error) {
+func (e ExportChatInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e ExportChatInviteLink[T]) Execute() (*string, error) {
+func (e ExportChatInviteLink) Execute() (*string, error) {
 	return MakePostRequest[string]("exportChatInviteLink", e)
 }
 
-type CreateInviteLink[T int | string] struct {
-	ChatId             T
+type CreateInviteLink struct {
+	ChatId             string
 	Name               *string
 	ExpireDate         *int
 	MemberLimit        *int
 	CreatesJoinRequest *bool
 }
 
-func (c CreateInviteLink[T]) Validate() error {
-	if c, ok := any(c.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(c.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (c CreateInviteLink) Validate() error {
+	if strings.TrimSpace(c.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if c.Name != nil {
 		if len(*c.Name) > 32 {
@@ -1878,16 +2327,16 @@ func (c CreateInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (c CreateInviteLink[T]) ToRequestBody() ([]byte, error) {
+func (c CreateInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CreateInviteLink[T]) Execute() (*objects.ChatInviteLink, error) {
+func (c CreateInviteLink) Execute() (*objects.ChatInviteLink, error) {
 	return MakePostRequest[objects.ChatInviteLink]("createInviteLink", c)
 }
 
-type EditInviteLink[T int | string] struct {
-	ChatId             T
+type EditInviteLink struct {
+	ChatId             string
 	InviteLink         string
 	Name               *string
 	ExpireDate         *int
@@ -1895,16 +2344,9 @@ type EditInviteLink[T int | string] struct {
 	CreatesJoinRequest *bool
 }
 
-func (c EditInviteLink[T]) Validate() error {
-	if c, ok := any(c.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(c.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (c EditInviteLink) Validate() error {
+	if strings.TrimSpace(c.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if c.Name != nil {
 		if len(*c.Name) > 32 {
@@ -1919,31 +2361,24 @@ func (c EditInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (c EditInviteLink[T]) ToRequestBody() ([]byte, error) {
+func (c EditInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c EditInviteLink[T]) Execute() (*objects.ChatInviteLink, error) {
+func (c EditInviteLink) Execute() (*objects.ChatInviteLink, error) {
 	return MakePostRequest[objects.ChatInviteLink]("editInviteLink", c)
 }
 
-type CreateChatSubscriptionInviteLink[T int | string] struct {
-	ChatId             T
+type CreateChatSubscriptionInviteLink struct {
+	ChatId             string
 	SubscriptionPeriod int
 	SubscriptionPrice  int
 	Name               *string
 }
 
-func (c CreateChatSubscriptionInviteLink[T]) Validate() error {
-	if c, ok := any(c.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(c.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (c CreateChatSubscriptionInviteLink) Validate() error {
+	if strings.TrimSpace(c.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if c.SubscriptionPeriod != 2592000 {
 		return objects.ErrInvalidParam("subscription_period currently must always be 2592000 seconds (30 days)")
@@ -1959,30 +2394,23 @@ func (c CreateChatSubscriptionInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (c CreateChatSubscriptionInviteLink[T]) ToRequestBody() ([]byte, error) {
+func (c CreateChatSubscriptionInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CreateChatSubscriptionInviteLink[T]) Execute() (*objects.ChatInviteLink, error) {
+func (c CreateChatSubscriptionInviteLink) Execute() (*objects.ChatInviteLink, error) {
 	return MakePostRequest[objects.ChatInviteLink]("createChatSubscriptionInviteLink", c)
 }
 
-type EditChatSubscriptionInviteLink[T int | string] struct {
-	ChatId     T
+type EditChatSubscriptionInviteLink struct {
+	ChatId     string
 	InviteLink string
 	Name       *string
 }
 
-func (c EditChatSubscriptionInviteLink[T]) Validate() error {
-	if c, ok := any(c.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(c.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (c EditChatSubscriptionInviteLink) Validate() error {
+	if strings.TrimSpace(c.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(c.InviteLink) == "" {
 		return objects.ErrInvalidParam("invite_link parameter can't be empty")
@@ -1995,30 +2423,23 @@ func (c EditChatSubscriptionInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (c EditChatSubscriptionInviteLink[T]) ToRequestBody() ([]byte, error) {
+func (c EditChatSubscriptionInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c EditChatSubscriptionInviteLink[T]) Execute() (*objects.ChatInviteLink, error) {
+func (c EditChatSubscriptionInviteLink) Execute() (*objects.ChatInviteLink, error) {
 	return MakePostRequest[objects.ChatInviteLink]("editChatSubscriptionInviteLink", c)
 }
 
-type RevokeInviteLink[T int | string] struct {
-	ChatId     T
+type RevokeInviteLink struct {
+	ChatId     string
 	InviteLink string
 	Name       *string
 }
 
-func (c RevokeInviteLink[T]) Validate() error {
-	if c, ok := any(c.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(c.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (c RevokeInviteLink) Validate() error {
+	if strings.TrimSpace(c.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if c.Name != nil {
 		if len(*c.Name) > 32 {
@@ -2028,29 +2449,22 @@ func (c RevokeInviteLink[T]) Validate() error {
 	return nil
 }
 
-func (c RevokeInviteLink[T]) ToRequestBody() ([]byte, error) {
+func (c RevokeInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c RevokeInviteLink[T]) Execute() (*objects.ChatInviteLink, error) {
+func (c RevokeInviteLink) Execute() (*objects.ChatInviteLink, error) {
 	return MakePostRequest[objects.ChatInviteLink]("revokeInviteLink", c)
 }
 
-type ApproveChatJoinRequest[T int | string] struct {
-	ChatId T
+type ApproveChatJoinRequest struct {
+	ChatId string
 	UserId int
 }
 
-func (s ApproveChatJoinRequest[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s ApproveChatJoinRequest) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
@@ -2058,29 +2472,22 @@ func (s ApproveChatJoinRequest[T]) Validate() error {
 	return nil
 }
 
-func (s ApproveChatJoinRequest[T]) ToRequestBody() ([]byte, error) {
+func (s ApproveChatJoinRequest) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s ApproveChatJoinRequest[T]) Execute() (*bool, error) {
+func (s ApproveChatJoinRequest) Execute() (*bool, error) {
 	return MakePostRequest[bool]("approveChatJoinRequest", s)
 }
 
-type DeclineChatJoinRequest[T int | string] struct {
-	ChatId T
+type DeclineChatJoinRequest struct {
+	ChatId string
 	UserId int
 }
 
-func (s DeclineChatJoinRequest[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s DeclineChatJoinRequest) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
@@ -2088,30 +2495,22 @@ func (s DeclineChatJoinRequest[T]) Validate() error {
 	return nil
 }
 
-func (s DeclineChatJoinRequest[T]) ToRequestBody() ([]byte, error) {
+func (s DeclineChatJoinRequest) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s DeclineChatJoinRequest[T]) Execute() (*bool, error) {
-	// NOTE: maybe there's a better way to get token?
+func (s DeclineChatJoinRequest) Execute() (*bool, error) {
 	return MakePostRequest[bool]("declineChatJoinRequest", s)
 }
 
-type SetChatPhoto[T int | string] struct {
-	ChatId T
+type SetChatPhoto struct {
+	ChatId string
 	Photo  objects.InputFile
 }
 
-func (s SetChatPhoto[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SetChatPhoto) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if err := s.Photo.Validate(); err != nil {
 		return err
@@ -2119,55 +2518,41 @@ func (s SetChatPhoto[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatPhoto[T]) ToRequestBody() ([]byte, error) {
+func (s SetChatPhoto) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatPhoto[T]) Execute() (*bool, error) {
+func (s SetChatPhoto) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatPhoto", s)
 }
 
-type DeleteChatPhoto[T int | string] struct {
-	ChatId T
+type DeleteChatPhoto struct {
+	ChatId string
 }
 
-func (d DeleteChatPhoto[T]) Validate() error {
-	if c, ok := any(d.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(d.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (d DeleteChatPhoto) Validate() error {
+	if strings.TrimSpace(d.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (d DeleteChatPhoto[T]) ToRequestBody() ([]byte, error) {
+func (d DeleteChatPhoto) ToRequestBody() ([]byte, error) {
 	return json.Marshal(d)
 }
 
-func (d DeleteChatPhoto[T]) Execute() (*bool, error) {
+func (d DeleteChatPhoto) Execute() (*bool, error) {
 	return MakePostRequest[bool]("deleteChatPhoto", d)
 }
 
-type SetChatTitle[T int | string] struct {
-	ChatId T
+type SetChatTitle struct {
+	ChatId string
 	Title  string
 }
 
-func (s SetChatTitle[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SetChatTitle) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(s.Title) < 1 || len(s.Title) > 128 {
 		return objects.ErrInvalidParam("title parameter must be between 1 and 128 characters long")
@@ -2175,29 +2560,22 @@ func (s SetChatTitle[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatTitle[T]) ToRequestBody() ([]byte, error) {
+func (s SetChatTitle) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatTitle[T]) Execute() (*bool, error) {
+func (s SetChatTitle) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatTitle", s)
 }
 
-type SetChatDescription[T int | string] struct {
-	ChatId      T
+type SetChatDescription struct {
+	ChatId      string
 	Description string
 }
 
-func (s SetChatDescription[T]) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s SetChatDescription) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(s.Description) > 255 {
 		return objects.ErrInvalidParam("description parameter must not be longer than 255 characters")
@@ -2205,31 +2583,24 @@ func (s SetChatDescription[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatDescription[T]) ToRequestBody() ([]byte, error) {
+func (s SetChatDescription) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatDescription[T]) Execute() (*bool, error) {
+func (s SetChatDescription) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatTitle", s)
 }
 
-type PinChatMessage[T int | string] struct {
-	ChatId               T
+type PinChatMessage struct {
+	ChatId               string
 	MessageId            int
 	BusinessConnectionId *string
 	DisableNotification  *bool
 }
 
-func (p PinChatMessage[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p PinChatMessage) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if p.MessageId < 1 {
 		return objects.ErrInvalidParam("message_id parameter can't be empty")
@@ -2237,30 +2608,23 @@ func (p PinChatMessage[T]) Validate() error {
 	return nil
 }
 
-func (p PinChatMessage[T]) ToRequestBody() ([]byte, error) {
+func (p PinChatMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p PinChatMessage[T]) Execute() (*bool, error) {
+func (p PinChatMessage) Execute() (*bool, error) {
 	return MakePostRequest[bool]("pinChatMessage", p)
 }
 
-type UnpinChatMessage[T int | string] struct {
-	ChatId               T
+type UnpinChatMessage struct {
+	ChatId               string
 	MessageId            int
 	BusinessConnectionId *string
 }
 
-func (p UnpinChatMessage[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p UnpinChatMessage) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if p.MessageId < 1 {
 		return objects.ErrInvalidParam("message_id parameter can't be empty")
@@ -2268,159 +2632,117 @@ func (p UnpinChatMessage[T]) Validate() error {
 	return nil
 }
 
-func (p UnpinChatMessage[T]) ToRequestBody() ([]byte, error) {
+func (p UnpinChatMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p UnpinChatMessage[T]) Execute() (*bool, error) {
+func (p UnpinChatMessage) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unpinChatMessage", p)
 }
 
-type UnpinAllChatMessages[T int | string] struct {
-	ChatId T
+type UnpinAllChatMessages struct {
+	ChatId string
 }
 
-func (p UnpinAllChatMessages[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p UnpinAllChatMessages) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (p UnpinAllChatMessages[T]) ToRequestBody() ([]byte, error) {
+func (p UnpinAllChatMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p UnpinAllChatMessages[T]) Execute() (*bool, error) {
+func (p UnpinAllChatMessages) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unpinAllChatMessages", p)
 }
 
-type LeaveChat[T int | string] struct {
-	ChatId T
+type LeaveChat struct {
+	ChatId string
 }
 
-func (p LeaveChat[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p LeaveChat) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (p LeaveChat[T]) ToRequestBody() ([]byte, error) {
+func (p LeaveChat) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p LeaveChat[T]) Execute() (*bool, error) {
+func (p LeaveChat) Execute() (*bool, error) {
 	return MakePostRequest[bool]("leaveChat", p)
 }
 
-type GetChat[T int | string] struct {
-	ChatId T
+type GetChat struct {
+	ChatId string
 }
 
-func (p GetChat[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p GetChat) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (p GetChat[T]) ToRequestBody() ([]byte, error) {
+func (p GetChat) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p GetChat[T]) Execute() (*objects.ChatFullInfo, error) {
+func (p GetChat) Execute() (*objects.ChatFullInfo, error) {
 	return MakeGetRequest[objects.ChatFullInfo]("getChat", p)
 }
 
-type GetChatAdministrators[T int | string] struct {
-	ChatId T
+type GetChatAdministrators struct {
+	ChatId string
 }
 
-func (p GetChatAdministrators[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p GetChatAdministrators) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (p GetChatAdministrators[T]) ToRequestBody() ([]byte, error) {
+func (p GetChatAdministrators) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p GetChatAdministrators[T]) Execute() (*[]objects.ChatMember, error) {
+func (p GetChatAdministrators) Execute() (*[]objects.ChatMember, error) {
 	return MakeGetRequest[[]objects.ChatMember]("getChatAdministrators", p)
 }
 
-type GetChatMemberCount[T int | string] struct {
-	ChatId T
+type GetChatMemberCount struct {
+	ChatId string
 }
 
-func (p GetChatMemberCount[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p GetChatMemberCount) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (p GetChatMemberCount[T]) ToRequestBody() ([]byte, error) {
+func (p GetChatMemberCount) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p GetChatMemberCount[T]) Execute() (*int, error) {
+func (p GetChatMemberCount) Execute() (*int, error) {
 	return MakeGetRequest[int]("getChatMemberCount", p)
 }
 
-type GetChatMember[T int | string] struct {
-	ChatId T
+type GetChatMember struct {
+	ChatId string
 	UserId int
 }
 
-func (p GetChatMember[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p GetChatMember) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if p.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
@@ -2428,29 +2750,22 @@ func (p GetChatMember[T]) Validate() error {
 	return nil
 }
 
-func (p GetChatMember[T]) ToRequestBody() ([]byte, error) {
+func (p GetChatMember) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p GetChatMember[T]) Execute() (*objects.ChatMember, error) {
+func (p GetChatMember) Execute() (*objects.ChatMember, error) {
 	return MakeGetRequest[objects.ChatMember]("getChatMember", p)
 }
 
-type SetChatStickerSet[T int | string] struct {
-	ChatId         T
+type SetChatStickerSet struct {
+	ChatId         string
 	StickerSetName string
 }
 
-func (p SetChatStickerSet[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p SetChatStickerSet) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(p.StickerSetName) == "" {
 		return objects.ErrInvalidParam("sticker_set_name parameter can't be empty")
@@ -2458,37 +2773,30 @@ func (p SetChatStickerSet[T]) Validate() error {
 	return nil
 }
 
-func (p SetChatStickerSet[T]) ToRequestBody() ([]byte, error) {
+func (p SetChatStickerSet) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p SetChatStickerSet[T]) Execute() (*bool, error) {
+func (p SetChatStickerSet) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatStickerSet", p)
 }
 
-type DeleteChatStickerSet[T int | string] struct {
-	ChatId T
+type DeleteChatStickerSet struct {
+	ChatId string
 }
 
-func (p DeleteChatStickerSet[T]) Validate() error {
-	if c, ok := any(p.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(p.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (p DeleteChatStickerSet) Validate() error {
+	if strings.TrimSpace(p.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (p DeleteChatStickerSet[T]) ToRequestBody() ([]byte, error) {
+func (p DeleteChatStickerSet) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p DeleteChatStickerSet[T]) Execute() (*bool, error) {
+func (p DeleteChatStickerSet) Execute() (*bool, error) {
 	return MakePostRequest[bool]("deleteChatStickerSet", p)
 }
 
@@ -2518,23 +2826,16 @@ var validIconColors = map[int]struct{}{
 	16478047: {},
 }
 
-type CreateForumTopic[T int | string] struct {
-	ChatId            T
+type CreateForumTopic struct {
+	ChatId            string
 	Name              string
 	IconColor         *int
 	IconCustomEmojiId *string
 }
 
-func (c CreateForumTopic[T]) Validate() error {
-	if c, ok := any(c.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(c.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (c CreateForumTopic) Validate() error {
+	if strings.TrimSpace(c.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(c.Name) < 1 || len(c.Name) > 128 {
 		return objects.ErrInvalidParam("name parameter must be between 1 and 128 characters long")
@@ -2547,31 +2848,24 @@ func (c CreateForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (c CreateForumTopic[T]) ToRequestBody() ([]byte, error) {
+func (c CreateForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CreateForumTopic[T]) Execute() (*objects.ForumTopic, error) {
+func (c CreateForumTopic) Execute() (*objects.ForumTopic, error) {
 	return MakePostRequest[objects.ForumTopic]("createForumTopic", c)
 }
 
-type EditForumTopic[T int | string] struct {
-	ChatId            T
+type EditForumTopic struct {
+	ChatId            string
 	MessageThreadId   string
 	Name              *string
 	IconCustomEmojiId *string
 }
 
-func (e EditForumTopic[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e EditForumTopic) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.MessageThreadId) == "" {
 		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
@@ -2584,29 +2878,22 @@ func (e EditForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e EditForumTopic[T]) ToRequestBody() ([]byte, error) {
+func (e EditForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditForumTopic[T]) Execute() (*bool, error) {
+func (e EditForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("editForumTopic", e)
 }
 
-type CloseForumTopic[T int | string] struct {
-	ChatId          T
+type CloseForumTopic struct {
+	ChatId          string
 	MessageThreadId string
 }
 
-func (e CloseForumTopic[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e CloseForumTopic) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.MessageThreadId) == "" {
 		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
@@ -2614,29 +2901,22 @@ func (e CloseForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e CloseForumTopic[T]) ToRequestBody() ([]byte, error) {
+func (e CloseForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e CloseForumTopic[T]) Execute() (*bool, error) {
+func (e CloseForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("closeForumTopic", e)
 }
 
-type ReopenForumTopic[T int | string] struct {
-	ChatId          T
+type ReopenForumTopic struct {
+	ChatId          string
 	MessageThreadId string
 }
 
-func (e ReopenForumTopic[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e ReopenForumTopic) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.MessageThreadId) == "" {
 		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
@@ -2644,29 +2924,22 @@ func (e ReopenForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e ReopenForumTopic[T]) ToRequestBody() ([]byte, error) {
+func (e ReopenForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e ReopenForumTopic[T]) Execute() (*bool, error) {
+func (e ReopenForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("reopenForumTopic", e)
 }
 
-type DeleteForumTopic[T int | string] struct {
-	ChatId          T
+type DeleteForumTopic struct {
+	ChatId          string
 	MessageThreadId string
 }
 
-func (e DeleteForumTopic[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e DeleteForumTopic) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.MessageThreadId) == "" {
 		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
@@ -2674,29 +2947,22 @@ func (e DeleteForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e DeleteForumTopic[T]) ToRequestBody() ([]byte, error) {
+func (e DeleteForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e DeleteForumTopic[T]) Execute() (*bool, error) {
+func (e DeleteForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("deleteForumTopic", e)
 }
 
-type UnpinAllForumTopicMessages[T int | string] struct {
-	ChatId          T
+type UnpinAllForumTopicMessages struct {
+	ChatId          string
 	MessageThreadId string
 }
 
-func (e UnpinAllForumTopicMessages[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e UnpinAllForumTopicMessages) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.MessageThreadId) == "" {
 		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
@@ -2704,29 +2970,22 @@ func (e UnpinAllForumTopicMessages[T]) Validate() error {
 	return nil
 }
 
-func (e UnpinAllForumTopicMessages[T]) ToRequestBody() ([]byte, error) {
+func (e UnpinAllForumTopicMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e UnpinAllForumTopicMessages[T]) Execute() (*bool, error) {
+func (e UnpinAllForumTopicMessages) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unpinAllForumTopicMessages", e)
 }
 
-type EditGeneralForumTopic[T int | string] struct {
-	ChatId T
+type EditGeneralForumTopic struct {
+	ChatId string
 	Name   string
 }
 
-func (e EditGeneralForumTopic[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e EditGeneralForumTopic) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.Name) == "" {
 		return objects.ErrInvalidParam("name parameter can't be empty")
@@ -2734,141 +2993,106 @@ func (e EditGeneralForumTopic[T]) Validate() error {
 	return nil
 }
 
-func (e EditGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
+func (e EditGeneralForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditGeneralForumTopic[T]) Execute() (*bool, error) {
+func (e EditGeneralForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("editGeneralForumTopic", e)
 }
 
-type CloseGeneralForumTopic[T int | string] struct {
-	ChatId T
+type CloseGeneralForumTopic struct {
+	ChatId string
 }
 
-func (e CloseGeneralForumTopic[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e CloseGeneralForumTopic) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (e CloseGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
+func (e CloseGeneralForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e CloseGeneralForumTopic[T]) Execute() (*bool, error) {
+func (e CloseGeneralForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("closeGeneralForumTopic", e)
 }
 
-type ReopenGeneralForumTopic[T int | string] struct {
-	ChatId T
+type ReopenGeneralForumTopic struct {
+	ChatId string
 }
 
-func (e ReopenGeneralForumTopic[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e ReopenGeneralForumTopic) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (e ReopenGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
+func (e ReopenGeneralForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e ReopenGeneralForumTopic[T]) Execute() (*bool, error) {
+func (e ReopenGeneralForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("reopenGeneralForumTopic", e)
 }
 
-type HideGeneralForumTopic[T int | string] struct {
-	ChatId T
+type HideGeneralForumTopic struct {
+	ChatId string
 }
 
-func (e HideGeneralForumTopic[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e HideGeneralForumTopic) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (e HideGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
+func (e HideGeneralForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e HideGeneralForumTopic[T]) Execute() (*bool, error) {
+func (e HideGeneralForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("hideGeneralForumTopic", e)
 }
 
-type UnhideGeneralForumTopic[T int | string] struct {
-	ChatId T
+type UnhideGeneralForumTopic struct {
+	ChatId string
 }
 
-func (e UnhideGeneralForumTopic[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e UnhideGeneralForumTopic) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (e UnhideGeneralForumTopic[T]) ToRequestBody() ([]byte, error) {
+func (e UnhideGeneralForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e UnhideGeneralForumTopic[T]) Execute() (*bool, error) {
+func (e UnhideGeneralForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unhideGeneralForumTopic", e)
 }
 
-type UnpinAllGeneralForumTopicMessages[T int | string] struct {
-	ChatId T
+type UnpinAllGeneralForumTopicMessages struct {
+	ChatId string
 }
 
-func (e UnpinAllGeneralForumTopicMessages[T]) Validate() error {
-	if c, ok := any(e.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(e.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (e UnpinAllGeneralForumTopicMessages) Validate() error {
+	if strings.TrimSpace(e.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
 
-func (e UnpinAllGeneralForumTopicMessages[T]) ToRequestBody() ([]byte, error) {
+func (e UnpinAllGeneralForumTopicMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e UnpinAllGeneralForumTopicMessages[T]) Execute() (*bool, error) {
+func (e UnpinAllGeneralForumTopicMessages) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unpinAllGeneralForumTopicMessages", e)
 }
 
@@ -2900,21 +3124,14 @@ func (a AnswerCallbackQuery) Execute() (*bool, error) {
 	return MakePostRequest[bool]("answerCallbackQuery", a)
 }
 
-type GetUserChatBoosts[T int | string] struct {
-	ChatId T
+type GetUserChatBoosts struct {
+	ChatId string
 	UserId int
 }
 
-func (g GetUserChatBoosts[T]) Validate() error {
-	if c, ok := any(g.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(g.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (g GetUserChatBoosts) Validate() error {
+	if strings.TrimSpace(g.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if g.UserId < 1 {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
@@ -2922,11 +3139,11 @@ func (g GetUserChatBoosts[T]) Validate() error {
 	return nil
 }
 
-func (g GetUserChatBoosts[T]) ToRequestBody() ([]byte, error) {
+func (g GetUserChatBoosts) ToRequestBody() ([]byte, error) {
 	return json.Marshal(g)
 }
 
-func (g GetUserChatBoosts[T]) Execute() (*objects.UserChatBoosts, error) {
+func (g GetUserChatBoosts) Execute() (*objects.UserChatBoosts, error) {
 	return MakeGetRequest[objects.UserChatBoosts]("getUserChatBoosts", g)
 }
 
@@ -3167,22 +3384,15 @@ func (s GetMyShortDescription) Execute() (*bool, error) {
 	return MakeGetRequest[bool]("getMyShortDescription", s)
 }
 
-type SetChatMenuButton[T int | string] struct {
-	ChatId     *T
+type SetChatMenuButton struct {
+	ChatId     *string
 	MenuButton objects.MenuButton
 }
 
-func (s SetChatMenuButton[T]) Validate() error {
+func (s SetChatMenuButton) Validate() error {
 	if s.ChatId != nil {
-		if c, ok := any(*s.ChatId).(string); ok {
-			if strings.TrimSpace(c) == "" {
-				return objects.ErrInvalidParam("chat_id parameter can't be empty")
-			}
-		}
-		if c, ok := any(*s.ChatId).(int); ok {
-			if c < 1 {
-				return objects.ErrInvalidParam("chat_id parameter can't be empty")
-			}
+		if strings.TrimSpace(*s.ChatId) == "" {
+			return objects.ErrInvalidParam("chat_id parameter can't be empty if specified")
 		}
 	}
 	if s.MenuButton != nil {
@@ -3193,11 +3403,11 @@ func (s SetChatMenuButton[T]) Validate() error {
 	return nil
 }
 
-func (s SetChatMenuButton[T]) ToRequestBody() ([]byte, error) {
+func (s SetChatMenuButton) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatMenuButton[T]) Execute() (*bool, error) {
+func (s SetChatMenuButton) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatMenuButton", s)
 }
 
@@ -3208,7 +3418,7 @@ type GetChatMenuButton struct {
 func (s GetChatMenuButton) Validate() error {
 	if s.ChatId != nil {
 		if *s.ChatId < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
+			return objects.ErrInvalidParam("chat_id parameter can't be empty if specified")
 		}
 	}
 	return nil

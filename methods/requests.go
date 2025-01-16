@@ -141,5 +141,8 @@ func MakeMultipartRequest[T any](endpoint string, body MultipartSendable) (*T, e
 			Message: apiResp.Description,
 		}
 	}
+	if apiResp.Description != nil {
+		fmt.Println(*apiResp.Description)
+	}
 	return &apiResp.Result, nil
 }

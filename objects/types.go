@@ -3418,7 +3418,7 @@ type ResponseParameters struct {
 type InputMedia interface {
 	SetInputMedia(media string, isNew bool)
 	Validate() error
-}
+} //TODO: media field should be referring to file name inside multipart part, as "media": "attach://filename"
 
 var (
 	url_regex        = regexp.MustCompile(`^https?://`)
@@ -3810,24 +3810,24 @@ func (i InputFileFromBytes) IsLocal() bool {
 	return true
 }
 
-type InputFileFromString string
+type InputFileFromRemote string
 
-func (i InputFileFromString) Validate() error {
+func (i InputFileFromRemote) Validate() error {
 	if i == "" {
 		return ErrInvalidParam("file id or url can't be empty")
 	}
 	return nil
 }
 
-func (i InputFileFromString) Name() string {
+func (i InputFileFromRemote) Name() string {
 	return ""
 }
 
-func (i InputFileFromString) Reader() (io.Reader, error) {
+func (i InputFileFromRemote) Reader() (io.Reader, error) {
 	return nil, fmt.Errorf("remote file can't have reader")
 }
 
-func (i InputFileFromString) IsLocal() bool {
+func (i InputFileFromRemote) IsLocal() bool {
 	return false
 }
 
@@ -3839,7 +3839,7 @@ func (i InputFileFromString) IsLocal() bool {
 type InputPaidMedia interface {
 	SetInputPaidMedia(media string, isNew bool)
 	Validate() error
-}
+} // TODO: rework all of the implementations to support multipart sending
 
 // The paid media to send is a photo.
 //

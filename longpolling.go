@@ -41,10 +41,10 @@ func GetBotSettings() BotSettings {
 type LongPollingBot struct {
 	//Telegram bot API access token
 	Token string
-	//A function which is called with every incoming update
+	//A function which is called on every incoming update
 	OnUpdate func(objects.Update) error
 	//A function which is called whenever an error occurs.
-	//Defaults to simple logging function
+	//Defaults to simple `fmt.Println(e.Error())`
 	OnError func(error)
 	//Limits the number of updates to be retrieved. Values between 1-100 are accepted.
 	//Defaults to 100.
@@ -77,7 +77,7 @@ func NewDefaultLongPollingBot(tkn string, onUpd func(objects.Update) error, opts
 	l := LongPollingBot{
 		Token:          tkn,
 		OnUpdate:       onUpd,
-		OnError:        defaultOnError,
+		OnError:        defaultOnErrFunc,
 		Limit:          100,
 		Timeout:        30,
 		AllowedUpdates: nil,
@@ -117,6 +117,10 @@ func WithOnErrFunc(onErr func(error)) LongPollingOption {
 	}
 }
 
+func defaultOnErrFunc(e error) {
+	fmt.Println(e.Error())
+}
+
 func WithClient(cl *http.Client) LongPollingOption {
 	return func(lpb *LongPollingBot) {
 		lpb.Client = cl
@@ -129,13 +133,9 @@ func WithBaseUrl(url string) LongPollingOption {
 	}
 }
 
-func defaultOnError(e error) {
-	fmt.Println(e.Error())
-}
-
 var once = &sync.Once{}
 
-func (l *LongPollingBot) Start() {
+func (l *LongPollingBot) Init() {
 	once.Do(func() {
 		botGlobalSettings = &BotSettings{
 			Token:   l.Token,
@@ -143,6 +143,12 @@ func (l *LongPollingBot) Start() {
 			Client:  l.Client,
 		}
 	})
+}
+
+func (l *LongPollingBot) Start() {
+	if botGlobalSettings == nil {
+		l.Init()
+	}
 
 	l.updChan = make(chan objects.Update)
 	l.errChan = make(chan error)
