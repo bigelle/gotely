@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"slices"
 	"strings"
 
 	"github.com/bigelle/tele.go/objects"
@@ -1831,18 +1830,31 @@ type SendContact struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId              string                   `json:"chat_id"`
-	PhoneNumber         string                   `json:"phone_number"`
-	FirstName           string                   `json:"first_name"`
-	LastName            *string                  `json:"last_name,omitempty"`
-	Vcard               *string                  `json:"vcard,omitempty"`
-	MessageThreadId     *string                  `json:"message_thread_id,omitempty"`
-	DisableNotification *bool                    `json:"disable_notification,omitempty"`
-	ProtectContent      *bool                    `json:"protect_content,omitempty"`
-	AllowPaidBroadcast  *bool                    `json:"allow_paid_broadcast,omitempty"`
-	MessageEffectId     *string                  `json:"message_effect_id,omitempty"`
-	ReplyParameters     *objects.ReplyParameters `json:"reply_parameters,omitempty"`
-	ReplyMarkup         *objects.ReplyMarkup     `json:"reply_markup,omitempty"`
+	ChatId string `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *string `json:"message_thread_id,omitempty"`
+	//Contact's phone number
+	PhoneNumber string `json:"phone_number"`
+	//Contact's first name
+	FirstName string `json:"first_name"`
+	//Contact's last name
+	LastName *string `json:"last_name,omitempty"`
+	//Additional data about the contact in the form of a vCard, 0-2048 bytes
+	Vcard *string `json:"vcard,omitempty"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 func (s SendContact) Validate() error {
@@ -1866,30 +1878,63 @@ func (s SendContact) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendContact", s)
 }
 
+// Use this method to send a native poll. On success, the sent Message is returned.
 type SendPoll struct {
-	ChatId               string
-	Question             string
-	Options              []objects.InputPollOption
-	QuestionParseMode    *string
-	QuestionEntities     *[]objects.MessageEntity
-	IsAnonymous          *bool
-	Type                 *string
-	AllowMultipleAnswers *bool
-	CorrectOptionId      *int
-	Explanation          *string
-	ExplanationParseMode *string
-	ExplanationEntities  *[]objects.MessageEntity
-	OpenPeriod           *int
-	CloseDate            *int
-	IsClosed             *bool
-	BusinessConnectionId *string
-	MessageThreadId      *string
-	DisableNotification  *bool
-	ProtectContent       *bool
-	AllowPaidBroadcast   *bool
-	MessageEffectId      *string
-	ReplyParameters      *objects.ReplyParameters
-	ReplyMarkup          *objects.ReplyMarkup
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *string `json:"message_thread_id,omitempty"`
+	//Poll question, 1-300 characters
+	Question string `json:"question"`
+	//Mode for parsing entities in the question.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	//Currently, only custom emoji entities are allowed
+	QuestionParseMode *string `json:"question_parse_mode,omitempty"`
+	//A JSON-serialized list of special entities that appear in the poll question.
+	//It can be specified instead of question_parse_mode
+	QuestionEntities *[]objects.MessageEntity `json:"question_entities,omitempty"`
+	//A JSON-serialized list of 2-10 answer options
+	Options []objects.InputPollOption `json:"options"`
+	//True, if the poll needs to be anonymous, defaults to True
+	IsAnonymous *bool `json:"is_anonymous,omitempty"`
+	//Poll type, “quiz” or “regular”, defaults to “regular”
+	Type *string `json:"type,omitempty"`
+	//True, if the poll allows multiple answers, ignored for polls in quiz mode, defaults to False
+	AllowMultipleAnswers *bool `json:"allow_multiple_answers,omitempty"`
+	//0-based identifier of the correct answer option, required for polls in quiz mode
+	CorrectOptionId *int `json:"correct_option_id,omitempty"`
+	//Text that is shown when a user chooses an incorrect answer or taps on the lamp icon in a quiz-style poll,
+	//0-200 characters with at most 2 line feeds after entities parsing
+	Explanation *string `json:"explanation,omitempty"`
+	//Mode for parsing entities in the explanation.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ExplanationParseMode *string `json:"explanation_parse_mode,omitempty"`
+	//A JSON-serialized list of special entities that appear in the poll explanation.
+	//It can be specified instead of explanation_parse_mode
+	ExplanationEntities *[]objects.MessageEntity `json:"explanation_entities,omitempty"`
+	//Amount of time in seconds the poll will be active after creation, 5-600. Can't be used together with close_date.
+	OpenPeriod *int `json:"open_period,omitempty"`
+	//Point in time (Unix timestamp) when the poll will be automatically closed. Must be at least 5 and no more than 600 seconds in the future.
+	//Can't be used together with open_period.
+	CloseDate *int `json:"close_date,omitempty"`
+	//Pass True if the poll needs to be immediately closed. This can be useful for poll preview.
+	IsClosed *bool `json:"is_closed,omitempty"`
+	// /Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding and saving
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 func (s SendPoll) Validate() error {
@@ -1902,6 +1947,11 @@ func (s SendPoll) Validate() error {
 	if len(s.Options) < 2 || len(s.Options) > 10 {
 		return objects.ErrInvalidParam("options parameter must be between 2 and 10")
 	}
+	if s.Type != nil {
+		if *s.Type != "quiz" && *s.Type != "regular" {
+			return objects.ErrInvalidParam("type parameter must be 'regular' or 'quiz' if specified")
+		}
+	}
 	return nil
 }
 
@@ -1913,17 +1963,32 @@ func (s SendPoll) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendPoll", s)
 }
 
+// Use this method to send an animated emoji that will display a random value. On success, the sent Message is returned.
 type SendDice struct {
-	ChatId               string
-	Emoji                string
-	BusinessConnectionId *string
-	MessageThreadId      *string
-	DisableNotification  *bool
-	ProtectContent       *bool
-	AllowPaidBroadcast   *bool
-	MessageEffectId      *string
-	ReplyParameters      *objects.ReplyParameters
-	ReplyMarkup          *objects.ReplyMarkup
+	//Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *string `json:"message_thread_id,omitempty"`
+	//Emoji on which the dice throw animation is based. Currently, must be one of “🎲”, “🎯”, “🏀”, “⚽”, “🎳”, or “🎰”.
+	//Dice can have values 1-6 for “🎲”, “🎯” and “🎳”, values 1-5 for “🏀” and “⚽”, and values 1-64 for “🎰”.
+	//Defaults to “🎲”
+	Emoji string `json:"emoji"`
+	//Sends the message silently. Users will receive a notification with no sound.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
+	//Protects the contents of the sent message from forwarding
+	ProtectContent *bool `json:"protect_content,omitempty"`
+	//Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
+	//The relevant Stars will be withdrawn from the bot's balance
+	AllowPaidBroadcast *bool `json:"allow_paid_broadcast,omitempty"`
+	//Unique identifier of the message effect to be added to the message; for private chats only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	//Description of the message to reply to
+	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+	//instructions to remove a reply keyboard or to force a reply from the user
+	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 func (s SendDice) Validate() error {
@@ -1944,11 +2009,27 @@ func (s SendDice) Execute() (*objects.Message, error) {
 	return MakePostRequest[objects.Message]("sendPoll", s)
 }
 
+// Use this method when you need to tell the user that something is happening on the bot's side.
+// The status is set for 5 seconds or less (when a message arrives from your bot, Telegram clients clear its typing status).
+// Returns True on success.
+//
+// Example: The ImageBot needs some time to process a request and upload the image.
+// Instead of sending a text message along the lines of “Retrieving image, please wait…”,
+// the bot may use sendChatAction with action = upload_photo. The user will see a “sending photo” status for the bot.
+//
+// We only recommend using this method when a response from the bot will take a noticeable amount of time to arrive.
 type SendChatAction struct {
-	ChatId               string
-	Action               string
-	BusinessConnectionId *string
-	MessageThreadId      *string
+	//Unique identifier of the business connection on behalf of which the action will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier for the target message thread; for supergroups only
+	Action string `json:"action"`
+	//Type of action to broadcast. Choose one, depending on what the user is about to receive: 'typing' for text messages,
+	//'upload_photo' for photos, 'record_video' or 'upload_video' for videos, 'record_voice' or 'upload_voice' for voice notes,
+	//'upload_document' for general files, 'choose_sticker' for stickers, 'find_location' for location data,
+	//'record_video_note' or 'upload_video_note' for video notes.
+	MessageThreadId *string `json:"message_thread_id,omitempty"`
 }
 
 func (s SendChatAction) Validate() error {
@@ -1958,30 +2039,41 @@ func (s SendChatAction) Validate() error {
 	if strings.TrimSpace(s.Action) == "" {
 		return objects.ErrInvalidParam("action parameter can't be empty")
 	}
-	allowed := []string{
-		"typing",
-		"upload_photo",
-		"record_video",
-		"record_voice",
-		"upload_voice",
-		"upload_document",
-		"choose_sticker",
-		"find_location",
-		"record_video_note",
-		"upload_video_note",
+	allowed := map[string]struct{}{
+		"typing":            {},
+		"upload_photo":      {},
+		"record_video":      {},
+		"upload_video":      {},
+		"record_voice":      {},
+		"upload_voice":      {},
+		"upload_document":   {},
+		"choose_sticker":    {},
+		"find_location":     {},
+		"record_video_note": {},
+		"upload_video_note": {},
 	}
-	// NOTE: maybe there's a better way
-	if !slices.Contains(allowed, s.Action) {
-		return objects.ErrInvalidParam(fmt.Sprintf("action must be %s or upload_video_note", strings.Join(allowed[:len(allowed)-1], ", ")))
+	if _, ok := allowed[s.Action]; !ok {
+		return objects.ErrInvalidParam("invalid action parameter: see https://core.telegram.org/bots/api#sendchataction for a list of available actions")
 	}
 	return nil
 }
 
+// Use this method to change the chosen reactions on a message.
+// Service messages can't be reacted to.
+// Automatically forwarded messages from a channel to its discussion group have the same available reactions as messages in the channel.
+// Bots can't use paid reactions. Returns True on success.
 type SetMessageReaction struct {
-	ChatId    string
-	MessageId int
-	Reaction  *[]objects.ReactionType
-	IsBig     *bool
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Identifier of the target message. If the message belongs to a media group, the reaction is set to the first non-deleted message in the group instead.
+	MessageId int `json:"message_id"`
+	//A JSON-serialized list of reaction types to set on the message.
+	//Currently, as non-premium users, bots can set up to one reaction per message.
+	//A custom emoji reaction can be used if it is either already present on the message or explicitly allowed by chat administrators.
+	//Paid reactions can't be used by bots.
+	Reaction *[]objects.ReactionType `json:"reaction,omitempty"`
+	//Pass True to set the reaction with a big animation
+	IsBig *bool `json:"is_big,omitempty"`
 }
 
 func (s SetMessageReaction) Validate() error {
@@ -1990,6 +2082,11 @@ func (s SetMessageReaction) Validate() error {
 	}
 	if s.MessageId < 1 {
 		return objects.ErrInvalidParam("message_id parameter can't be empty")
+	}
+	for _, r := range *s.Reaction {
+		if err := r.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -2002,10 +2099,14 @@ func (s SetMessageReaction) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setMessageReaction", s)
 }
 
+// Use this method to get a list of profile pictures for a user. Returns a UserProfilePhotos object.
 type GetUserProfilePhotos struct {
-	UserId int
-	Offset *int
-	Limit  *int
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
+	//Sequential number of the first photo to be returned. By default, all photos are returned.
+	Offset *int `json:"offset,omitempty"`
+	//Limits the number of photos to be retrieved. Values between 1-100 are accepted. Defaults to 100.
+	Limit *int `json:"limit,omitempty"`
 }
 
 func (g GetUserProfilePhotos) Validate() error {
@@ -2028,10 +2129,15 @@ func (g GetUserProfilePhotos) Execute() (*objects.UserProfilePhotos, error) {
 	return MakeGetRequest[objects.UserProfilePhotos]("getUserProfilePhotos", g)
 }
 
+// Changes the emoji status for a given user that previously allowed the bot to manage their emoji status via the
+// Mini App method requestEmojiStatusAccess. Returns True on success.
 type SetUserEmojiStatus struct {
-	UserId                    int
-	EmojiStatusCustomEmojiId  *string
-	EmojiStatusExpirationDate *int
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
+	//Custom emoji identifier of the emoji status to set. Pass an empty string to remove the status.
+	EmojiStatusCustomEmojiId *string `json:"emoji_status_custom_emoji_id,omitempty"`
+	//Expiration date of the emoji status, if any
+	EmojiStatusExpirationDate *int `json:"emoji_status_expiration_date,omitempty"`
 }
 
 func (s SetUserEmojiStatus) Validate() error {
@@ -2049,9 +2155,18 @@ func (s SetUserEmojiStatus) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setUserEmojiStatus", s)
 }
 
+// Use this method to get basic information about a file and prepare it for downloading.
+// For the moment, bots can download files of up to 20MB in size. On success, a File object is returned.
+// The file can then be downloaded via the link https://api.telegram.org/file/bot<token>/<file_path>,
+// where <file_path> is taken from the response. It is guaranteed that the link will be valid for at least 1 hour.
+// When the link expires, a new one can be requested by calling getFile again.
+//
+// Note: This function may not preserve the original file name and MIME type.
+// You should save the file's MIME type and name (if available) when the File object is received.
 type GetFile struct {
-	FileId string
-}
+	//File identifier to get information about
+	FileId string `json:"file_id"`
+} //TODO: probably a good idea to add a method that will download the file and will return it as reader
 
 func (g GetFile) Validate() error {
 	if strings.TrimSpace(g.FileId) == "" {
@@ -2068,11 +2183,23 @@ func (g GetFile) Execute() (*objects.File, error) {
 	return MakeGetRequest[objects.File]("getFile", g)
 }
 
+// Use this method to ban a user in a group, a supergroup or a channel.
+// In the case of supergroups and channels, the user will not be able to return to the chat on their own using invite links,
+// etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Returns True on success.
 type BanChatMember struct {
-	ChatId         string
-	UserId         int
-	UntilDate      *int
-	RevokeMessages *bool
+	//Unique identifier for the target group or username of the target supergroup or channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
+	//Date when the user will be unbanned; Unix time.
+	//If user is banned for more than 366 days or less than 30 seconds from the current time they are considered to be banned forever.
+	//Applied for supergroups and channels only.
+	UntilDate *int `json:"until_date,omitempty"`
+	//Pass True to delete all messages from the chat for the user that is being removed.
+	//If False, the user will be able to see messages in the group that were sent before the user was removed.
+	//Always True for supergroups and channels.
+	RevokeMessages *bool `json:"revoke_messages,omitempty"`
 }
 
 func (b BanChatMember) Validate() error {
@@ -2093,10 +2220,19 @@ func (b BanChatMember) Execute() (*bool, error) {
 	return MakeGetRequest[bool]("banChatMember", b)
 }
 
+// Use this method to unban a previously banned user in a supergroup or channel.
+// The user will not return to the group or channel automatically, but will be able to join via link, etc.
+// The bot must be an administrator for this to work. By default,
+// this method guarantees that after the call the user is not a member of the chat, but will be able to join it.
+// So if the user is a member of the chat they will also be removed from the chat. If you don't want this, use the parameter only_if_banned.
+// Returns True on success.
 type UnbanChatMember struct {
-	ChatId       string
-	UserId       int
-	OnlyIfBanned *bool
+	//Unique identifier for the target group or username of the target supergroup or channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
+	//Do nothing if the user is not banned
+	OnlyIfBanned *bool `json:"only_if_banned,omitempty"`
 }
 
 func (b UnbanChatMember) Validate() error {
@@ -2117,12 +2253,24 @@ func (b UnbanChatMember) Execute() (*bool, error) {
 	return MakeGetRequest[bool]("unbanChatMember", b)
 }
 
+// Use this method to restrict a user in a supergroup.
+// The bot must be an administrator in the supergroup for this to work and must have the appropriate administrator rights.
+// Pass True for all permissions to lift restrictions from a user. Returns True on success.
 type RestrictChatMember struct {
-	ChatId                         string
-	UserId                         int
-	Permissions                    objects.ChatPermissions
-	UserIndependentChatPermissions *bool
-	UntilDate                      *int
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
+	//A JSON-serialized object for new user permissions
+	Permissions objects.ChatPermissions `json:"permissions"`
+	//Pass True if chat permissions are set independently.
+	//Otherwise, the can_send_other_messages and can_add_web_page_previews permissions will imply the can_send_messages,
+	//can_send_audios, can_send_documents, can_send_photos, can_send_videos, can_send_video_notes, and can_send_voice_notes permissions;
+	//the can_send_polls permission will imply the can_send_messages permission.
+	UserIndependentChatPermissions *bool `json:"user_independent_chat_permissions,omitempty"`
+	//Date when restrictions will be lifted for the user; Unix time.
+	//If user is restricted for more than 366 days or less than 30 seconds from the current time, they are considered to be restricted forever
+	UntilDate *int `json:"until_date,omitempty"`
 }
 
 func (r RestrictChatMember) Validate() error {
@@ -2143,24 +2291,48 @@ func (r RestrictChatMember) Execute() (*bool, error) {
 	return MakePostRequest[bool]("restrictChatMember", r)
 }
 
+// Use this method to promote or demote a user in a supergroup or a channel.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Pass False for all boolean parameters to demote a user. Returns True on success
 type PromoteChatMember struct {
-	ChatId              string
-	UserId              int
-	IsAnonymous         *bool
-	CanManageChat       *bool
-	CanDeleteMessages   *bool
-	CanManageVideoChats *bool
-	CanRestrictMembers  *bool
-	CanPromoteMembers   *bool
-	CanChangeInfo       *bool
-	CanInviteUsers      *bool
-	CanPostStories      *bool
-	CanEditStories      *bool
-	CanDeleteStories    *bool
-	CanPostMessages     *bool
-	CanEditMessages     *bool
-	CanPinMessages      *bool
-	CanManageTopics     *bool
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
+	//Pass True if the administrator's presence in the chat is hidden
+	IsAnonymous *bool `json:"is_anonymous,omitempty"`
+	//Pass True if the administrator can access the chat event log, get boost list,
+	//see hidden supergroup and channel members, report spam messages and ignore slow mode.
+	//Implied by any other administrator privilege.
+	CanManageChat *bool `json:"can_manage_chat,omitempty"`
+	//Pass True if the administrator can delete messages of other users
+	CanDeleteMessages *bool `json:"can_delete_messages,omitempty"`
+	//Pass True if the administrator can manage video chats
+	CanManageVideoChats *bool `json:"can_manage_video_chats,omitempty"`
+	//Pass True if the administrator can restrict, ban or unban chat members, or access supergroup statistics
+	CanRestrictMembers *bool `json:"can_restrict_members,omitempty"`
+	//Pass True if the administrator can add new administrators with a subset of their own privileges or
+	//demote administrators that they have promoted, directly or indirectly (promoted by administrators that were appointed by him)
+	CanPromoteMembers *bool `json:"can_promote_members,omitempty"`
+	//Pass True if the administrator can change chat title, photo and other settings
+	CanChangeInfo *bool `json:"can_change_info,omitempty"`
+	//Pass True if the administrator can invite new users to the chat
+	CanInviteUsers *bool `json:"can_invite_users,omitempty"`
+	//Pass True if the administrator can post stories to the chat
+	CanPostStories *bool `json:"can_post_stories,omitempty"`
+	//Pass True if the administrator can edit stories posted by other users,
+	//post stories to the chat page, pin chat stories, and access the chat's story archive
+	CanEditStories *bool `json:"can_edit_stories,omitempty"`
+	//Pass True if the administrator can delete stories posted by other users
+	CanDeleteStories *bool `json:"can_delete_stories,omitempty"`
+	//Pass True if the administrator can post messages in the channel, or access channel statistics; for channels only
+	CanPostMessages *bool `json:"can_post_messages,omitempty"`
+	//Pass True if the administrator can edit messages of other users and can pin messages; for channels only
+	CanEditMessages *bool `json:"can_edit_messages,omitempty"`
+	//Pass True if the administrator can pin messages; for supergroups only
+	CanPinMessages *bool `json:"can_pin_messages,omitempty"`
+	//Pass True if the user is allowed to create, rename, close, and reopen forum topics; for supergroups only
+	CanManageTopics *bool `json:"can_manage_topics,omitempty"`
 }
 
 func (p PromoteChatMember) Validate() error {
@@ -2181,10 +2353,14 @@ func (p PromoteChatMember) Execute() (*bool, error) {
 	return MakePostRequest[bool]("promoteChatMember", p)
 }
 
+// Use this method to set a custom title for an administrator in a supergroup promoted by the bot. Returns True on success.
 type SetChatAdministratorCustomTitle struct {
-	ChatId      string
-	UserId      int
-	CustomTitle string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
+	//New custom title for the administrator; 0-16 characters, emoji are not allowed
+	CustomTitle string `json:"custom_title"`
 }
 
 func (s SetChatAdministratorCustomTitle) Validate() error {
@@ -2216,8 +2392,14 @@ func (s SetChatAdministratorCustomTitle) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatAdministratorCustomTitle", s)
 }
 
+// Use this method to ban a channel chat in a supergroup or a channel. Until the chat is unbanned,
+// the owner of the banned chat won't be able to send messages on behalf of any of their channels.
+// The bot must be an administrator in the supergroup or channel for this to work and must have the appropriate administrator rights.
+// Returns True on success.
 type BanChatSenderChat struct {
-	ChatId       string
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string
+	//Unique identifier of the target sender chat
 	SenderChatId int
 }
 
@@ -2239,8 +2421,13 @@ func (b BanChatSenderChat) Execute() (*bool, error) {
 	return MakePostRequest[bool]("banChatSenderChat", b)
 }
 
+// Use this method to unban a previously banned channel chat in a supergroup or channel.
+// The bot must be an administrator for this to work and must have the appropriate administrator rights.
+// Returns True on success.
 type UnbanChatSenderChat struct {
-	ChatId       string
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string
+	//Unique identifier of the target sender chat
 	SenderChatId int
 }
 
@@ -2262,9 +2449,19 @@ func (b UnbanChatSenderChat) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unbanChatSenderChat", b)
 }
 
+// Use this method to set default chat permissions for all members.
+// The bot must be an administrator in the group or a supergroup for this to work and must have the can_restrict_members administrator rights.
+// Returns True on success.
 type SetChatPermissions struct {
-	ChatId                         string
-	Permissions                    objects.ChatPermissions
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string
+	//A JSON-serialized object for new default chat permissions
+	Permissions objects.ChatPermissions
+	//Pass True if chat permissions are set independently.
+	//Otherwise, the can_send_other_messages and can_add_web_page_previews permissions will imply the
+	//can_send_messages, can_send_audios, can_send_documents, can_send_photos,
+	// can_send_videos, can_send_video_notes, and can_send_voice_notes permissions;
+	//the can_send_polls permission will imply the can_send_messages permission.
 	UserIndependentChatPermissions *bool
 }
 
@@ -2283,7 +2480,15 @@ func (s SetChatPermissions) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatPermissions", s)
 }
 
+// Use this method to generate a new primary invite link for a chat; any previously generated primary link is revoked.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Returns the new invite link as String on success.
+//
+// Note: Each administrator in a chat generates their own invite links. Bots can't use invite links generated by other administrators.
+// If you want your bot to work with invite links, it will need to generate its own link using exportChatInviteLink or by calling the getChat method.
+// If your bot needs to generate a new primary invite link replacing its previous one, use exportChatInviteLink again.
 type ExportChatInviteLink struct {
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string
 }
 
@@ -2302,12 +2507,20 @@ func (e ExportChatInviteLink) Execute() (*string, error) {
 	return MakePostRequest[string]("exportChatInviteLink", e)
 }
 
+// Use this method to create an additional invite link for a chat.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// The link can be revoked using the method revokeChatInviteLink. Returns the new invite link as ChatInviteLink object.
 type CreateInviteLink struct {
-	ChatId             string
-	Name               *string
-	ExpireDate         *int
-	MemberLimit        *int
-	CreatesJoinRequest *bool
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Invite link name; 0-32 characters
+	Name *string `json:"name,omitempty"`
+	//Point in time (Unix timestamp) when the link will expire
+	ExpireDate *int `json:"expire_date,omitempty"`
+	//The maximum number of users that can be members of the chat simultaneously after joining the chat via this invite link; 1-99999
+	MemberLimit *int `json:"member_limit,omitempty"`
+	//True, if users joining the chat via the link need to be approved by chat administrators. If True, member_limit can't be specified
+	CreatesJoinRequest *bool `json:"creates_join_request,omitempty"`
 }
 
 func (c CreateInviteLink) Validate() error {
@@ -2335,16 +2548,25 @@ func (c CreateInviteLink) Execute() (*objects.ChatInviteLink, error) {
 	return MakePostRequest[objects.ChatInviteLink]("createInviteLink", c)
 }
 
-type EditInviteLink struct {
-	ChatId             string
-	InviteLink         string
-	Name               *string
-	ExpireDate         *int
-	MemberLimit        *int
-	CreatesJoinRequest *bool
+// Use this method to edit a non-primary invite link created by the bot.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Returns the edited invite link as a ChatInviteLink object.
+type EditChatInviteLink struct {
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//The invite link to edit
+	InviteLink string `json:"invite_link"`
+	//Invite link name; 0-32 characters
+	Name *string `json:"name,omitempty"`
+	//Point in time (Unix timestamp) when the link will expire
+	ExpireDate *int `json:"expire_date,omitempty"`
+	//The maximum number of users that can be members of the chat simultaneously after joining the chat via this invite link; 1-99999
+	MemberLimit *int `json:"member_limit,omitempty"`
+	//True, if users joining the chat via the link need to be approved by chat administrators. If True, member_limit can't be specified
+	CreatesJoinRequest *bool `json:"creates_join_request,omitempty"`
 }
 
-func (c EditInviteLink) Validate() error {
+func (c EditChatInviteLink) Validate() error {
 	if strings.TrimSpace(c.ChatId) == "" {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
@@ -2361,19 +2583,27 @@ func (c EditInviteLink) Validate() error {
 	return nil
 }
 
-func (c EditInviteLink) ToRequestBody() ([]byte, error) {
+func (c EditChatInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c EditInviteLink) Execute() (*objects.ChatInviteLink, error) {
+func (c EditChatInviteLink) Execute() (*objects.ChatInviteLink, error) {
 	return MakePostRequest[objects.ChatInviteLink]("editInviteLink", c)
 }
 
+// Use this method to create a subscription invite link for a channel chat.
+// The bot must have the can_invite_users administrator rights.
+// The link can be edited using the method editChatSubscriptionInviteLink or revoked using the method revokeChatInviteLink.
+// Returns the new invite link as a ChatInviteLink object.
 type CreateChatSubscriptionInviteLink struct {
-	ChatId             string
-	SubscriptionPeriod int
-	SubscriptionPrice  int
-	Name               *string
+	//Unique identifier for the target channel chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Invite link name; 0-32 characters
+	Name *string `json:"name,omitempty"`
+	//The number of seconds the subscription will be active for before the next payment. Currently, it must always be 2592000 (30 days).
+	SubscriptionPeriod int `json:"subscription_period"`
+	//The amount of Telegram Stars a user must pay initially and after each subsequent subscription period to be a member of the chat; 1-2500
+	SubscriptionPrice int `json:"subscription_price"`
 }
 
 func (c CreateChatSubscriptionInviteLink) Validate() error {
@@ -2402,10 +2632,16 @@ func (c CreateChatSubscriptionInviteLink) Execute() (*objects.ChatInviteLink, er
 	return MakePostRequest[objects.ChatInviteLink]("createChatSubscriptionInviteLink", c)
 }
 
+// Use this method to edit a subscription invite link created by the bot.
+// The bot must have the can_invite_users administrator rights.
+// Returns the edited invite link as a ChatInviteLink object.
 type EditChatSubscriptionInviteLink struct {
-	ChatId     string
-	InviteLink string
-	Name       *string
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//The invite link to edit
+	InviteLink string `json:"invite_link"`
+	//Invite link name; 0-32 characters
+	Name *string `json:"name,omitempty"`
 }
 
 func (c EditChatSubscriptionInviteLink) Validate() error {
@@ -2417,7 +2653,7 @@ func (c EditChatSubscriptionInviteLink) Validate() error {
 	}
 	if c.Name != nil {
 		if len(*c.Name) > 32 {
-			return objects.ErrInvalidParam("name parameter must not be longer than 32 characters")
+			return objects.ErrInvalidParam("name parameter must not be longer than 32 characters if specified")
 		}
 	}
 	return nil
@@ -2431,20 +2667,23 @@ func (c EditChatSubscriptionInviteLink) Execute() (*objects.ChatInviteLink, erro
 	return MakePostRequest[objects.ChatInviteLink]("editChatSubscriptionInviteLink", c)
 }
 
+// Use this method to revoke an invite link created by the bot.
+// If the primary link is revoked, a new link is automatically generated.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Returns the revoked invite link as ChatInviteLink object.
 type RevokeInviteLink struct {
-	ChatId     string
-	InviteLink string
-	Name       *string
+	//nique identifier of the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//The invite link to revoke
+	InviteLink string `json:"invite_link"`
 }
 
 func (c RevokeInviteLink) Validate() error {
 	if strings.TrimSpace(c.ChatId) == "" {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if c.Name != nil {
-		if len(*c.Name) > 32 {
-			return objects.ErrInvalidParam("name parameter must not be longer than 32 characters")
-		}
+	if strings.TrimSpace(c.InviteLink) == "" {
+		return objects.ErrInvalidParam("invite_link parameter can't be empty")
 	}
 	return nil
 }
@@ -2457,9 +2696,14 @@ func (c RevokeInviteLink) Execute() (*objects.ChatInviteLink, error) {
 	return MakePostRequest[objects.ChatInviteLink]("revokeInviteLink", c)
 }
 
+// Use this method to approve a chat join request.
+// The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right.
+// Returns True on success.
 type ApproveChatJoinRequest struct {
-	ChatId string
-	UserId int
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
 }
 
 func (s ApproveChatJoinRequest) Validate() error {
@@ -2480,9 +2724,14 @@ func (s ApproveChatJoinRequest) Execute() (*bool, error) {
 	return MakePostRequest[bool]("approveChatJoinRequest", s)
 }
 
+// Use this method to decline a chat join request.
+// The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right.
+// Returns True on success.
 type DeclineChatJoinRequest struct {
-	ChatId string
-	UserId int
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
 }
 
 func (s DeclineChatJoinRequest) Validate() error {
@@ -2504,8 +2753,8 @@ func (s DeclineChatJoinRequest) Execute() (*bool, error) {
 }
 
 type SetChatPhoto struct {
-	ChatId string
-	Photo  objects.InputFile
+	ChatId string            `json:"chat_id"`
+	Photo  objects.InputFile `json:"photo"`
 }
 
 func (s SetChatPhoto) Validate() error {
@@ -2518,16 +2767,43 @@ func (s SetChatPhoto) Validate() error {
 	return nil
 }
 
-func (s SetChatPhoto) ToRequestBody() ([]byte, error) {
-	return json.Marshal(s)
+func (s SetChatPhoto) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
+	if _, ok := s.Photo.(objects.InputFileFromRemote); ok {
+		return nil, nil, fmt.Errorf("can't use remote file when setting chat photo; only local files are supported")
+	}
+
+	buf := &bytes.Buffer{}
+	w := multipart.NewWriter(buf)
+
+	if err := w.WriteField("chat_id", s.ChatId); err != nil {
+		return nil, nil, err
+	}
+
+	part, err := w.CreateFormFile("photo", s.Photo.Name())
+	if err != nil {
+		return nil, nil, err
+	}
+	reader, err := s.Photo.Reader()
+	if err != nil {
+		return nil, nil, err
+	}
+	if _, err = io.Copy(part, reader); err != nil {
+		return nil, nil, err
+	}
+	w.Close()
+	return buf, w, nil
 }
 
 func (s SetChatPhoto) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setChatPhoto", s)
+	return MakeMultipartRequest[bool]("setChatPhoto", s)
 }
 
+// Use this method to delete a chat photo. Photos can't be changed for private chats.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Returns True on success.
 type DeleteChatPhoto struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (d DeleteChatPhoto) Validate() error {
@@ -2545,9 +2821,14 @@ func (d DeleteChatPhoto) Execute() (*bool, error) {
 	return MakePostRequest[bool]("deleteChatPhoto", d)
 }
 
+// Use this method to change the title of a chat. Titles can't be changed for private chats.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Returns True on success.
 type SetChatTitle struct {
-	ChatId string
-	Title  string
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//New chat title, 1-128 characters
+	Title string `json:"title"`
 }
 
 func (s SetChatTitle) Validate() error {
@@ -2568,8 +2849,13 @@ func (s SetChatTitle) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatTitle", s)
 }
 
+// Use this method to change the description of a group, a supergroup or a channel.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Returns True on success.
 type SetChatDescription struct {
-	ChatId      string
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string
+	//New chat description, 0-255 characters
 	Description string
 }
 
@@ -2591,11 +2877,20 @@ func (s SetChatDescription) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatTitle", s)
 }
 
+// Use this method to add a message to the list of pinned messages in a chat.
+// If the chat is not a private chat, the bot must be an administrator in the chat for this to work and
+// must have the 'can_pin_messages' administrator right in a supergroup or 'can_edit_messages' administrator right in a channel.
+// Returns True on success.
 type PinChatMessage struct {
-	ChatId               string
-	MessageId            int
-	BusinessConnectionId *string
-	DisableNotification  *bool
+	//Unique identifier of the business connection on behalf of which the message will be pinned
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Identifier of a message to pin
+	MessageId int `json:"message_id"`
+	//Pass True if it is not necessary to send a notification to all chat members about the new pinned message.
+	//Notifications are always disabled in channels and private chats.
+	DisableNotification *bool `json:"disable_notification,omitempty"`
 }
 
 func (p PinChatMessage) Validate() error {
@@ -2616,19 +2911,29 @@ func (p PinChatMessage) Execute() (*bool, error) {
 	return MakePostRequest[bool]("pinChatMessage", p)
 }
 
+// Use this method to remove a message from the list of pinned messages in a chat.
+// If the chat is not a private chat, the bot must be an administrator in the chat for this to work and
+// must have the 'can_pin_messages' administrator right in a supergroup or 'can_edit_messages' administrator right in a channel.
+// Returns True on success.
 type UnpinChatMessage struct {
-	ChatId               string
-	MessageId            int
-	BusinessConnectionId *string
+	//Unique identifier of the business connection on behalf of which the message will be unpinned
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Identifier of the message to unpin. Required if business_connection_id is specified. If not specified, the most recent pinned message (by sending date) will be unpinned.
+	MessageId *int `json:"message_id,omitempty"`
 }
 
 func (p UnpinChatMessage) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if p.MessageId < 1 {
-		return objects.ErrInvalidParam("message_id parameter can't be empty")
+	if p.MessageId != nil {
+		if *p.MessageId < 1 {
+			return objects.ErrInvalidParam("message_id parameter can't be empty")
+		}
 	}
+
 	return nil
 }
 
@@ -2640,8 +2945,13 @@ func (p UnpinChatMessage) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unpinChatMessage", p)
 }
 
+// Use this method to clear the list of pinned messages in a chat.
+// If the chat is not a private chat, the bot must be an administrator in the chat for this to work and
+// must have the 'can_pin_messages' administrator right in a supergroup or 'can_edit_messages' administrator right in a channel.
+// Returns True on success.
 type UnpinAllChatMessages struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (p UnpinAllChatMessages) Validate() error {
@@ -2659,8 +2969,10 @@ func (p UnpinAllChatMessages) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unpinAllChatMessages", p)
 }
 
+// Use this method for your bot to leave a group, supergroup or channel. Returns True on success.
 type LeaveChat struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (p LeaveChat) Validate() error {
@@ -2678,8 +2990,10 @@ func (p LeaveChat) Execute() (*bool, error) {
 	return MakePostRequest[bool]("leaveChat", p)
 }
 
+// Use this method to get up-to-date information about the chat. Returns a ChatFullInfo object on success.
 type GetChat struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (p GetChat) Validate() error {
@@ -2697,8 +3011,10 @@ func (p GetChat) Execute() (*objects.ChatFullInfo, error) {
 	return MakeGetRequest[objects.ChatFullInfo]("getChat", p)
 }
 
+// Use this method to get a list of administrators in a chat, which aren't bots. Returns an Array of ChatMember objects.
 type GetChatAdministrators struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (p GetChatAdministrators) Validate() error {
@@ -2716,8 +3032,10 @@ func (p GetChatAdministrators) Execute() (*[]objects.ChatMember, error) {
 	return MakeGetRequest[[]objects.ChatMember]("getChatAdministrators", p)
 }
 
+// Use this method to get the number of members in a chat. Returns Int on success.
 type GetChatMemberCount struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (p GetChatMemberCount) Validate() error {
@@ -2735,9 +3053,14 @@ func (p GetChatMemberCount) Execute() (*int, error) {
 	return MakeGetRequest[int]("getChatMemberCount", p)
 }
 
+// Use this method to get information about a member of a chat.
+// The method is only guaranteed to work for other users if the bot is an administrator in the chat.
+// Returns a ChatMember object on success.
 type GetChatMember struct {
-	ChatId string
-	UserId int
+	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
 }
 
 func (p GetChatMember) Validate() error {
@@ -2758,9 +3081,15 @@ func (p GetChatMember) Execute() (*objects.ChatMember, error) {
 	return MakeGetRequest[objects.ChatMember]("getChatMember", p)
 }
 
+// Use this method to set a new group sticker set for a supergroup.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method.
+// Returns True on success.
 type SetChatStickerSet struct {
-	ChatId         string
-	StickerSetName string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
+	//Name of the sticker set to be set as the group sticker set
+	StickerSetName string `json:"sticker_set_name"`
 }
 
 func (p SetChatStickerSet) Validate() error {
@@ -2781,8 +3110,13 @@ func (p SetChatStickerSet) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatStickerSet", p)
 }
 
+// Use this method to delete a group sticker set from a supergroup.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method.
+// Returns True on success.
 type DeleteChatStickerSet struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (p DeleteChatStickerSet) Validate() error {
@@ -2800,6 +3134,8 @@ func (p DeleteChatStickerSet) Execute() (*bool, error) {
 	return MakePostRequest[bool]("deleteChatStickerSet", p)
 }
 
+// Use this method to get custom emoji stickers, which can be used as a forum topic icon by any user.
+// Requires no parameters. Returns an Array of Sticker objects.
 type GetForumTopicIconStickers struct {
 }
 
@@ -2817,20 +3153,19 @@ func (g GetForumTopicIconStickers) Execute() (*[]objects.Sticker, error) {
 	return MakeGetRequest[[]objects.Sticker]("getForumTopicStickers", g)
 }
 
-var validIconColors = map[int]struct{}{
-	7322096:  {},
-	16766590: {},
-	13338331: {},
-	9367192:  {},
-	16749490: {},
-	16478047: {},
-}
-
+// Use this method to create a topic in a forum supergroup chat.
+// The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights.
+// Returns information about the created topic as a ForumTopic object.
 type CreateForumTopic struct {
-	ChatId            string
-	Name              string
-	IconColor         *int
-	IconCustomEmojiId *string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
+	//Topic name, 1-128 characters
+	Name string `json:"name"`
+	//Color of the topic icon in RGB format.
+	//Currently, must be one of 7322096 (0x6FB9F0), 16766590 (0xFFD67E), 13338331 (0xCB86DB), 9367192 (0x8EEE98), 16749490 (0xFF93B2), or 16478047 (0xFB6F5F)
+	IconColor *int `json:"icon_color,omitempty"`
+	//Unique identifier of the custom emoji shown as the topic icon. Use getForumTopicIconStickers to get all allowed custom emoji identifiers.
+	IconCustomEmojiId *string `json:"icon_custom_emoji_id,omitempty"`
 }
 
 func (c CreateForumTopic) Validate() error {
@@ -2841,6 +3176,14 @@ func (c CreateForumTopic) Validate() error {
 		return objects.ErrInvalidParam("name parameter must be between 1 and 128 characters long")
 	}
 	if c.IconColor != nil {
+		var validIconColors = map[int]struct{}{
+			7322096:  {},
+			16766590: {},
+			13338331: {},
+			9367192:  {},
+			16749490: {},
+			16478047: {},
+		}
 		if _, ok := validIconColors[*c.IconColor]; !ok {
 			return objects.ErrInvalidParam("icon_color must be one of 7322096 (0x6FB9F0), 16766590 (0xFFD67E), 13338331 (0xCB86DB), 9367192 (0x8EEE98), 16749490 (0xFF93B2), or 16478047 (0xFB6F5F)")
 		}
@@ -2856,11 +3199,21 @@ func (c CreateForumTopic) Execute() (*objects.ForumTopic, error) {
 	return MakePostRequest[objects.ForumTopic]("createForumTopic", c)
 }
 
+// Use this method to edit name and icon of a topic in a forum supergroup chat.
+// The bot must be an administrator in the chat for this to work and
+// must have the can_manage_topics administrator rights, unless it is the creator of the topic.
+// Returns True on success.
 type EditForumTopic struct {
-	ChatId            string
-	MessageThreadId   string
-	Name              *string
-	IconCustomEmojiId *string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier for the target message thread of the forum topic
+	MessageThreadId string `json:"message_thread_id"`
+	//New topic name, 0-128 characters. If not specified or empty, the current name of the topic will be kept
+	Name *string `json:"name,omitempty"`
+	//New unique identifier of the custom emoji shown as the topic icon.
+	//Use getForumTopicIconStickers to get all allowed custom emoji identifiers.
+	//Pass an empty string to remove the icon. If not specified, the current icon will be kept
+	IconCustomEmojiId *string `json:"icon_custom_emoji_id,omitempty"`
 }
 
 func (e EditForumTopic) Validate() error {
@@ -2886,9 +3239,14 @@ func (e EditForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("editForumTopic", e)
 }
 
+// Use this method to close an open topic in a forum supergroup chat.
+// The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights, unless it is the creator of the topic.
+// Returns True on success.
 type CloseForumTopic struct {
-	ChatId          string
-	MessageThreadId string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier for the target message thread of the forum topic
+	MessageThreadId string `json:"message_thread_id"`
 }
 
 func (e CloseForumTopic) Validate() error {
@@ -2909,9 +3267,15 @@ func (e CloseForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("closeForumTopic", e)
 }
 
+// Use this method to reopen a closed topic in a forum supergroup chat.
+// The bot must be an administrator in the chat for this to work and
+// must have the can_manage_topics administrator rights, unless it is the creator of the topic.
+// Returns True on success.
 type ReopenForumTopic struct {
-	ChatId          string
-	MessageThreadId string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier for the target message thread of the forum topic
+	MessageThreadId string `json:"message_thread_id"`
 }
 
 func (e ReopenForumTopic) Validate() error {
@@ -2932,9 +3296,14 @@ func (e ReopenForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("reopenForumTopic", e)
 }
 
+// Use this method to delete a forum topic along with all its messages in a forum supergroup chat.
+// The bot must be an administrator in the chat for this to work and must have the can_delete_messages administrator rights.
+// Returns True on success.
 type DeleteForumTopic struct {
-	ChatId          string
-	MessageThreadId string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier for the target message thread of the forum topic
+	MessageThreadId string `json:"message_thread_id"`
 }
 
 func (e DeleteForumTopic) Validate() error {
@@ -2955,9 +3324,15 @@ func (e DeleteForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("deleteForumTopic", e)
 }
 
+// Use this method to clear the list of pinned messages in a forum topic.
+// The bot must be an administrator in the chat for this to work and
+// must have the can_pin_messages administrator right in the supergroup.
+// Returns True on success.
 type UnpinAllForumTopicMessages struct {
-	ChatId          string
-	MessageThreadId string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier for the target message thread of the forum topic
+	MessageThreadId string `json:"message_thread_id"`
 }
 
 func (e UnpinAllForumTopicMessages) Validate() error {
@@ -2978,9 +3353,14 @@ func (e UnpinAllForumTopicMessages) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unpinAllForumTopicMessages", e)
 }
 
+// Use this method to edit the name of the 'General' topic in a forum supergroup chat.
+// The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights.
+// Returns True on success.
 type EditGeneralForumTopic struct {
-	ChatId string
-	Name   string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
+	//New topic name, 1-128 characters
+	Name string `json:"name"`
 }
 
 func (e EditGeneralForumTopic) Validate() error {
@@ -3001,8 +3381,13 @@ func (e EditGeneralForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("editGeneralForumTopic", e)
 }
 
+// Use this method to close an open 'General' topic in a forum supergroup chat.
+// The bot must be an administrator in the chat for this to work and
+// must have the can_manage_topics administrator rights.
+// Returns True on success.
 type CloseGeneralForumTopic struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (e CloseGeneralForumTopic) Validate() error {
@@ -3020,8 +3405,13 @@ func (e CloseGeneralForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("closeGeneralForumTopic", e)
 }
 
+// Use this method to reopen a closed 'General' topic in a forum supergroup chat.
+// The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights.
+// The topic will be automatically unhidden if it was hidden.
+// Returns True on success.
 type ReopenGeneralForumTopic struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (e ReopenGeneralForumTopic) Validate() error {
@@ -3039,8 +3429,12 @@ func (e ReopenGeneralForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("reopenGeneralForumTopic", e)
 }
 
+// Use this method to hide the 'General' topic in a forum supergroup chat.
+// The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights.
+// The topic will be automatically closed if it was open. Returns True on success.
 type HideGeneralForumTopic struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (e HideGeneralForumTopic) Validate() error {
@@ -3058,8 +3452,12 @@ func (e HideGeneralForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("hideGeneralForumTopic", e)
 }
 
+// Use this method to unhide the 'General' topic in a forum supergroup chat.
+// The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights.
+// Returns True on success.
 type UnhideGeneralForumTopic struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (e UnhideGeneralForumTopic) Validate() error {
@@ -3077,8 +3475,13 @@ func (e UnhideGeneralForumTopic) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unhideGeneralForumTopic", e)
 }
 
+// Use this method to clear the list of pinned messages in a General forum topic.
+// The bot must be an administrator in the chat for this to work and
+// must have the can_pin_messages administrator right in the supergroup.
+// Returns True on success.
 type UnpinAllGeneralForumTopicMessages struct {
-	ChatId string
+	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
+	ChatId string `json:"chat_id"`
 }
 
 func (e UnpinAllGeneralForumTopicMessages) Validate() error {
@@ -3096,12 +3499,29 @@ func (e UnpinAllGeneralForumTopicMessages) Execute() (*bool, error) {
 	return MakePostRequest[bool]("unpinAllGeneralForumTopicMessages", e)
 }
 
+// Use this method to send answers to callback queries sent from inline keyboards.
+// The answer will be displayed to the user as a notification at the top of the chat screen or as an alert.
+// On success, True is returned.
+//
+// Alternatively, the user can be redirected to the specified Game URL.
+// For this option to work, you must first create a game for your bot via @BotFather and accept the terms.
+// Otherwise, you may use links like t.me/your_bot?start=XXXX that open your bot with a parameter.
 type AnswerCallbackQuery struct {
-	CallbackQueryId string
-	Text            *string
-	ShowAlert       *bool
-	Url             *string
-	CacheTime       *int
+	//Unique identifier for the query to be answered
+	CallbackQueryId string `json:"callback_query_id"`
+	//Text of the notification. If not specified, nothing will be shown to the user, 0-200 characters
+	Text *string `json:"text"`
+	//If True, an alert will be shown by the client instead of a notification at the top of the chat screen. Defaults to false.
+	ShowAlert *bool `json:"show_alert"`
+	//URL that will be opened by the user's client.
+	//If you have created a Game and accepted the conditions via @BotFather,
+	//specify the URL that opens your game - note that this will only work if the query comes from a callback_game button.
+	//
+	//Otherwise, you may use links like t.me/your_bot?start=XXXX that open your bot with a parameter.
+	Url *string `json:"url"`
+	//The maximum amount of time in seconds that the result of the callback query may be cached client-side.
+	//Telegram apps will support caching starting in version 3.14. Defaults to 0.
+	CacheTime *int `json:"cache_time"`
 }
 
 func (a AnswerCallbackQuery) Validate() error {
@@ -3110,7 +3530,7 @@ func (a AnswerCallbackQuery) Validate() error {
 	}
 	if a.Text != nil {
 		if len(*a.Text) > 200 {
-			return objects.ErrInvalidParam("text parameter must not be longer than 200 characters ")
+			return objects.ErrInvalidParam("text parameter must not be longer than 200 characters if specified")
 		}
 	}
 	return nil
@@ -3124,9 +3544,12 @@ func (a AnswerCallbackQuery) Execute() (*bool, error) {
 	return MakePostRequest[bool]("answerCallbackQuery", a)
 }
 
+// Use this method to get the list of boosts added to a chat by a user. Requires administrator rights in the chat. Returns a UserChatBoosts object.
 type GetUserChatBoosts struct {
-	ChatId string
-	UserId int
+	//Unique identifier for the chat or username of the channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Unique identifier of the target user
+	UserId int `json:"user_id"`
 }
 
 func (g GetUserChatBoosts) Validate() error {
@@ -3147,8 +3570,11 @@ func (g GetUserChatBoosts) Execute() (*objects.UserChatBoosts, error) {
 	return MakeGetRequest[objects.UserChatBoosts]("getUserChatBoosts", g)
 }
 
+// Use this method to get information about the connection of the bot with a business account.
+// Returns a BusinessConnection object on success.
 type GetBusinessConnection struct {
-	BusinessConnectionId string
+	//Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
 }
 
 func (g GetBusinessConnection) Validate() error {
@@ -3166,15 +3592,24 @@ func (g GetBusinessConnection) Execute() (*objects.BusinessConnection, error) {
 	return MakeGetRequest[objects.BusinessConnection]("getBusinessConnection", g)
 }
 
+// Use this method to change the list of the bot's commands. See this manual for more details about bot commands. Returns True on success.
 type SetMyCommands struct {
-	Commands     []objects.BotCommand
-	Scope        *objects.BotCommandScope
-	LanguageCode *string
+	//A JSON-serialized list of bot commands to be set as the list of the bot's commands. At most 100 commands can be specified.
+	Commands []objects.BotCommand `json:"commands"`
+	//A JSON-serialized object, describing scope of users for which the commands are relevant. Defaults to BotCommandScopeDefault.
+	Scope objects.BotCommandScope `json:"scope,omitempty"`
+	//A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands
+	LanguageCode *string `json:"language_code,omitempty"`
 }
 
 func (s SetMyCommands) Validate() error {
 	for _, command := range s.Commands {
 		if err := command.Validate(); err != nil {
+			return err
+		}
+	}
+	if s.Scope != nil {
+		if err := s.Scope.Validate(); err != nil {
 			return err
 		}
 	}
@@ -3196,15 +3631,24 @@ func (s SetMyCommands) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setMyCommands", s)
 }
 
+// Use this method to delete the list of the bot's commands for the given scope and user language.
+// After deletion, higher level commands will be shown to affected users. Returns True on success.
 type DeleteMyCommands struct {
-	Scope        *objects.BotCommandScope
-	LanguageCode *string
+	//A JSON-serialized object, describing scope of users for which the commands are relevant. Defaults to BotCommandScopeDefault.
+	Scope objects.BotCommandScope `json:"scope,omitempty"`
+	//A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands
+	LanguageCode *string `json:"language_code,omitempty"`
 }
 
 func (s DeleteMyCommands) Validate() error {
 	if s.LanguageCode != nil && *s.LanguageCode != "" {
 		if !iso6391.ValidCode(*s.LanguageCode) {
 			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	if s.Scope != nil {
+		if err := s.Scope.Validate(); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -3218,15 +3662,24 @@ func (s DeleteMyCommands) Execute() (*bool, error) {
 	return MakePostRequest[bool]("deleteMyCommands", s)
 }
 
+// Use this method to get the current list of the bot's commands for the given scope and user language.
+// Returns an Array of BotCommand objects. If commands aren't set, an empty list is returned.
 type GetMyCommands struct {
-	Scope        *objects.BotCommandScope
-	LanguageCode *string
+	//A JSON-serialized object, describing scope of users. Defaults to BotCommandScopeDefault.
+	Scope objects.BotCommandScope `json:"scope,omitempty"`
+	//A two-letter ISO 639-1 language code or an empty string
+	LanguageCode *string `json:"language_code,omitempty"`
 }
 
 func (s GetMyCommands) Validate() error {
 	if s.LanguageCode != nil && *s.LanguageCode != "" {
 		if !iso6391.ValidCode(*s.LanguageCode) {
 			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
+		}
+	}
+	if s.Scope != nil {
+		if err := s.Scope.Validate(); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -3240,9 +3693,12 @@ func (s GetMyCommands) Execute() (*[]objects.BotCommand, error) {
 	return MakeGetRequest[[]objects.BotCommand]("getMyCommands", s)
 }
 
+// Use this method to change the bot's name. Returns True on success.
 type SetMyName struct {
-	Name         *string
-	LanguageCode *string
+	//New bot name; 0-64 characters. Pass an empty string to remove the dedicated name for the given language.
+	Name *string `json:"name,omitempty"`
+	//A two-letter ISO 639-1 language code. If empty, the name will be shown to all users for whose language there is no dedicated name.
+	LanguageCode *string `json:"language_code,omitempty"`
 }
 
 func (s SetMyName) Validate() error {
@@ -3267,8 +3723,10 @@ func (s SetMyName) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setMyName", s)
 }
 
+// Use this method to get the current bot name for the given user language. Returns BotName on success.
 type GetMyName struct {
-	LanguageCode *string
+	//A two-letter ISO 639-1 language code or an empty string
+	LanguageCode *string `json:"language_code,omitempty"`
 }
 
 func (s GetMyName) Validate() error {
@@ -3288,9 +3746,12 @@ func (s GetMyName) Execute() (*objects.BotName, error) {
 	return MakeGetRequest[objects.BotName]("getMyName", s)
 }
 
+// Use this method to change the bot's description, which is shown in the chat with the bot if the chat is empty. Returns True on success.
 type SetMyDescription struct {
-	Description  *string
-	LanguageCode *string
+	//New bot description; 0-512 characters. Pass an empty string to remove the dedicated description for the given language.
+	Description *string `json:"description,omitempty"`
+	//A two-letter ISO 639-1 language code. If empty, the description will be applied to all users for whose language there is no dedicated description.
+	LanguageCode *string `json:"language_code,omitempty"`
 }
 
 func (s SetMyDescription) Validate() error {
@@ -3315,8 +3776,10 @@ func (s SetMyDescription) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setMyDescription", s)
 }
 
+// Use this method to get the current bot description for the given user language. Returns BotDescription on success.
 type GetMyDescription struct {
-	LanguageCode *string
+	//A two-letter ISO 639-1 language code or an empty string
+	LanguageCode *string `json:"language_code,omitempty"`
 }
 
 func (s GetMyDescription) Validate() error {
@@ -3336,9 +3799,13 @@ func (s GetMyDescription) Execute() (*objects.BotDescription, error) {
 	return MakeGetRequest[objects.BotDescription]("getMyDescription", s)
 }
 
+// Use this method to change the bot's short description, which is shown on the bot's profile page and is sent together with the link when users share the bot.
+// Returns True on success.
 type SetMyShortDescription struct {
-	ShortDescription *string
-	LanguageCode     *string
+	//New short description for the bot; 0-120 characters. Pass an empty string to remove the dedicated short description for the given language.
+	ShortDescription *string `json:"short_description,omitempty"`
+	//A two-letter ISO 639-1 language code. If empty, the short description will be applied to all users for whose language there is no dedicated short description.
+	LanguageCode *string `json:"language_code,omitempty"`
 }
 
 func (s SetMyShortDescription) Validate() error {
@@ -3363,8 +3830,10 @@ func (s SetMyShortDescription) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setMyShortDescription", s)
 }
 
+// Use this method to get the current bot short description for the given user language. Returns BotShortDescription on success.
 type GetMyShortDescription struct {
-	LanguageCode *string
+	//A two-letter ISO 639-1 language code or an empty string
+	LanguageCode *string `json:"language_code,omitempty"`
 }
 
 func (s GetMyShortDescription) Validate() error {
@@ -3384,9 +3853,12 @@ func (s GetMyShortDescription) Execute() (*bool, error) {
 	return MakeGetRequest[bool]("getMyShortDescription", s)
 }
 
+// Use this method to change the bot's menu button in a private chat, or the default menu button. Returns True on success.
 type SetChatMenuButton struct {
-	ChatId     *string
-	MenuButton objects.MenuButton
+	//Unique identifier for the target private chat. If not specified, default bot's menu button will be changed
+	ChatId *string `json:"chat_id,omitempty"`
+	//A JSON-serialized object for the bot's new menu button. Defaults to MenuButtonDefault
+	MenuButton objects.MenuButton `json:"menu_button,omitempty"`
 }
 
 func (s SetChatMenuButton) Validate() error {
@@ -3411,8 +3883,11 @@ func (s SetChatMenuButton) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setChatMenuButton", s)
 }
 
+// Use this method to get the current value of the bot's menu button in a private chat, or the default menu button.
+// Returns MenuButton on success.
 type GetChatMenuButton struct {
-	ChatId *int
+	//Unique identifier for the target private chat. If not specified, default bot's menu button will be returned
+	ChatId *int `json:"chat_id,omitempty"`
 }
 
 func (s GetChatMenuButton) Validate() error {
@@ -3432,9 +3907,15 @@ func (s GetChatMenuButton) Execute() (*objects.MenuButtonResponse, error) {
 	return MakeGetRequest[objects.MenuButtonResponse]("setChatMenuButton", s)
 }
 
+// Use this method to change the default administrator rights requested by the bot when it's added as an administrator to groups or channels.
+// These rights will be suggested to users, but they are free to modify the list before adding the bot.
+// Returns True on success.
 type SetMyDefaultAdministratorRights struct {
-	Rights      *objects.ChatAdministratorRights
-	ForChannels *bool
+	//A JSON-serialized object describing new default administrator rights. If not specified, the default administrator rights will be cleared.
+	Rights *objects.ChatAdministratorRights `json:"rights,omitempty"`
+	//Pass True to change the default administrator rights of the bot in channels.
+	//Otherwise, the default administrator rights of the bot for groups and supergroups will be changed.
+	ForChannels *bool `json:"for_channels,omitempty"`
 }
 
 // always nil
@@ -3450,8 +3931,11 @@ func (s SetMyDefaultAdministratorRights) Execute() (*bool, error) {
 	return MakePostRequest[bool]("setMyDefaultAdministratorRights", s)
 }
 
+// Use this method to get the current default administrator rights of the bot. Returns ChatAdministratorRights on success.
 type GetMyDefaultAdministratorRights struct {
-	ForChannels *bool
+	//Pass True to get default administrator rights of the bot in channels.
+	//Otherwise, default administrator rights of the bot for groups and supergroups will be returned.
+	ForChannels *bool `json:"for_channels,omitempty"`
 }
 
 // always nil

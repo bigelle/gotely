@@ -2757,6 +2757,7 @@ type ChatLocation struct {
 //
 // - ReactionTypePaid
 type ReactionType interface {
+	Validable
 	GetReactionType() string
 }
 
