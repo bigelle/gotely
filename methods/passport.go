@@ -1,7 +1,7 @@
 package methods
 
 import (
-	"github.com/bigelle/tele.go/objects"
+	"github.com/bigelle/gotely/objects"
 )
 
 type SetPassportDataErrors struct {

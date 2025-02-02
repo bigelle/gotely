@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/bigelle/tele.go/objects"
+	"github.com/bigelle/gotely/objects"
 )
 
 type ErrBadBot struct {

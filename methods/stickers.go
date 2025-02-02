@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/bigelle/tele.go/objects"
+	"github.com/bigelle/gotely/objects"
 )
 
 type SendSticker[T int | string] struct {

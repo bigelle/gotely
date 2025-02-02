@@ -3417,18 +3417,16 @@ type ResponseParameters struct {
 //
 // - InputMediaVideo
 type InputMedia interface {
-	SetInputMedia(media string, isNew bool)
-	Validate() error
-} //TODO: media field should be referring to file name inside multipart part, as "media": "attach://filename"
-
-var (
-	url_regex        = regexp.MustCompile(`^https?://`)
-	attachment_regex = regexp.MustCompile(`^attach://[\w-]+$`)
-)
+	SetMedia(r io.Reader)
+	IsLocalFile() bool
+	Deattach() string
+	GetReader() io.Reader
+	Validable
+} //TODO: media field should be referring to file name inside multipart part, as "media": "attach://filename" (or should it?)
 
 // Represents a photo to be sent.
 //
-// IMPORTANT: It is strongly recommended to use the SetInputMedia method to ensure
+// IMPORTANT: It is strongly recommended to use the SetMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaPhoto struct {
@@ -3449,36 +3447,39 @@ type InputMediaPhoto struct {
 	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
 	//Optional. Pass True if the photo needs to be covered with a spoiler animation
 	HasSpoiler *bool `json:"has_spoiler,omitempty"`
-	isNew      bool  `json:"-"`
+	//Required. Pass true if photo is a local file
+	IsLocal bool `json:"-"`
+	//Optional. Required if photo is a local file
+	Reader io.Reader `json:"-"`
 }
 
-func (i *InputMediaPhoto) SetInputMedia(media string, isNew bool) {
-	if isNew {
-		if url_regex.MatchString(media) {
-			i.Media = media
-		} else {
-			i.Media = "attach://" + media
-		}
-	} else {
-		i.Media = media
-		i.isNew = false
-	}
+func (i *InputMediaPhoto) SetMedia(r io.Reader) {
+	i.Reader = r
+	i.IsLocal = true
+}
+
+func (i InputMediaPhoto) IsLocalFile() bool {
+	return i.IsLocal
+}
+
+func (i InputMediaPhoto) Deattach() string {
+	return i.Media[9:]
+}
+
+func (i InputMediaPhoto) GetReader() io.Reader {
+	return i.Reader
 }
 
 func (i InputMediaPhoto) Validate() error {
 	if i.Type != "photo" {
 		return ErrInvalidParam("type must be photo")
 	}
-	if strings.TrimSpace(i.Media) == "" {
+	if len(i.Media) == 0 {
 		return ErrInvalidParam("media parameter can't be empty")
 	}
-
-	if i.isNew {
-		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		}
+	if i.IsLocal && i.Reader == nil {
+		return ErrInvalidParam("reader can't be nil if file is local")
 	}
-
 	return nil
 }
 
@@ -3525,11 +3526,11 @@ type InputMediaVideo struct {
 
 func (i *InputMediaVideo) SetInputMedia(media string, isNew bool) {
 	if isNew {
-		if url_regex.MatchString(media) {
-			i.Media = media
-		} else {
-			i.Media = "attach://" + media
-		}
+		// if url_regex.MatchString(media) {
+		// 	i.Media = media
+		// } else {
+		// 	i.Media = "attach://" + media
+		// }
 	} else {
 		i.Media = media
 		i.isNew = false
@@ -3545,9 +3546,9 @@ func (i InputMediaVideo) Validate() error {
 	}
 
 	if i.isNew {
-		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		}
+		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
+		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+		// }
 	}
 
 	return nil
@@ -3594,11 +3595,11 @@ type InputMediaAnimation struct {
 
 func (i *InputMediaAnimation) SetInputMedia(media string, isNew bool) {
 	if isNew {
-		if url_regex.MatchString(media) {
-			i.Media = media
-		} else {
-			i.Media = "attach://" + media
-		}
+		// if url_regex.MatchString(media) {
+		// 	i.Media = media
+		// } else {
+		// 	i.Media = "attach://" + media
+		// }
 	} else {
 		i.Media = media
 		i.isNew = false
@@ -3614,9 +3615,9 @@ func (i InputMediaAnimation) Validate() error {
 	}
 
 	if i.isNew {
-		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		}
+		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
+		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+		// }
 	}
 	return nil
 }
@@ -3658,11 +3659,11 @@ type InputMediaAudio struct {
 
 func (i *InputMediaAudio) SetInputMedia(media string, isNew bool) {
 	if isNew {
-		if url_regex.MatchString(media) {
-			i.Media = media
-		} else {
-			i.Media = "attach://" + media
-		}
+		// if url_regex.MatchString(media) {
+		// 	i.Media = media
+		// } else {
+		// 	i.Media = "attach://" + media
+		// }
 	} else {
 		i.Media = media
 		i.isNew = false
@@ -3678,9 +3679,9 @@ func (i InputMediaAudio) Validate() error {
 	}
 
 	if i.isNew {
-		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		}
+		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
+		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+		// }
 	}
 	return nil
 }
@@ -3720,11 +3721,11 @@ type InputMediaDocument struct {
 
 func (i *InputMediaDocument) SetInputMedia(media string, isNew bool) {
 	if isNew {
-		if url_regex.MatchString(media) {
-			i.Media = media
-		} else {
-			i.Media = "attach://" + media
-		}
+		// if url_regex.MatchString(media) {
+		// 	i.Media = media
+		// } else {
+		// 	i.Media = "attach://" + media
+		// }
 	} else {
 		i.Media = media
 		i.isNew = false
@@ -3740,36 +3741,38 @@ func (i InputMediaDocument) Validate() error {
 	}
 
 	if i.isNew {
-		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		}
+		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
+		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+		// }
 	}
 	return nil
 }
 
-// FIXME: should be an interface with 3 implementations:
-// 1. a byte slice
-// 2. a file path
-// 3. a file id
+// InputFile represents a file to be uploaded.
+// It supports different sources (local path, byte data, or remote identifier) and must be posted using multipart/form-data.
 type InputFile interface {
 	Validable
-	Name() string
-	Reader() (io.Reader, error)
-	IsLocal() bool
+	Name() string               // Returns the file name.
+	Reader() (io.Reader, error) // Returns an io.Reader for the file content.
+	IsLocal() bool              // Indicates if the file is stored locally.
 }
 
+// InputFileFromPath represents a file stored on the local filesystem.
 type InputFileFromPath struct {
-	FilePath string
+	FilePath string // Absolute or relative path to the file.
 }
 
+// Returns the base name of the file.
 func (i InputFileFromPath) Name() string {
 	return filepath.Base(i.FilePath)
 }
 
+// Opens the file for reading.
 func (i InputFileFromPath) Reader() (io.Reader, error) {
 	return os.Open(i.FilePath)
 }
 
+// Validates the file path and checks file existence.
 func (i InputFileFromPath) Validate() error {
 	if i.FilePath == "" {
 		return ErrInvalidParam("file path can't be empty")
@@ -3780,23 +3783,28 @@ func (i InputFileFromPath) Validate() error {
 	return nil
 }
 
+// Always returns true.
 func (i InputFileFromPath) IsLocal() bool {
 	return true
 }
 
+// InputFileFromBytes represents a file created from in-memory byte data.
 type InputFileFromBytes struct {
-	FileName string
-	Data     []byte
+	FileName string // Name of the file (used in upload).
+	Data     []byte // File content as a byte slice.
 }
 
+// Returns the file name.
 func (i InputFileFromBytes) Name() string {
 	return i.FileName
 }
 
+// Creates a reader for the byte slice.
 func (i InputFileFromBytes) Reader() (io.Reader, error) {
 	return bytes.NewReader(i.Data), nil
 }
 
+// Validates the file name and content length.
 func (i InputFileFromBytes) Validate() error {
 	if i.FileName == "" {
 		return ErrInvalidParam("file name can't be empty")
@@ -3807,12 +3815,15 @@ func (i InputFileFromBytes) Validate() error {
 	return nil
 }
 
+// Always returns true.
 func (i InputFileFromBytes) IsLocal() bool {
 	return true
 }
 
+// InputFileFromRemote represents a file identified by a remote ID or URL.
 type InputFileFromRemote string
 
+// Validates the remote FileId or URL.
 func (i InputFileFromRemote) Validate() error {
 	if i == "" {
 		return ErrInvalidParam("file id or url can't be empty")
@@ -3820,14 +3831,17 @@ func (i InputFileFromRemote) Validate() error {
 	return nil
 }
 
+// Returns an empty string (remote files don't have a local name).
 func (i InputFileFromRemote) Name() string {
 	return ""
 }
 
+// Always returns an error (no reader for remote files).
 func (i InputFileFromRemote) Reader() (io.Reader, error) {
 	return nil, fmt.Errorf("remote file can't have reader")
 }
 
+// Always returns false.
 func (i InputFileFromRemote) IsLocal() bool {
 	return false
 }
@@ -3867,20 +3881,20 @@ func (i InputPaidMediaPhoto) Validate() error {
 	}
 
 	if i.isNew {
-		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		}
+		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
+		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+		// }
 	}
 	return nil
 }
 
 func (i *InputPaidMediaPhoto) SetInputPaidMedia(media string, isNew bool) {
 	if isNew {
-		if url_regex.MatchString(media) {
-			i.Media = media
-		} else {
-			i.Media = "attach://" + media
-		}
+		// if url_regex.MatchString(media) {
+		// 	i.Media = media
+		// } else {
+		// 	i.Media = "attach://" + media
+		// }
 	} else {
 		i.Media = media
 		i.isNew = false
@@ -3920,11 +3934,11 @@ type InputPaidMediaVideo struct {
 
 func (i *InputPaidMediaVideo) SetInputPaidMedia(media string, isNew bool) {
 	if isNew {
-		if url_regex.MatchString(media) {
-			i.Media = media
-		} else {
-			i.Media = "attach://" + media
-		}
+		// if url_regex.MatchString(media) {
+		// 	i.Media = media
+		// } else {
+		// 	i.Media = "attach://" + media
+		// }
 	} else {
 		i.Media = media
 		i.isNew = false
@@ -3940,9 +3954,9 @@ func (i InputPaidMediaVideo) Validate() error {
 	}
 
 	if i.isNew {
-		if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-			return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		}
+		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
+		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
+		// }
 	}
 	return nil
 }

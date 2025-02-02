@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/bigelle/tele.go/objects"
+	"github.com/bigelle/gotely/objects"
 )
 
 type SendInvoice[T int | string] struct {

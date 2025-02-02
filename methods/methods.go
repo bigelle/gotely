@@ -1,3 +1,6 @@
+// TODO: make optional and required fields more obvious
+// TODO: add documentation for struct methods in Go style
+// TODO: replace iso6391 dependency with self-made function OR package (do i need it?)
 package methods
 
 import (
@@ -8,7 +11,7 @@ import (
 	"mime/multipart"
 	"strings"
 
-	"github.com/bigelle/tele.go/objects"
+	"github.com/bigelle/gotely/objects"
 	iso6391 "github.com/emvi/iso-639-1"
 )
 
@@ -1665,7 +1668,7 @@ type SendMediaGroup struct {
 	//An array describing messages to be sent, must include 2-10 items
 	Media []objects.InputMedia `json:"media"`
 	//Sends messages silently. Users will receive a notif,omitemptyication with no sound.
-	DisableNotification *bool `json:"disable_notification"`
+	DisableNotification *bool `json:"disable_notification,omitempty"`
 	//Protects the contents of the sent messages from forwarding and saving
 	ProtectContent *bool `json:"protect_content,omitempty"`
 	// /Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message.
@@ -1695,12 +1698,77 @@ func (s SendMediaGroup) Validate() error {
 	return nil
 }
 
-func (s SendMediaGroup) ToRequestBody() ([]byte, error) {
-	return json.Marshal(s)
+func (s SendMediaGroup) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
+	b := &bytes.Buffer{}
+	w := multipart.NewWriter(b)
+
+	if s.BusinessConnectionId != nil {
+		if err := w.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+			return nil, nil, err
+		}
+	}
+	if err := w.WriteField("chat_id", s.ChatId); err != nil {
+		return nil, nil, err
+	}
+	if s.MessageThreadId != nil {
+		if err := w.WriteField("message_thread_id", *s.MessageThreadId); err != nil {
+			return nil, nil, err
+		}
+	}
+	by, err := json.Marshal(s.Media)
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := w.WriteField("media", string(by)); err != nil {
+		return nil, nil, err
+	}
+	if s.DisableNotification != nil {
+		if err := w.WriteField("disable_notification", fmt.Sprint(s.DisableNotification)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ProtectContent != nil {
+		if err := w.WriteField("protect_content", fmt.Sprint(s.ProtectContent)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.AllowPaidBroadcast != nil {
+		if err := w.WriteField("allow_paid_broadcast", fmt.Sprint(s.AllowPaidBroadcast)); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.MessageEffectId != nil {
+		if err := w.WriteField("message_effect_id", *s.MessageEffectId); err != nil {
+			return nil, nil, err
+		}
+	}
+	if s.ReplyParameters != nil {
+		by, err := json.Marshal(s.ReplyParameters)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := w.WriteField("reply_parameters", string(by)); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	for _, media := range s.Media {
+		if media.IsLocalFile() {
+			part, err := w.CreateFormFile(media.Deattach(), media.Deattach())
+			if err != nil {
+				return nil, nil, err
+			}
+			if _, err := io.Copy(part, media.GetReader()); err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+	w.Close()
+	return b, w, nil
 }
 
-func (s SendMediaGroup) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("sendMediaGroup", s)
+func (s SendMediaGroup) Execute() (*[]objects.Message, error) {
+	return MakeMultipartRequest[[]objects.Message]("sendMediaGroup", s)
 }
 
 // Use this method to send point on the map. On success, the sent Message is returned.

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/bigelle/tele.go/objects"
+	"github.com/bigelle/gotely/objects"
 )
 
 // MessageOrBool represents the result of "edit-" methods in the Telegram Bot API.
@@ -21,19 +21,43 @@ type MessageOrBool struct {
 	Bool    *bool
 }
 
-type EditMessageText[T int | string] struct {
-	ChatId               *T
-	Text                 string
-	BusinessConnectionId *string
-	MessageId            *int
-	InlineMessageId      *string
-	ParseMode            *string
-	Entities             *[]objects.MessageEntity
-	LinkPreviewOptions   *objects.LinkPreviewOptions
-	ReplyMarkup          *objects.InlineKeyboardMarkup
+// Use this method to edit text and game messages.
+// On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned.
+// Note that business messages that were not sent by the bot and
+// do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
+type EditMessageText struct {
+	//Optional:
+	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Optional:
+	//Required if inline_message_id is not specified.
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId *string `json:"chat_id,omitempty"`
+	//Optional:
+	//Required if inline_message_id is not specified. Identifier of the message to edit
+	MessageId *int `json:"message_id,omitempty"`
+	//Optional:
+	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	InlineMessageId *string `json:"inline_message_id,omitempty"`
+	//Required:
+	//New text of the message, 1-4096 characters after entities parsing
+	Text string `json:"text"`
+	//Optional:
+	//Mode for parsing entities in the message text.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional:
+	//A JSON-serialized list of special entities that appear in message text, which can be specified instead of parse_mode
+	Entities *[]objects.MessageEntity `json:"entities,omitempty"`
+	//Optional:
+	//Link preview generation options for the message
+	LinkPreviewOptions *objects.LinkPreviewOptions `json:"link_preview_options,omitempty"`
+	//Optional:
+	//A JSON-serialized object for an inline keyboard.
+	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
-func (e EditMessageText[T]) Validate() error {
+func (e EditMessageText) Validate() error {
 	if len(e.Text) < 1 || len(e.Text) > 4096 {
 		return objects.ErrInvalidParam("text parameter must be between 1 and 4096 characters")
 	}
@@ -43,7 +67,7 @@ func (e EditMessageText[T]) Validate() error {
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil {
+		if e.ChatId == nil && len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
@@ -76,11 +100,11 @@ func (e EditMessageText[T]) Validate() error {
 	return nil
 }
 
-func (e EditMessageText[T]) ToRequestBody() ([]byte, error) {
+func (e EditMessageText) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditMessageText[T]) Execute() (MessageOrBool, error) {
+func (e EditMessageText) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
 		b, err := MakePostRequest[bool]("editMessageText", e)
@@ -98,19 +122,43 @@ func (e EditMessageText[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type EditMessageCaption[T int | string] struct {
-	ChatId                *T
-	Caption               *string
-	BusinessConnectionId  *string
-	MessageId             *int
-	InlineMessageId       *string
-	ParseMode             *string
-	Entities              *[]objects.MessageEntity
-	ShowCaptionAboveMedia *bool
-	ReplyMarkup           *objects.InlineKeyboardMarkup
+// Use this method to edit captions of messages.
+// On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned.
+// Note that business messages that were not sent by the bot and
+// do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
+type EditMessageCaption struct {
+	//Optional:
+	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Optional:
+	//Required if inline_message_id is not specified.
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId *string `json:"chat_id,omitempty"`
+	//Optional:
+	//Required if inline_message_id is not specified. Identifier of the message to edit
+	MessageId *int `json:"message_id,omitempty"`
+	//Optional:
+	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	InlineMessageId *string `json:"inline_message_id,omitempty"`
+	//Optional:
+	//New caption of the message, 0-1024 characters after entities parsing
+	Caption *string `json:"caption"`
+	//Optional:
+	//Mode for parsing entities in the message caption.
+	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	//Optional:
+	//A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
+	CaptionEntities *[]objects.MessageEntity `json:"caption_entities,omitempty"`
+	//Optional:
+	//Pass True, if the caption must be shown above the message media. Supported only for animation, photo and video messages.
+	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
+	//Optional:
+	//A JSON-serialized object for an inline keyboard.
+	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
-func (e EditMessageCaption[T]) Validate() error {
+func (e EditMessageCaption) Validate() error {
 	if e.Caption != nil {
 		if len(*e.Caption) < 1 || len(*e.Caption) > 4096 {
 			return objects.ErrInvalidParam("caption parameter must be between 1 and 4096 characters")
@@ -122,7 +170,7 @@ func (e EditMessageCaption[T]) Validate() error {
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil {
+		if e.ChatId == nil && len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
@@ -144,7 +192,7 @@ func (e EditMessageCaption[T]) Validate() error {
 			}
 		}
 	}
-	if e.Entities != nil && e.ParseMode != nil {
+	if e.CaptionEntities != nil && e.ParseMode != nil {
 		return objects.ErrInvalidParam("entities can't be used if parse_mode is provided")
 	}
 	if e.ReplyMarkup != nil {
@@ -155,11 +203,11 @@ func (e EditMessageCaption[T]) Validate() error {
 	return nil
 }
 
-func (e EditMessageCaption[T]) ToRequestBody() ([]byte, error) {
+func (e EditMessageCaption) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditMessageCaption[T]) Execute() (MessageOrBool, error) {
+func (e EditMessageCaption) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
 		b, err := MakePostRequest[bool]("editMessageCaption", e)
@@ -177,17 +225,24 @@ func (e EditMessageCaption[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type EditMessageMedia[T int | string] struct {
-	Media                 objects.InputMedia
-	ChatId                *T
-	BusinessConnectionId  *string
-	MessageId             *int
-	InlineMessageId       *string
-	ShowCaptionAboveMedia *bool
-	ReplyMarkup           *objects.InlineKeyboardMarkup
+// Use this method to edit animation, audio, document, photo, or video messages, or to add media to text messages.
+// If a message is part of a message album, then it can be edited only to an audio for audio albums,
+// only to a document for document albums and to a photo or a video otherwise. When an inline message is edited,
+// a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL.
+// On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned.
+// Note that business messages that were not sent by the bot and
+// do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
+type EditMessageMedia struct {
+	Media                 objects.InputMedia            `json:"media"`
+	ChatId                *string                       `json:"chat_id,omitempty"`
+	BusinessConnectionId  *string                       `json:"business_connection_id,omitempty"`
+	MessageId             *int                          `json:"message_id,omitempty"`
+	InlineMessageId       *string                       `json:"inline_message_id,omitempty"`
+	ShowCaptionAboveMedia *bool                         `json:"show_caption_above_media,omitempty"`
+	ReplyMarkup           *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
-func (e EditMessageMedia[T]) Validate() error {
+func (e EditMessageMedia) Validate() error {
 	if err := e.Media.Validate(); err != nil {
 		return err
 	}
@@ -197,7 +252,7 @@ func (e EditMessageMedia[T]) Validate() error {
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil {
+		if e.ChatId == nil && len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
@@ -227,11 +282,11 @@ func (e EditMessageMedia[T]) Validate() error {
 	return nil
 }
 
-func (e EditMessageMedia[T]) ToRequestBody() ([]byte, error) {
+func (e EditMessageMedia) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditMessageMedia[T]) Execute() (MessageOrBool, error) {
+func (e EditMessageMedia) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
 		b, err := MakePostRequest[bool]("editMessageMedia", e)
@@ -249,21 +304,21 @@ func (e EditMessageMedia[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type EditMessageLiveLocation[T int | string] struct {
+type EditMessageLiveLocation struct {
 	Latitude             *float64
 	Longtitude           *float64
 	LivePeriod           *int
 	HorizontalAccuracy   *float64
 	Heading              *int
 	ProximityAlertRadius *int
-	ChatId               *T
+	ChatId               *string
 	BusinessConnectionId *string
 	MessageId            *int
 	InlineMessageId      *string
 	ReplyMarkup          *objects.InlineKeyboardMarkup
 }
 
-func (e EditMessageLiveLocation[T]) Validate() error {
+func (e EditMessageLiveLocation) Validate() error {
 	if e.Latitude == nil {
 		return objects.ErrInvalidParam("latitude parameter can't be empty")
 	}
@@ -286,7 +341,7 @@ func (e EditMessageLiveLocation[T]) Validate() error {
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil {
+		if e.ChatId == nil && len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
@@ -316,11 +371,11 @@ func (e EditMessageLiveLocation[T]) Validate() error {
 	return nil
 }
 
-func (e EditMessageLiveLocation[T]) ToRequestBody() ([]byte, error) {
+func (e EditMessageLiveLocation) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditMessageLiveLocation[T]) Execute() (MessageOrBool, error) {
+func (e EditMessageLiveLocation) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
 		b, err := MakePostRequest[bool]("editMessageLiveLocation", e)
@@ -338,22 +393,22 @@ func (e EditMessageLiveLocation[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type StopMessageLiveLocation[T int | string] struct {
-	ChatId               *T
+type StopMessageLiveLocation struct {
+	ChatId               *string
 	BusinessConnectionId *string
 	MessageId            *int
 	InlineMessageId      *string
 	ReplyMarkup          *objects.InlineKeyboardMarkup
 }
 
-func (e StopMessageLiveLocation[T]) Validate() error {
+func (e StopMessageLiveLocation) Validate() error {
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
 			return objects.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil {
+		if e.ChatId == nil && len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
@@ -383,11 +438,11 @@ func (e StopMessageLiveLocation[T]) Validate() error {
 	return nil
 }
 
-func (e StopMessageLiveLocation[T]) ToRequestBody() ([]byte, error) {
+func (e StopMessageLiveLocation) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e StopMessageLiveLocation[T]) Execute() (MessageOrBool, error) {
+func (e StopMessageLiveLocation) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
 		b, err := MakePostRequest[bool]("stopMessageMedia", e)
@@ -405,22 +460,22 @@ func (e StopMessageLiveLocation[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type EditMessageReplyMarkup[T int | string] struct {
-	ChatId               *T
+type EditMessageReplyMarkup struct {
+	ChatId               *string
 	BusinessConnectionId *string
 	MessageId            *int
 	InlineMessageId      *string
 	ReplyMarkup          *objects.InlineKeyboardMarkup
 }
 
-func (e EditMessageReplyMarkup[T]) Validate() error {
+func (e EditMessageReplyMarkup) Validate() error {
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
 			return objects.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil {
+		if e.ChatId == nil && len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		} else {
 			if c, ok := any(*e.ChatId).(string); ok {
@@ -450,11 +505,11 @@ func (e EditMessageReplyMarkup[T]) Validate() error {
 	return nil
 }
 
-func (e EditMessageReplyMarkup[T]) ToRequestBody() ([]byte, error) {
+func (e EditMessageReplyMarkup) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditMessageReplyMarkup[T]) Execute() (MessageOrBool, error) {
+func (e EditMessageReplyMarkup) Execute() (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
 		b, err := MakePostRequest[bool]("editMessageReplyMarkup", e)
@@ -472,14 +527,14 @@ func (e EditMessageReplyMarkup[T]) Execute() (MessageOrBool, error) {
 	}
 }
 
-type StopPoll[T int | string] struct {
-	ChatId               T
+type StopPoll struct {
+	ChatId               string
 	MessageId            int
 	BusinessConnectionId *string
 	ReplyMarkup          *objects.InlineKeyboardMarkup
 }
 
-func (s StopPoll[T]) Validate() error {
+func (s StopPoll) Validate() error {
 	if c, ok := any(s.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -501,20 +556,20 @@ func (s StopPoll[T]) Validate() error {
 	return nil
 }
 
-func (s StopPoll[T]) ToRequestBody() ([]byte, error) {
+func (s StopPoll) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s StopPoll[T]) Execute() (*objects.Poll, error) {
+func (s StopPoll) Execute() (*objects.Poll, error) {
 	return MakePostRequest[objects.Poll]("stopPoll", s)
 }
 
-type DeleteMessage[T int | string] struct {
-	ChatId    T
+type DeleteMessage struct {
+	ChatId    string
 	MessageId int
 }
 
-func (d DeleteMessage[T]) Validate() error {
+func (d DeleteMessage) Validate() error {
 	if c, ok := any(d.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -531,20 +586,20 @@ func (d DeleteMessage[T]) Validate() error {
 	return nil
 }
 
-func (d DeleteMessage[T]) ToRequestBody() ([]byte, error) {
+func (d DeleteMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(d)
 }
 
-func (d DeleteMessage[T]) Execute() (*bool, error) {
+func (d DeleteMessage) Execute() (*bool, error) {
 	return MakePostRequest[bool]("deleteMessage", d)
 }
 
-type DeleteMessages[T int | string] struct {
-	ChatId     T
+type DeleteMessages struct {
+	ChatId     string
 	MessageIds []int
 }
 
-func (d DeleteMessages[T]) Validate() error {
+func (d DeleteMessages) Validate() error {
 	if c, ok := any(d.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -562,10 +617,10 @@ func (d DeleteMessages[T]) Validate() error {
 	return nil
 }
 
-func (d DeleteMessages[T]) ToRequestBody() ([]byte, error) {
+func (d DeleteMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(d)
 }
 
-func (d DeleteMessages[T]) Execute() (*bool, error) {
+func (d DeleteMessages) Execute() (*bool, error) {
 	return MakePostRequest[bool]("deleteMessages", d)
 }

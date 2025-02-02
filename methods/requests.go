@@ -8,16 +8,16 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	telego "github.com/bigelle/tele.go"
-	"github.com/bigelle/tele.go/objects"
+	telego "github.com/bigelle/gotely"
+	"github.com/bigelle/gotely/objects"
 )
 
 type ApiResponse[T any] struct {
 	Ok          bool                        `json:"ok"`
-	ErrorCode   int                         `json:"error_code"`
+	ErrorCode   *int                        `json:"error_code,omitempty"`
 	Description *string                     `json:"description,omitempty"`
 	Parameters  *objects.ResponseParameters `json:"parameters,omitempty"`
-	Result      T                           `json:"result"`
+	Result      *T                          `json:"result,omitempty"`
 }
 
 type Sendable interface { // NOTE probably should rename it to make it more obviously separated from multipart objects
@@ -86,11 +86,11 @@ func MakeRequest[T any](httpMethod, endpoint string, body Sendable) (*T, error) 
 	}
 	if !apiResp.Ok {
 		return nil, ErrFailedRequest{
-			Code:    &apiResp.ErrorCode,
+			Code:    apiResp.ErrorCode,
 			Message: apiResp.Description,
 		}
 	}
-	return &apiResp.Result, nil
+	return apiResp.Result, nil
 }
 
 func MakeGetRequest[T any](endpoint string, body Sendable) (*T, error) {
@@ -137,12 +137,12 @@ func MakeMultipartRequest[T any](endpoint string, body MultipartSendable) (*T, e
 	}
 	if !apiResp.Ok {
 		return nil, ErrFailedRequest{
-			Code:    &apiResp.ErrorCode,
+			Code:    apiResp.ErrorCode,
 			Message: apiResp.Description,
 		}
 	}
 	if apiResp.Description != nil {
 		fmt.Println(*apiResp.Description)
 	}
-	return &apiResp.Result, nil
+	return apiResp.Result, nil
 }
