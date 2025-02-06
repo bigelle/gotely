@@ -1,4 +1,4 @@
-package telego
+package gotely
 
 import (
 	"bytes"

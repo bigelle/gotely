@@ -8,7 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	telego "github.com/bigelle/gotely"
+	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/objects"
 )
 
@@ -46,7 +46,7 @@ func MakeRequest[T any](httpMethod, endpoint string, body Sendable) (*T, error) 
 		return nil, fmt.Errorf("can't make request: %w", err)
 	}
 
-	settings := telego.GetBotSettings()
+	settings := gotely.GetBotSettings()
 	token := settings.Token
 	if token == "" {
 		return nil, fmt.Errorf("API token can't be empty")
@@ -106,7 +106,7 @@ func MakeMultipartRequest[T any](endpoint string, body MultipartSendable) (*T, e
 		return nil, err
 	}
 
-	settings := telego.GetBotSettings()
+	settings := gotely.GetBotSettings()
 
 	buf, w, err := body.ToMultipartBody()
 	if err != nil {
