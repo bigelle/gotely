@@ -2,6 +2,7 @@ package methods
 
 import (
 	"encoding/json"
+	"net/http"
 	"strings"
 
 	"github.com/bigelle/gotely/objects"
@@ -55,6 +56,32 @@ type EditMessageText struct {
 	//Optional:
 	//A JSON-serialized object for an inline keyboard.
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *EditMessageText) WithClient(c *http.Client) *EditMessageText {
+	s.client = c
+	return s
+}
+
+func (s EditMessageText) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *EditMessageText) WithApiBaseUrl(u string) *EditMessageText {
+	s.baseUrl = u
+	return s
+}
+
+func (s EditMessageText) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e EditMessageText) Validate() error {
@@ -104,17 +131,17 @@ func (e EditMessageText) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditMessageText) Execute() (MessageOrBool, error) {
+func (e EditMessageText) Execute(token string) (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := MakePostRequest[bool]("editMessageText", e)
+		b, err := SendTelegramPostRequest[bool](token, "editMessageText", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := MakePostRequest[objects.Message]("editMessageText", e)
+		msg, err := SendTelegramPostRequest[objects.Message](token, "editMessageText", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -156,6 +183,32 @@ type EditMessageCaption struct {
 	//Optional:
 	//A JSON-serialized object for an inline keyboard.
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *EditMessageCaption) WithClient(c *http.Client) *EditMessageCaption {
+	s.client = c
+	return s
+}
+
+func (s EditMessageCaption) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *EditMessageCaption) WithApiBaseUrl(u string) *EditMessageCaption {
+	s.baseUrl = u
+	return s
+}
+
+func (s EditMessageCaption) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e EditMessageCaption) Validate() error {
@@ -207,17 +260,17 @@ func (e EditMessageCaption) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditMessageCaption) Execute() (MessageOrBool, error) {
+func (e EditMessageCaption) Execute(token string) (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := MakePostRequest[bool]("editMessageCaption", e)
+		b, err := SendTelegramPostRequest[bool](token, "editMessageCaption", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := MakePostRequest[objects.Message]("editMessageCaption", e)
+		msg, err := SendTelegramPostRequest[objects.Message](token, "editMessageCaption", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -240,6 +293,32 @@ type EditMessageMedia struct {
 	InlineMessageId       *string                       `json:"inline_message_id,omitempty"`
 	ShowCaptionAboveMedia *bool                         `json:"show_caption_above_media,omitempty"`
 	ReplyMarkup           *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	client                *http.Client
+	baseUrl               string
+}
+
+func (s *EditMessageMedia) WithClient(c *http.Client) *EditMessageMedia {
+	s.client = c
+	return s
+}
+
+func (s EditMessageMedia) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *EditMessageMedia) WithApiBaseUrl(u string) *EditMessageMedia {
+	s.baseUrl = u
+	return s
+}
+
+func (s EditMessageMedia) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e EditMessageMedia) Validate() error {
@@ -286,17 +365,17 @@ func (e EditMessageMedia) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditMessageMedia) Execute() (MessageOrBool, error) {
+func (e EditMessageMedia) Execute(token string) (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := MakePostRequest[bool]("editMessageMedia", e)
+		b, err := SendTelegramPostRequest[bool](token, "editMessageMedia", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := MakePostRequest[objects.Message]("editMessageMedia", e)
+		msg, err := SendTelegramPostRequest[objects.Message](token, "editMessageMedia", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -316,6 +395,32 @@ type EditMessageLiveLocation struct {
 	MessageId            *int
 	InlineMessageId      *string
 	ReplyMarkup          *objects.InlineKeyboardMarkup
+	client               *http.Client
+	baseUrl              string
+}
+
+func (s *EditMessageLiveLocation) WithClient(c *http.Client) *EditMessageLiveLocation {
+	s.client = c
+	return s
+}
+
+func (s EditMessageLiveLocation) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *EditMessageLiveLocation) WithApiBaseUrl(u string) *EditMessageLiveLocation {
+	s.baseUrl = u
+	return s
+}
+
+func (s EditMessageLiveLocation) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e EditMessageLiveLocation) Validate() error {
@@ -375,17 +480,17 @@ func (e EditMessageLiveLocation) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditMessageLiveLocation) Execute() (MessageOrBool, error) {
+func (e EditMessageLiveLocation) Execute(token string) (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := MakePostRequest[bool]("editMessageLiveLocation", e)
+		b, err := SendTelegramPostRequest[bool](token, "editMessageLiveLocation", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := MakePostRequest[objects.Message]("editMessageLiveLocation", e)
+		msg, err := SendTelegramPostRequest[objects.Message](token, "editMessageLiveLocation", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -399,6 +504,32 @@ type StopMessageLiveLocation struct {
 	MessageId            *int
 	InlineMessageId      *string
 	ReplyMarkup          *objects.InlineKeyboardMarkup
+	client               *http.Client
+	baseUrl              string
+}
+
+func (s *StopMessageLiveLocation) WithClient(c *http.Client) *StopMessageLiveLocation {
+	s.client = c
+	return s
+}
+
+func (s StopMessageLiveLocation) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *StopMessageLiveLocation) WithApiBaseUrl(u string) *StopMessageLiveLocation {
+	s.baseUrl = u
+	return s
+}
+
+func (s StopMessageLiveLocation) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e StopMessageLiveLocation) Validate() error {
@@ -442,17 +573,17 @@ func (e StopMessageLiveLocation) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e StopMessageLiveLocation) Execute() (MessageOrBool, error) {
+func (e StopMessageLiveLocation) Execute(token string) (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := MakePostRequest[bool]("stopMessageMedia", e)
+		b, err := SendTelegramPostRequest[bool](token, "stopMessageMedia", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := MakePostRequest[objects.Message]("editMessageMedia", e)
+		msg, err := SendTelegramPostRequest[objects.Message](token, "editMessageMedia", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -466,6 +597,32 @@ type EditMessageReplyMarkup struct {
 	MessageId            *int
 	InlineMessageId      *string
 	ReplyMarkup          *objects.InlineKeyboardMarkup
+	client               *http.Client
+	baseUrl              string
+}
+
+func (s *EditMessageReplyMarkup) WithClient(c *http.Client) *EditMessageReplyMarkup {
+	s.client = c
+	return s
+}
+
+func (s EditMessageReplyMarkup) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *EditMessageReplyMarkup) WithApiBaseUrl(u string) *EditMessageReplyMarkup {
+	s.baseUrl = u
+	return s
+}
+
+func (s EditMessageReplyMarkup) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e EditMessageReplyMarkup) Validate() error {
@@ -509,17 +666,17 @@ func (e EditMessageReplyMarkup) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditMessageReplyMarkup) Execute() (MessageOrBool, error) {
+func (e EditMessageReplyMarkup) Execute(token string) (MessageOrBool, error) {
 	if e.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := MakePostRequest[bool]("editMessageReplyMarkup", e)
+		b, err := SendTelegramPostRequest[bool](token, "editMessageReplyMarkup", e)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := MakePostRequest[objects.Message]("editMessageReplyMarkup", e)
+		msg, err := SendTelegramPostRequest[objects.Message](token, "editMessageReplyMarkup", e)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -532,6 +689,32 @@ type StopPoll struct {
 	MessageId            int
 	BusinessConnectionId *string
 	ReplyMarkup          *objects.InlineKeyboardMarkup
+	client               *http.Client
+	baseUrl              string
+}
+
+func (s *StopPoll) WithClient(c *http.Client) *StopPoll {
+	s.client = c
+	return s
+}
+
+func (s StopPoll) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *StopPoll) WithApiBaseUrl(u string) *StopPoll {
+	s.baseUrl = u
+	return s
+}
+
+func (s StopPoll) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s StopPoll) Validate() error {
@@ -560,13 +743,39 @@ func (s StopPoll) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s StopPoll) Execute() (*objects.Poll, error) {
-	return MakePostRequest[objects.Poll]("stopPoll", s)
+func (s StopPoll) Execute(token string) (*objects.Poll, error) {
+	return SendTelegramPostRequest[objects.Poll](token, "stopPoll", s)
 }
 
 type DeleteMessage struct {
 	ChatId    string
 	MessageId int
+	client    *http.Client
+	baseUrl   string
+}
+
+func (s *DeleteMessage) WithClient(c *http.Client) *DeleteMessage {
+	s.client = c
+	return s
+}
+
+func (s DeleteMessage) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *DeleteMessage) WithApiBaseUrl(u string) *DeleteMessage {
+	s.baseUrl = u
+	return s
+}
+
+func (s DeleteMessage) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (d DeleteMessage) Validate() error {
@@ -590,13 +799,39 @@ func (d DeleteMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(d)
 }
 
-func (d DeleteMessage) Execute() (*bool, error) {
-	return MakePostRequest[bool]("deleteMessage", d)
+func (d DeleteMessage) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "deleteMessage", d)
 }
 
 type DeleteMessages struct {
 	ChatId     string
 	MessageIds []int
+	client     *http.Client
+	baseUrl    string
+}
+
+func (s *DeleteMessages) WithClient(c *http.Client) *DeleteMessages {
+	s.client = c
+	return s
+}
+
+func (s DeleteMessages) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *DeleteMessages) WithApiBaseUrl(u string) *DeleteMessages {
+	s.baseUrl = u
+	return s
+}
+
+func (s DeleteMessages) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (d DeleteMessages) Validate() error {
@@ -621,6 +856,6 @@ func (d DeleteMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(d)
 }
 
-func (d DeleteMessages) Execute() (*bool, error) {
-	return MakePostRequest[bool]("deleteMessages", d)
+func (d DeleteMessages) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "deleteMessages", d)
 }

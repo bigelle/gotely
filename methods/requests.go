@@ -8,7 +8,6 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/objects"
 )
 
@@ -22,11 +21,15 @@ type ApiResponse[T any] struct {
 
 type Sendable interface { // NOTE probably should rename it to make it more obviously separated from multipart objects
 	objects.Validable
+	Client() *http.Client
+	ApiBaseUrl() string
 	ToRequestBody() ([]byte, error)
 }
 
 type MultipartSendable interface {
 	objects.Validable
+	Client() *http.Client
+	ApiBaseUrl() string
 	ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error)
 }
 
@@ -41,15 +44,9 @@ func (e ErrFailedRequest) Error() string {
 	return fmt.Sprintf("request failed with code %d: %s", *e.Code, *e.Message)
 }
 
-func MakeRequest[T any](httpMethod, endpoint string, body Sendable) (*T, error) {
+func SendTelegramRequest[T any](httpMethod, token, endpoint string, body Sendable) (*T, error) {
 	if err := body.Validate(); err != nil {
 		return nil, fmt.Errorf("can't make request: %w", err)
-	}
-
-	settings := gotely.GetBotSettings()
-	token := settings.Token
-	if token == "" {
-		return nil, fmt.Errorf("API token can't be empty")
 	}
 
 	data, err := body.ToRequestBody()
@@ -57,7 +54,7 @@ func MakeRequest[T any](httpMethod, endpoint string, body Sendable) (*T, error) 
 		return nil, fmt.Errorf("can't marshal request body: %w", err)
 	}
 
-	url := fmt.Sprintf(settings.BaseUrl, token, endpoint)
+	url := fmt.Sprintf(body.ApiBaseUrl(), token, endpoint)
 
 	req, err := http.NewRequest(httpMethod, url, bytes.NewReader(data))
 	if err != nil {
@@ -65,7 +62,7 @@ func MakeRequest[T any](httpMethod, endpoint string, body Sendable) (*T, error) 
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := settings.Client.Do(req)
+	resp, err := body.Client().Do(req)
 	if err != nil {
 		e := err.Error()
 		return nil, ErrFailedRequest{
@@ -75,58 +72,45 @@ func MakeRequest[T any](httpMethod, endpoint string, body Sendable) (*T, error) 
 	}
 	defer resp.Body.Close()
 
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("can't read response: %w", err)
-	}
-
-	var apiResp ApiResponse[T]
-	if err := json.Unmarshal(b, &apiResp); err != nil {
-		return nil, fmt.Errorf("can't unmarshal response body: %w", err)
-	}
-	if !apiResp.Ok {
-		return nil, ErrFailedRequest{
-			Code:    apiResp.ErrorCode,
-			Message: apiResp.Description,
-		}
-	}
-	return apiResp.Result, nil
+	return readResult[T](resp.Body)
 }
 
-func MakeGetRequest[T any](endpoint string, body Sendable) (*T, error) {
-	return MakeRequest[T]("GET", endpoint, body)
+func SendTelegramGetRequest[T any](token, endpoint string, body Sendable) (*T, error) {
+	return SendTelegramRequest[T]("GET", token, endpoint, body)
 }
 
-func MakePostRequest[T any](endpoint string, body Sendable) (*T, error) {
-	return MakeRequest[T]("POST", endpoint, body)
+func SendTelegramPostRequest[T any](token, endpoint string, body Sendable) (*T, error) {
+	return SendTelegramRequest[T]("POST", token, endpoint, body)
 }
 
-func MakeMultipartRequest[T any](endpoint string, body MultipartSendable) (*T, error) {
+func SendTelegramMultipartRequest[T any](token, endpoint string, body MultipartSendable) (*T, error) {
 	if err := body.Validate(); err != nil {
 		return nil, err
 	}
-
-	settings := gotely.GetBotSettings()
 
 	buf, w, err := body.ToMultipartBody()
 	if err != nil {
 		return nil, err
 	}
 
-	url := fmt.Sprintf(settings.BaseUrl, settings.Token, endpoint)
+	url := fmt.Sprintf(body.ApiBaseUrl(), token, endpoint)
 	req, err := http.NewRequest("POST", url, buf)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
-	resp, err := settings.Client.Do(req)
+	resp, err := body.Client().Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	b, err := io.ReadAll(resp.Body)
+	return readResult[T](resp.Body)
+}
+
+func readResult[T any](r io.ReadCloser) (*T, error) {
+	b, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

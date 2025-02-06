@@ -2,6 +2,7 @@ package methods
 
 import (
 	"encoding/json"
+	"net/http"
 	"strings"
 
 	"github.com/bigelle/gotely/objects"
@@ -18,6 +19,32 @@ type SendGame struct {
 	MessageEffectId      *string
 	ReplyParameters      *objects.ReplyParameters
 	ReplyMarkup          *objects.InlineKeyboardMarkup
+	client               *http.Client
+	baseUrl              string
+}
+
+func (s *SendGame) WithClient(c *http.Client) *SendGame {
+	s.client = c
+	return s
+}
+
+func (s SendGame) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendGame) WithApiBaseUrl(u string) *SendGame {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendGame) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendGame) Validate() error {
@@ -44,8 +71,8 @@ func (s SendGame) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendGame) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("sendGame", s)
+func (s SendGame) Execute(token string) (*objects.Message, error) {
+	return SendTelegramPostRequest[objects.Message](token, "sendGame", s)
 }
 
 type SetGameHighScore struct {
@@ -56,6 +83,32 @@ type SetGameHighScore struct {
 	ChatId             *int
 	MessageId          *int
 	InlineMessageId    *string
+	client             *http.Client
+	baseUrl            string
+}
+
+func (s *SetGameHighScore) WithClient(c *http.Client) *SetGameHighScore {
+	s.client = c
+	return s
+}
+
+func (s SetGameHighScore) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetGameHighScore) WithApiBaseUrl(u string) *SetGameHighScore {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetGameHighScore) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetGameHighScore) Validate() error {
@@ -85,17 +138,17 @@ func (s SetGameHighScore) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetGameHighScore) Execute() (MessageOrBool, error) {
+func (s SetGameHighScore) Execute(token string) (MessageOrBool, error) {
 	if s.InlineMessageId != nil {
 		// expecting a boolean
-		b, err := MakePostRequest[bool]("setGameScore", s)
+		b, err := SendTelegramPostRequest[bool](token, "setGameScore", s)
 		return MessageOrBool{
 			Message: nil,
 			Bool:    b,
 		}, err
 	} else {
 		// expecting a Message
-		msg, err := MakePostRequest[objects.Message]("setGameScore", s)
+		msg, err := SendTelegramPostRequest[objects.Message](token, "setGameScore", s)
 		return MessageOrBool{
 			Message: msg,
 			Bool:    nil,
@@ -108,6 +161,32 @@ type GetGameHighScores struct {
 	ChatId          *int
 	MessageId       *int
 	InlineMessageId *string
+	client          *http.Client
+	baseUrl         string
+}
+
+func (s *GetGameHighScores) WithClient(c *http.Client) *GetGameHighScores {
+	s.client = c
+	return s
+}
+
+func (s GetGameHighScores) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetGameHighScores) WithApiBaseUrl(u string) *GetGameHighScores {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetGameHighScores) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s GetGameHighScores) Validate() error {
@@ -134,6 +213,6 @@ func (s GetGameHighScores) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (g GetGameHighScores) Execute() (*[]objects.GameHighScore, error) {
-	return MakePostRequest[[]objects.GameHighScore]("getGameHighScores", g)
+func (g GetGameHighScores) Execute(token string) (*[]objects.GameHighScore, error) {
+	return SendTelegramPostRequest[[]objects.GameHighScore](token, "getGameHighScores", g)
 }

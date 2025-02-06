@@ -1,4 +1,4 @@
-package gotely
+package longpolling
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"sync"
 
+	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/objects"
 )
 
@@ -42,7 +43,7 @@ type LongPollingBot struct {
 	//Telegram bot API access token
 	Token string
 	//A function which is called on every incoming update
-	OnUpdate func(objects.Update) error
+	OnUpdate func(gotely.Context) error
 	//A function which is called whenever an error occurs.
 	//Defaults to simple `fmt.Println(e.Error())`
 	OnError func(error)
@@ -65,7 +66,7 @@ type LongPollingBot struct {
 	//where the first %s is API token and the second is API end point
 	ApiBaseUrl string
 	errChan    chan error
-	updChan    chan objects.Update
+	ctxChan    chan *gotely.Context
 	ctx        context.Context
 	cancel     context.CancelFunc
 	offset     *int
@@ -73,7 +74,7 @@ type LongPollingBot struct {
 
 type LongPollingOption func(*LongPollingBot)
 
-func NewDefaultLongPollingBot(tkn string, onUpd func(objects.Update) error, opts ...LongPollingOption) (*LongPollingBot, error) {
+func NewDefaultLongPollingBot(tkn string, onUpd func(gotely.Context) error, opts ...LongPollingOption) (*LongPollingBot, error) {
 	l := LongPollingBot{
 		Token:          tkn,
 		OnUpdate:       onUpd,
@@ -150,7 +151,7 @@ func (l *LongPollingBot) Start() {
 		l.Init()
 	}
 
-	l.updChan = make(chan objects.Update)
+	l.ctxChan = make(chan *gotely.Context)
 	l.errChan = make(chan error)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -177,7 +178,7 @@ func (l *LongPollingBot) Start() {
 func (l *LongPollingBot) Stop() {
 	l.cancel()
 	close(l.errChan)
-	close(l.updChan)
+	close(l.ctxChan)
 }
 
 func (l LongPollingBot) Validate() error {
@@ -334,7 +335,12 @@ func (l *LongPollingBot) poll() {
 			upds := result.Result
 			if len(upds) > 0 {
 				for _, upd := range upds {
-					l.updChan <- upd
+					l.ctxChan <- &gotely.Context{
+						Update:     upd,
+						ApiBaseUrl: l.ApiBaseUrl,
+						Client:     l.Client,
+						Token:      l.Token,
+					}
 				}
 				newoffset := upds[len(upds)-1].UpdateId + 1
 				l.offset = &newoffset
@@ -349,8 +355,8 @@ func (l *LongPollingBot) handle_updates() {
 		select {
 		case <-l.ctx.Done():
 			return
-		case upd := <-l.updChan:
-			err := l.OnUpdate(upd)
+		case ctx := <-l.ctxChan:
+			err := l.OnUpdate(*ctx)
 			if err != nil {
 				l.errChan <- err
 			}

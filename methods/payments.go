@@ -2,13 +2,14 @@ package methods
 
 import (
 	"encoding/json"
+	"net/http"
 	"strings"
 
 	"github.com/bigelle/gotely/objects"
 )
 
-type SendInvoice[T int | string] struct {
-	ChatId                    T
+type SendInvoice struct {
+	ChatId                    string
 	Title                     string
 	Description               string
 	Payload                   string
@@ -37,18 +38,37 @@ type SendInvoice[T int | string] struct {
 	MessageEffectId           *string
 	ReplyParameters           *objects.ReplyParameters
 	ReplyMarkup               *objects.InlineKeyboardMarkup
+	client                    *http.Client
+	baseUrl                   string
 }
 
-func (s SendInvoice[T]) Validate() error {
-	if c, ok := any(s.ChatId).(int); ok {
-		if c == 0 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+func (s *SendInvoice) WithClient(c *http.Client) *SendInvoice {
+	s.client = c
+	return s
+}
+
+func (s SendInvoice) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
 	}
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+	return s.client
+}
+
+func (s *SendInvoice) WithApiBaseUrl(u string) *SendInvoice {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendInvoice) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
+}
+
+func (s SendInvoice) Validate() error {
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(s.Title) < 1 || len(s.Title) > 32 {
 		return objects.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
@@ -92,12 +112,12 @@ func (s SendInvoice[T]) Validate() error {
 	return nil
 }
 
-func (s SendInvoice[T]) ToRequestBody() ([]byte, error) {
+func (s SendInvoice) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendInvoice[T]) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("sendInvoice", s)
+func (s SendInvoice) Execute(token string) (*objects.Message, error) {
+	return SendTelegramPostRequest[objects.Message](token, "sendInvoice", s)
 }
 
 type CreateInvoiceLink struct {
@@ -123,6 +143,32 @@ type CreateInvoiceLink struct {
 	SendPhoneNumberToProvider *bool
 	SendEmailToProvider       *bool
 	IsFlexible                *bool
+	client                    *http.Client
+	baseUrl                   string
+}
+
+func (s *CreateInvoiceLink) WithClient(c *http.Client) *CreateInvoiceLink {
+	s.client = c
+	return s
+}
+
+func (s CreateInvoiceLink) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *CreateInvoiceLink) WithApiBaseUrl(u string) *CreateInvoiceLink {
+	s.baseUrl = u
+	return s
+}
+
+func (s CreateInvoiceLink) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (c CreateInvoiceLink) Validate() error {
@@ -172,8 +218,8 @@ func (c CreateInvoiceLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CreateInvoiceLink) Execute() (*string, error) {
-	return MakePostRequest[string]("createInvoiceLink", c)
+func (c CreateInvoiceLink) Execute(token string) (*string, error) {
+	return SendTelegramPostRequest[string](token, "createInvoiceLink", c)
 }
 
 type AnswerShippingQuery struct {
@@ -181,6 +227,32 @@ type AnswerShippingQuery struct {
 	Ok              bool
 	ShippingOptions *[]objects.ShippingOption
 	ErrorMessage    *string
+	client          *http.Client
+	baseUrl         string
+}
+
+func (s *AnswerShippingQuery) WithClient(c *http.Client) *AnswerShippingQuery {
+	s.client = c
+	return s
+}
+
+func (s AnswerShippingQuery) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *AnswerShippingQuery) WithApiBaseUrl(u string) *AnswerShippingQuery {
+	s.baseUrl = u
+	return s
+}
+
+func (s AnswerShippingQuery) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (a AnswerShippingQuery) Validate() error {
@@ -207,14 +279,40 @@ func (a AnswerShippingQuery) ToRequestBody() ([]byte, error) {
 	return json.Marshal(a)
 }
 
-func (a AnswerShippingQuery) Execute() (*bool, error) {
-	return MakePostRequest[bool]("answerShippingQuery", a)
+func (a AnswerShippingQuery) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "answerShippingQuery", a)
 }
 
 type AnswerPreCheckoutQuery struct {
 	PreCheckoutQueryId string
 	Ok                 bool
 	ErrorMessage       *bool
+	client             *http.Client
+	baseUrl            string
+}
+
+func (s *AnswerPreCheckoutQuery) WithClient(c *http.Client) *AnswerPreCheckoutQuery {
+	s.client = c
+	return s
+}
+
+func (s AnswerPreCheckoutQuery) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *AnswerPreCheckoutQuery) WithApiBaseUrl(u string) *AnswerPreCheckoutQuery {
+	s.baseUrl = u
+	return s
+}
+
+func (s AnswerPreCheckoutQuery) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (a AnswerPreCheckoutQuery) Validate() error {
@@ -231,13 +329,39 @@ func (a AnswerPreCheckoutQuery) ToRequestBody() ([]byte, error) {
 	return json.Marshal(a)
 }
 
-func (a AnswerPreCheckoutQuery) Execute() (*bool, error) {
-	return MakePostRequest[bool]("answerPreCheckoutQuery", a)
+func (a AnswerPreCheckoutQuery) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "answerPreCheckoutQuery", a)
 }
 
 type GetStarTransactions struct {
-	Offset *int
-	Limit  *int
+	Offset  *int
+	Limit   *int
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *GetStarTransactions) WithClient(c *http.Client) *GetStarTransactions {
+	s.client = c
+	return s
+}
+
+func (s GetStarTransactions) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetStarTransactions) WithApiBaseUrl(u string) *GetStarTransactions {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetStarTransactions) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (g GetStarTransactions) Validate() error {
@@ -253,8 +377,8 @@ func (g GetStarTransactions) ToRequestBody() ([]byte, error) {
 	return json.Marshal(g)
 }
 
-func (g GetStarTransactions) Execute() (*objects.StarTransactions, error) {
-	return MakeGetRequest[objects.StarTransactions]("getStarTransactions", g)
+func (g GetStarTransactions) Execute(token string) (*objects.StarTransactions, error) {
+	return SendTelegramGetRequest[objects.StarTransactions](token, "getStarTransactions", g)
 }
 
 type RefundStarPayment struct {
@@ -262,6 +386,32 @@ type RefundStarPayment struct {
 	// should fix validation EVERYWHERE
 	UserId                  int
 	TelegramPaymentChargeId string
+	client                  *http.Client
+	baseUrl                 string
+}
+
+func (s *RefundStarPayment) WithClient(c *http.Client) *RefundStarPayment {
+	s.client = c
+	return s
+}
+
+func (s RefundStarPayment) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *RefundStarPayment) WithApiBaseUrl(u string) *RefundStarPayment {
+	s.baseUrl = u
+	return s
+}
+
+func (s RefundStarPayment) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (r RefundStarPayment) Validate() error {
@@ -278,14 +428,40 @@ func (r RefundStarPayment) ToRequestBody() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func (r RefundStarPayment) Execute() (*bool, error) {
-	return MakePostRequest[bool]("refundStarPayment", r)
+func (r RefundStarPayment) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "refundStarPayment", r)
 }
 
 type EditUserStarSubscription struct {
 	UserId                  int
 	TelegramPaymentChargeId string
 	IsCanceled              bool
+	client                  *http.Client
+	baseUrl                 string
+}
+
+func (s *EditUserStarSubscription) WithClient(c *http.Client) *EditUserStarSubscription {
+	s.client = c
+	return s
+}
+
+func (s EditUserStarSubscription) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *EditUserStarSubscription) WithApiBaseUrl(u string) *EditUserStarSubscription {
+	s.baseUrl = u
+	return s
+}
+
+func (s EditUserStarSubscription) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e EditUserStarSubscription) Validate() error {
@@ -302,6 +478,6 @@ func (e EditUserStarSubscription) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditUserStarSubscription) Execute() (*bool, error) {
-	return MakePostRequest[bool]("editUserStarSubscription", e)
+func (e EditUserStarSubscription) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "editUserStarSubscription", e)
 }

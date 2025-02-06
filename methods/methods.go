@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"strings"
 
 	"github.com/bigelle/gotely/objects"
@@ -59,6 +60,32 @@ type SendMessage struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard,
 	//custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty,"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendMessage) WithClient(c *http.Client) *SendMessage {
+	s.client = c
+	return s
+}
+
+func (s SendMessage) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendMessage) WithApiBaseUrl(u string) *SendMessage {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendMessage) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendMessage) Validate() error {
@@ -76,8 +103,8 @@ func (s SendMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendMessage) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("sendMessage", s)
+func (s SendMessage) Execute(token string) (*objects.Message, error) {
+	return SendTelegramPostRequest[objects.Message](token, "sendMessage", s)
 }
 
 // Use this method to forward messages of any kind.
@@ -102,6 +129,32 @@ type ForwardMessage struct {
 	//Optional.
 	//Protects the contents of the forwarded message from forwarding and saving
 	ProtectContent *bool `json:"protect_content,omitempty"`
+	client         *http.Client
+	baseUrl        string
+}
+
+func (s *ForwardMessage) WithClient(c *http.Client) *ForwardMessage {
+	s.client = c
+	return s
+}
+
+func (s ForwardMessage) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *ForwardMessage) WithApiBaseUrl(u string) *ForwardMessage {
+	s.baseUrl = u
+	return s
+}
+
+func (s ForwardMessage) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (f ForwardMessage) Validate() error {
@@ -121,8 +174,8 @@ func (f ForwardMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(f)
 }
 
-func (f ForwardMessage) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("forwardMessage", f)
+func (f ForwardMessage) Execute(token string) (*objects.Message, error) {
+	return SendTelegramPostRequest[objects.Message](token, "forwardMessage", f)
 }
 
 // Use this method to forward multiple messages of any kind.
@@ -150,6 +203,32 @@ type ForwardMessages struct {
 	//Optional.
 	//Protects the contents of the forwarded messages from forwarding and saving
 	ProtectContent *bool `json:"protect_content,omitempty"`
+	client         *http.Client
+	baseUrl        string
+}
+
+func (s *ForwardMessages) WithClient(c *http.Client) *ForwardMessages {
+	s.client = c
+	return s
+}
+
+func (s ForwardMessages) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *ForwardMessages) WithApiBaseUrl(u string) *ForwardMessages {
+	s.baseUrl = u
+	return s
+}
+
+func (s ForwardMessages) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (f ForwardMessages) Validate() error {
@@ -169,8 +248,8 @@ func (f ForwardMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(f)
 }
 
-func (f ForwardMessages) Execute() (*[]objects.MessageId, error) {
-	return MakePostRequest[[]objects.MessageId]("forwardMessages", f)
+func (f ForwardMessages) Execute(token string) (*[]objects.MessageId, error) {
+	return SendTelegramPostRequest[[]objects.MessageId](token, "forwardMessages", f)
 }
 
 // Use this method to copy messages of any kind.
@@ -222,6 +301,32 @@ type CopyMessage struct {
 	//A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *CopyMessage) WithClient(c *http.Client) *CopyMessage {
+	s.client = c
+	return s
+}
+
+func (s CopyMessage) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *CopyMessage) WithApiBaseUrl(u string) *CopyMessage {
+	s.baseUrl = u
+	return s
+}
+
+func (s CopyMessage) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (c CopyMessage) Validate() error {
@@ -241,8 +346,8 @@ func (c CopyMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CopyMessage) Execute() (*objects.MessageId, error) {
-	return MakePostRequest[objects.MessageId]("copyMessage", c)
+func (c CopyMessage) Execute(token string) (*objects.MessageId, error) {
+	return SendTelegramPostRequest[objects.MessageId](token, "copyMessage", c)
 }
 
 // Use this method to copy messages of any kind.
@@ -267,6 +372,32 @@ type CopyMessages struct {
 	ProtectContent *bool `json:"protect_content,omitempty"`
 	//Pass True to copy the messages without their captions
 	RemoveCaption *bool `json:"remove_caption,omitempty"`
+	client        *http.Client
+	baseUrl       string
+}
+
+func (s *CopyMessages) WithClient(c *http.Client) *CopyMessages {
+	s.client = c
+	return s
+}
+
+func (s CopyMessages) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *CopyMessages) WithApiBaseUrl(u string) *CopyMessages {
+	s.baseUrl = u
+	return s
+}
+
+func (s CopyMessages) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (c CopyMessages) ToRequestBody() ([]byte, error) {
@@ -286,8 +417,8 @@ func (c CopyMessages) Validate() error {
 	return nil
 }
 
-func (c CopyMessages) Execute() (*[]objects.MessageId, error) {
-	return MakePostRequest[[]objects.MessageId]("copyMessages", c)
+func (c CopyMessages) Execute(token string) (*[]objects.MessageId, error) {
+	return SendTelegramPostRequest[[]objects.MessageId](token, "copyMessages", c)
 }
 
 // Use this method to send photos. On success, the sent Message is returned.
@@ -331,6 +462,32 @@ type SendPhoto struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard,
 	//custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendPhoto) WithClient(c *http.Client) *SendPhoto {
+	s.client = c
+	return s
+}
+
+func (s SendPhoto) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendPhoto) WithApiBaseUrl(u string) *SendPhoto {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendPhoto) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendPhoto) Validate() error {
@@ -446,11 +603,11 @@ func (s SendPhoto) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendPhoto) Execute() (*objects.Message, error) {
+func (s SendPhoto) Execute(token string) (*objects.Message, error) {
 	if s.Photo.IsLocal() {
-		return MakeMultipartRequest[objects.Message]("sendPhoto", s)
+		return SendTelegramMultipartRequest[objects.Message](token, "sendPhoto", s)
 	}
-	return MakePostRequest[objects.Message]("sendPhoto", s)
+	return SendTelegramPostRequest[objects.Message](token, "sendPhoto", s)
 }
 
 // Use this method to send audio files, if you want Telegram clients to display them in the music player.
@@ -504,6 +661,32 @@ type SendAudio struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendAudio) WithClient(c *http.Client) *SendAudio {
+	s.client = c
+	return s
+}
+
+func (s SendAudio) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendAudio) WithApiBaseUrl(u string) *SendAudio {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendAudio) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendAudio) Validate() error {
@@ -649,11 +832,11 @@ func (s SendAudio) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendAudio) Execute() (*objects.Message, error) {
+func (s SendAudio) Execute(token string) (*objects.Message, error) {
 	if s.Audio.IsLocal() {
-		return MakeMultipartRequest[objects.Message]("sendAudio", s)
+		return SendTelegramMultipartRequest[objects.Message](token, "sendAudio", s)
 	}
-	return MakePostRequest[objects.Message]("sendAudio", s)
+	return SendTelegramPostRequest[objects.Message](token, "sendAudio", s)
 }
 
 // Use this method to send general files. On success, the sent Message is returned.
@@ -698,6 +881,32 @@ type SendDocument struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendDocument) WithClient(c *http.Client) *SendDocument {
+	s.client = c
+	return s
+}
+
+func (s SendDocument) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendDocument) WithApiBaseUrl(u string) *SendDocument {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendDocument) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendDocument) Validate() error {
@@ -834,11 +1043,11 @@ func (s SendDocument) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendDocument) Execute() (*objects.Message, error) {
+func (s SendDocument) Execute(token string) (*objects.Message, error) {
 	if s.Document.IsLocal() {
-		return MakeMultipartRequest[objects.Message]("sendDocument", s)
+		return SendTelegramMultipartRequest[objects.Message](token, "sendDocument", s)
 	}
-	return MakePostRequest[objects.Message]("sendDocument", s)
+	return SendTelegramPostRequest[objects.Message](token, "sendDocument", s)
 }
 
 // Use this method to send video files, Telegram clients support MPEG4 videos (other formats may be sent as Document).
@@ -894,6 +1103,32 @@ type SendVideo struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendVideo) WithClient(c *http.Client) *SendVideo {
+	s.client = c
+	return s
+}
+
+func (s SendVideo) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendVideo) WithApiBaseUrl(u string) *SendVideo {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendVideo) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendVideo) Validate() error {
@@ -1049,11 +1284,11 @@ func (s SendVideo) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendVideo) Execute() (*objects.Message, error) {
+func (s SendVideo) Execute(token string) (*objects.Message, error) {
 	if s.Video.IsLocal() {
-		return MakeMultipartRequest[objects.Message]("sendVideo", s)
+		return SendTelegramMultipartRequest[objects.Message](token, "sendVideo", s)
 	}
-	return MakePostRequest[objects.Message]("sendVideo", s)
+	return SendTelegramPostRequest[objects.Message](token, "sendVideo", s)
 }
 
 // Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound). On success, the sent Message is returned.
@@ -1106,6 +1341,32 @@ type SendAnimation struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendAnimation) WithClient(c *http.Client) *SendAnimation {
+	s.client = c
+	return s
+}
+
+func (s SendAnimation) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendAnimation) WithApiBaseUrl(u string) *SendAnimation {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendAnimation) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendAnimation) Validate() error {
@@ -1256,11 +1517,11 @@ func (s SendAnimation) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendAnimation) Execute() (*objects.Message, error) {
+func (s SendAnimation) Execute(token string) (*objects.Message, error) {
 	if s.Animation.IsLocal() {
-		return MakeMultipartRequest[objects.Message]("sendAnimation", s)
+		return SendTelegramMultipartRequest[objects.Message](token, "sendAnimation", s)
 	}
-	return MakePostRequest[objects.Message]("sendAnimation", s)
+	return SendTelegramPostRequest[objects.Message](token, "sendAnimation", s)
 }
 
 // Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message.
@@ -1302,6 +1563,32 @@ type SendVoice struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendVoice) WithClient(c *http.Client) *SendVoice {
+	s.client = c
+	return s
+}
+
+func (s SendVoice) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendVoice) WithApiBaseUrl(u string) *SendVoice {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendVoice) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendVoice) Validate() error {
@@ -1415,11 +1702,11 @@ func (s SendVoice) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error) {
 	return buf, w, nil
 }
 
-func (s SendVoice) Execute() (*objects.Message, error) {
+func (s SendVoice) Execute(token string) (*objects.Message, error) {
 	if s.Voice.IsLocal() {
-		return MakeMultipartRequest[objects.Message]("sendVoice", s)
+		return SendTelegramMultipartRequest[objects.Message](token, "sendVoice", s)
 	}
-	return MakePostRequest[objects.Message]("sendVoice", s)
+	return SendTelegramPostRequest[objects.Message](token, "sendVoice", s)
 }
 
 // As of v.4.0, Telegram clients support rounded square MPEG4 videos of up to 1 minute long.
@@ -1461,6 +1748,32 @@ type SendVideoNote struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendVideoNote) WithClient(c *http.Client) *SendVideoNote {
+	s.client = c
+	return s
+}
+
+func (s SendVideoNote) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendVideoNote) WithApiBaseUrl(u string) *SendVideoNote {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendVideoNote) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendVideoNote) Validate() error {
@@ -1582,11 +1895,11 @@ func (s SendVideoNote) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendVideoNote) Execute() (*objects.Message, error) {
+func (s SendVideoNote) Execute(token string) (*objects.Message, error) {
 	if s.VideoNote.IsLocal() {
-		return MakeMultipartRequest[objects.Message]("sendVideoNote", s)
+		return SendTelegramMultipartRequest[objects.Message](token, "sendVideoNote", s)
 	}
-	return MakePostRequest[objects.Message]("sendVideoNote", s)
+	return SendTelegramPostRequest[objects.Message](token, "sendVideoNote", s)
 }
 
 // Use this method to send paid media. On success, the sent Message is returned.
@@ -1624,6 +1937,32 @@ type SendPaidMedia struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendPaidMedia) WithClient(c *http.Client) *SendPaidMedia {
+	s.client = c
+	return s
+}
+
+func (s SendPaidMedia) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendPaidMedia) WithApiBaseUrl(u string) *SendPaidMedia {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendPaidMedia) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendPaidMedia) Validate() error {
@@ -1651,8 +1990,8 @@ func (s SendPaidMedia) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendPaidMedia) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("sendPaidMedia", s)
+func (s SendPaidMedia) Execute(token string) (*objects.Message, error) {
+	return SendTelegramPostRequest[objects.Message](token, "sendPaidMedia", s)
 }
 
 // Use this method to send a group of photos, videos, documents or audios as an album.
@@ -1678,6 +2017,32 @@ type SendMediaGroup struct {
 	MessageEffectId *string `json:"message_effect_id,omitempty"`
 	//Description of the message to reply to
 	ReplyParameters *objects.ReplyParameters `json:"reply_parameters,omitempty"`
+	client          *http.Client
+	baseUrl         string
+}
+
+func (s *SendMediaGroup) WithClient(c *http.Client) *SendMediaGroup {
+	s.client = c
+	return s
+}
+
+func (s SendMediaGroup) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendMediaGroup) WithApiBaseUrl(u string) *SendMediaGroup {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendMediaGroup) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendMediaGroup) Validate() error {
@@ -1767,8 +2132,8 @@ func (s SendMediaGroup) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, err
 	return b, w, nil
 }
 
-func (s SendMediaGroup) Execute() (*[]objects.Message, error) {
-	return MakeMultipartRequest[[]objects.Message]("sendMediaGroup", s)
+func (s SendMediaGroup) Execute(token string) (*[]objects.Message, error) {
+	return SendTelegramMultipartRequest[[]objects.Message](token, "sendMediaGroup", s)
 }
 
 // Use this method to send point on the map. On success, the sent Message is returned.
@@ -1808,6 +2173,32 @@ type SendLocation struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendLocation) WithClient(c *http.Client) *SendLocation {
+	s.client = c
+	return s
+}
+
+func (s SendLocation) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendLocation) WithApiBaseUrl(u string) *SendLocation {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendLocation) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendLocation) Validate() error {
@@ -1828,8 +2219,8 @@ func (s SendLocation) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendLocation) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("sendLocation", s)
+func (s SendLocation) Execute(token string) (*objects.Message, error) {
+	return SendTelegramPostRequest[objects.Message](token, "sendLocation", s)
 }
 
 // Use this method to send information about a venue. On success, the sent Message is returned.
@@ -1870,6 +2261,32 @@ type SendVenue struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendVenue) WithClient(c *http.Client) *SendVenue {
+	s.client = c
+	return s
+}
+
+func (s SendVenue) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendVenue) WithApiBaseUrl(u string) *SendVenue {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendVenue) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendVenue) Validate() error {
@@ -1889,8 +2306,8 @@ func (s SendVenue) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendVenue) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("sendVenue", s)
+func (s SendVenue) Execute(token string) (*objects.Message, error) {
+	return SendTelegramPostRequest[objects.Message](token, "sendVenue", s)
 }
 
 // Use this method to send phone contacts. On success, the sent Message is returned.
@@ -1923,6 +2340,32 @@ type SendContact struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendContact) WithClient(c *http.Client) *SendContact {
+	s.client = c
+	return s
+}
+
+func (s SendContact) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendContact) WithApiBaseUrl(u string) *SendContact {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendContact) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendContact) Validate() error {
@@ -1942,8 +2385,8 @@ func (s SendContact) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendContact) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("sendContact", s)
+func (s SendContact) Execute(token string) (*objects.Message, error) {
+	return SendTelegramPostRequest[objects.Message](token, "sendContact", s)
 }
 
 // Use this method to send a native poll. On success, the sent Message is returned.
@@ -2003,6 +2446,32 @@ type SendPoll struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendPoll) WithClient(c *http.Client) *SendPoll {
+	s.client = c
+	return s
+}
+
+func (s SendPoll) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendPoll) WithApiBaseUrl(u string) *SendPoll {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendPoll) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendPoll) Validate() error {
@@ -2027,8 +2496,8 @@ func (s SendPoll) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendPoll) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("sendPoll", s)
+func (s SendPoll) Execute(token string) (*objects.Message, error) {
+	return SendTelegramPostRequest[objects.Message](token, "sendPoll", s)
 }
 
 // Use this method to send an animated emoji that will display a random value. On success, the sent Message is returned.
@@ -2057,6 +2526,32 @@ type SendDice struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SendDice) WithClient(c *http.Client) *SendDice {
+	s.client = c
+	return s
+}
+
+func (s SendDice) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendDice) WithApiBaseUrl(u string) *SendDice {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendDice) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendDice) Validate() error {
@@ -2073,8 +2568,8 @@ func (s SendDice) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SendDice) Execute() (*objects.Message, error) {
-	return MakePostRequest[objects.Message]("sendPoll", s)
+func (s SendDice) Execute(token string) (*objects.Message, error) {
+	return SendTelegramPostRequest[objects.Message](token, "sendPoll", s)
 }
 
 // Use this method when you need to tell the user that something is happening on the bot's side.
@@ -2098,6 +2593,32 @@ type SendChatAction struct {
 	//'upload_document' for general files, 'choose_sticker' for stickers, 'find_location' for location data,
 	//'record_video_note' or 'upload_video_note' for video notes.
 	MessageThreadId *string `json:"message_thread_id,omitempty"`
+	client          *http.Client
+	baseUrl         string
+}
+
+func (s *SendChatAction) WithClient(c *http.Client) *SendChatAction {
+	s.client = c
+	return s
+}
+
+func (s SendChatAction) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SendChatAction) WithApiBaseUrl(u string) *SendChatAction {
+	s.baseUrl = u
+	return s
+}
+
+func (s SendChatAction) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SendChatAction) Validate() error {
@@ -2126,6 +2647,18 @@ func (s SendChatAction) Validate() error {
 	return nil
 }
 
+func (s SendChatAction) ToRequestBody() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s SendChatAction) Execute(token string) (*bool, error) {
+	return SendTelegramGetRequest[bool](token, "sendChatAction", s)
+	//TODO: make a function that will be a part of sendable interface and will return endpoint of this method as a string
+	//name should be Endpoint()
+	//then there would be no need to pass endpoint to any of those functions
+	//function signature would be smaller and easier
+}
+
 // Use this method to change the chosen reactions on a message.
 // Service messages can't be reacted to.
 // Automatically forwarded messages from a channel to its discussion group have the same available reactions as messages in the channel.
@@ -2141,7 +2674,33 @@ type SetMessageReaction struct {
 	//Paid reactions can't be used by bots.
 	Reaction *[]objects.ReactionType `json:"reaction,omitempty"`
 	//Pass True to set the reaction with a big animation
-	IsBig *bool `json:"is_big,omitempty"`
+	IsBig   *bool `json:"is_big,omitempty"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *SetMessageReaction) WithClient(c *http.Client) *SetMessageReaction {
+	s.client = c
+	return s
+}
+
+func (s SetMessageReaction) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetMessageReaction) WithApiBaseUrl(u string) *SetMessageReaction {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetMessageReaction) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetMessageReaction) Validate() error {
@@ -2163,8 +2722,8 @@ func (s SetMessageReaction) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetMessageReaction) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setMessageReaction", s)
+func (s SetMessageReaction) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setMessageReaction", s)
 }
 
 // Use this method to get a list of profile pictures for a user. Returns a UserProfilePhotos object.
@@ -2174,7 +2733,33 @@ type GetUserProfilePhotos struct {
 	//Sequential number of the first photo to be returned. By default, all photos are returned.
 	Offset *int `json:"offset,omitempty"`
 	//Limits the number of photos to be retrieved. Values between 1-100 are accepted. Defaults to 100.
-	Limit *int `json:"limit,omitempty"`
+	Limit   *int `json:"limit,omitempty"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *GetUserProfilePhotos) WithClient(c *http.Client) *GetUserProfilePhotos {
+	s.client = c
+	return s
+}
+
+func (s GetUserProfilePhotos) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetUserProfilePhotos) WithApiBaseUrl(u string) *GetUserProfilePhotos {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetUserProfilePhotos) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (g GetUserProfilePhotos) Validate() error {
@@ -2193,8 +2778,8 @@ func (g GetUserProfilePhotos) ToRequestBody() ([]byte, error) {
 	return json.Marshal(g)
 }
 
-func (g GetUserProfilePhotos) Execute() (*objects.UserProfilePhotos, error) {
-	return MakeGetRequest[objects.UserProfilePhotos]("getUserProfilePhotos", g)
+func (g GetUserProfilePhotos) Execute(token string) (*objects.UserProfilePhotos, error) {
+	return SendTelegramGetRequest[objects.UserProfilePhotos](token, "getUserProfilePhotos", g)
 }
 
 // Changes the emoji status for a given user that previously allowed the bot to manage their emoji status via the
@@ -2206,6 +2791,32 @@ type SetUserEmojiStatus struct {
 	EmojiStatusCustomEmojiId *string `json:"emoji_status_custom_emoji_id,omitempty"`
 	//Expiration date of the emoji status, if any
 	EmojiStatusExpirationDate *int `json:"emoji_status_expiration_date,omitempty"`
+	client                    *http.Client
+	baseUrl                   string
+}
+
+func (s *SetUserEmojiStatus) WithClient(c *http.Client) *SetUserEmojiStatus {
+	s.client = c
+	return s
+}
+
+func (s SetUserEmojiStatus) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetUserEmojiStatus) WithApiBaseUrl(u string) *SetUserEmojiStatus {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetUserEmojiStatus) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetUserEmojiStatus) Validate() error {
@@ -2219,8 +2830,8 @@ func (s SetUserEmojiStatus) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetUserEmojiStatus) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setUserEmojiStatus", s)
+func (s SetUserEmojiStatus) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setUserEmojiStatus", s)
 }
 
 // Use this method to get basic information about a file and prepare it for downloading.
@@ -2233,8 +2844,34 @@ func (s SetUserEmojiStatus) Execute() (*bool, error) {
 // You should save the file's MIME type and name (if available) when the File object is received.
 type GetFile struct {
 	//File identifier to get information about
-	FileId string `json:"file_id"`
+	FileId  string `json:"file_id"`
+	client  *http.Client
+	baseUrl string
 } //TODO: probably a good idea to add a method that will download the file and will return it as reader
+
+func (s *GetFile) WithClient(c *http.Client) *GetFile {
+	s.client = c
+	return s
+}
+
+func (s GetFile) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetFile) WithApiBaseUrl(u string) *GetFile {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetFile) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
+}
 
 func (g GetFile) Validate() error {
 	if strings.TrimSpace(g.FileId) == "" {
@@ -2247,8 +2884,8 @@ func (g GetFile) ToRequestBody() ([]byte, error) {
 	return json.Marshal(g)
 }
 
-func (g GetFile) Execute() (*objects.File, error) {
-	return MakeGetRequest[objects.File]("getFile", g)
+func (g GetFile) Execute(token string) (*objects.File, error) {
+	return SendTelegramGetRequest[objects.File](token, "getFile", g)
 }
 
 // Use this method to ban a user in a group, a supergroup or a channel.
@@ -2268,6 +2905,32 @@ type BanChatMember struct {
 	//If False, the user will be able to see messages in the group that were sent before the user was removed.
 	//Always True for supergroups and channels.
 	RevokeMessages *bool `json:"revoke_messages,omitempty"`
+	client         *http.Client
+	baseUrl        string
+}
+
+func (s *BanChatMember) WithClient(c *http.Client) *BanChatMember {
+	s.client = c
+	return s
+}
+
+func (s BanChatMember) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *BanChatMember) WithApiBaseUrl(u string) *BanChatMember {
+	s.baseUrl = u
+	return s
+}
+
+func (s BanChatMember) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (b BanChatMember) Validate() error {
@@ -2284,8 +2947,8 @@ func (b BanChatMember) ToRequestBody() ([]byte, error) {
 	return json.Marshal(b)
 }
 
-func (b BanChatMember) Execute() (*bool, error) {
-	return MakeGetRequest[bool]("banChatMember", b)
+func (b BanChatMember) Execute(token string) (*bool, error) {
+	return SendTelegramGetRequest[bool](token, "banChatMember", b)
 }
 
 // Use this method to unban a previously banned user in a supergroup or channel.
@@ -2301,6 +2964,32 @@ type UnbanChatMember struct {
 	UserId int `json:"user_id"`
 	//Do nothing if the user is not banned
 	OnlyIfBanned *bool `json:"only_if_banned,omitempty"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *UnbanChatMember) WithClient(c *http.Client) *UnbanChatMember {
+	s.client = c
+	return s
+}
+
+func (s UnbanChatMember) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *UnbanChatMember) WithApiBaseUrl(u string) *UnbanChatMember {
+	s.baseUrl = u
+	return s
+}
+
+func (s UnbanChatMember) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (b UnbanChatMember) Validate() error {
@@ -2317,8 +3006,8 @@ func (b UnbanChatMember) ToRequestBody() ([]byte, error) {
 	return json.Marshal(b)
 }
 
-func (b UnbanChatMember) Execute() (*bool, error) {
-	return MakeGetRequest[bool]("unbanChatMember", b)
+func (b UnbanChatMember) Execute(token string) (*bool, error) {
+	return SendTelegramGetRequest[bool](token, "unbanChatMember", b)
 }
 
 // Use this method to restrict a user in a supergroup.
@@ -2339,6 +3028,32 @@ type RestrictChatMember struct {
 	//Date when restrictions will be lifted for the user; Unix time.
 	//If user is restricted for more than 366 days or less than 30 seconds from the current time, they are considered to be restricted forever
 	UntilDate *int `json:"until_date,omitempty"`
+	client    *http.Client
+	baseUrl   string
+}
+
+func (s *RestrictChatMember) WithClient(c *http.Client) *RestrictChatMember {
+	s.client = c
+	return s
+}
+
+func (s RestrictChatMember) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *RestrictChatMember) WithApiBaseUrl(u string) *RestrictChatMember {
+	s.baseUrl = u
+	return s
+}
+
+func (s RestrictChatMember) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (r RestrictChatMember) Validate() error {
@@ -2355,8 +3070,8 @@ func (r RestrictChatMember) ToRequestBody() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func (r RestrictChatMember) Execute() (*bool, error) {
-	return MakePostRequest[bool]("restrictChatMember", r)
+func (r RestrictChatMember) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "restrictChatMember", r)
 }
 
 // Use this method to promote or demote a user in a supergroup or a channel.
@@ -2401,6 +3116,32 @@ type PromoteChatMember struct {
 	CanPinMessages *bool `json:"can_pin_messages,omitempty"`
 	//Pass True if the user is allowed to create, rename, close, and reopen forum topics; for supergroups only
 	CanManageTopics *bool `json:"can_manage_topics,omitempty"`
+	client          *http.Client
+	baseUrl         string
+}
+
+func (s *PromoteChatMember) WithClient(c *http.Client) *PromoteChatMember {
+	s.client = c
+	return s
+}
+
+func (s PromoteChatMember) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *PromoteChatMember) WithApiBaseUrl(u string) *PromoteChatMember {
+	s.baseUrl = u
+	return s
+}
+
+func (s PromoteChatMember) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p PromoteChatMember) Validate() error {
@@ -2417,8 +3158,8 @@ func (p PromoteChatMember) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p PromoteChatMember) Execute() (*bool, error) {
-	return MakePostRequest[bool]("promoteChatMember", p)
+func (p PromoteChatMember) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "promoteChatMember", p)
 }
 
 // Use this method to set a custom title for an administrator in a supergroup promoted by the bot. Returns True on success.
@@ -2429,6 +3170,32 @@ type SetChatAdministratorCustomTitle struct {
 	UserId int `json:"user_id"`
 	//New custom title for the administrator; 0-16 characters, emoji are not allowed
 	CustomTitle string `json:"custom_title"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SetChatAdministratorCustomTitle) WithClient(c *http.Client) *SetChatAdministratorCustomTitle {
+	s.client = c
+	return s
+}
+
+func (s SetChatAdministratorCustomTitle) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetChatAdministratorCustomTitle) WithApiBaseUrl(u string) *SetChatAdministratorCustomTitle {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetChatAdministratorCustomTitle) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetChatAdministratorCustomTitle) Validate() error {
@@ -2456,8 +3223,8 @@ func (s SetChatAdministratorCustomTitle) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatAdministratorCustomTitle) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setChatAdministratorCustomTitle", s)
+func (s SetChatAdministratorCustomTitle) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setChatAdministratorCustomTitle", s)
 }
 
 // Use this method to ban a channel chat in a supergroup or a channel. Until the chat is unbanned,
@@ -2466,9 +3233,35 @@ func (s SetChatAdministratorCustomTitle) Execute() (*bool, error) {
 // Returns True on success.
 type BanChatSenderChat struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId string
+	ChatId string `json:"chat_id"`
 	//Unique identifier of the target sender chat
-	SenderChatId int
+	SenderChatId int `json:"sender_chat_id"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *BanChatSenderChat) WithClient(c *http.Client) *BanChatSenderChat {
+	s.client = c
+	return s
+}
+
+func (s BanChatSenderChat) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *BanChatSenderChat) WithApiBaseUrl(u string) *BanChatSenderChat {
+	s.baseUrl = u
+	return s
+}
+
+func (s BanChatSenderChat) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (b BanChatSenderChat) Validate() error {
@@ -2485,8 +3278,8 @@ func (b BanChatSenderChat) ToRequestBody() ([]byte, error) {
 	return json.Marshal(b)
 }
 
-func (b BanChatSenderChat) Execute() (*bool, error) {
-	return MakePostRequest[bool]("banChatSenderChat", b)
+func (b BanChatSenderChat) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "banChatSenderChat", b)
 }
 
 // Use this method to unban a previously banned channel chat in a supergroup or channel.
@@ -2494,9 +3287,35 @@ func (b BanChatSenderChat) Execute() (*bool, error) {
 // Returns True on success.
 type UnbanChatSenderChat struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId string
+	ChatId string `json:"chat_id"`
 	//Unique identifier of the target sender chat
-	SenderChatId int
+	SenderChatId int `json:"sender_chat_id"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *UnbanChatSenderChat) WithClient(c *http.Client) *UnbanChatSenderChat {
+	s.client = c
+	return s
+}
+
+func (s UnbanChatSenderChat) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *UnbanChatSenderChat) WithApiBaseUrl(u string) *UnbanChatSenderChat {
+	s.baseUrl = u
+	return s
+}
+
+func (s UnbanChatSenderChat) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (b UnbanChatSenderChat) Validate() error {
@@ -2513,8 +3332,8 @@ func (b UnbanChatSenderChat) ToRequestBody() ([]byte, error) {
 	return json.Marshal(b)
 }
 
-func (b UnbanChatSenderChat) Execute() (*bool, error) {
-	return MakePostRequest[bool]("unbanChatSenderChat", b)
+func (b UnbanChatSenderChat) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "unbanChatSenderChat", b)
 }
 
 // Use this method to set default chat permissions for all members.
@@ -2522,15 +3341,41 @@ func (b UnbanChatSenderChat) Execute() (*bool, error) {
 // Returns True on success.
 type SetChatPermissions struct {
 	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-	ChatId string
+	ChatId string `json:"chat_id"`
 	//A JSON-serialized object for new default chat permissions
-	Permissions objects.ChatPermissions
+	Permissions objects.ChatPermissions `json:"permissions"`
 	//Pass True if chat permissions are set independently.
 	//Otherwise, the can_send_other_messages and can_add_web_page_previews permissions will imply the
 	//can_send_messages, can_send_audios, can_send_documents, can_send_photos,
 	// can_send_videos, can_send_video_notes, and can_send_voice_notes permissions;
 	//the can_send_polls permission will imply the can_send_messages permission.
-	UserIndependentChatPermissions *bool
+	UserIndependentChatPermissions *bool `json:"user_independent_chat_permissions"`
+	client                         *http.Client
+	baseUrl                        string
+}
+
+func (s *SetChatPermissions) WithClient(c *http.Client) *SetChatPermissions {
+	s.client = c
+	return s
+}
+
+func (s SetChatPermissions) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetChatPermissions) WithApiBaseUrl(u string) *SetChatPermissions {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetChatPermissions) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetChatPermissions) Validate() error {
@@ -2544,8 +3389,8 @@ func (s SetChatPermissions) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatPermissions) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setChatPermissions", s)
+func (s SetChatPermissions) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setChatPermissions", s)
 }
 
 // Use this method to generate a new primary invite link for a chat; any previously generated primary link is revoked.
@@ -2557,7 +3402,33 @@ func (s SetChatPermissions) Execute() (*bool, error) {
 // If your bot needs to generate a new primary invite link replacing its previous one, use exportChatInviteLink again.
 type ExportChatInviteLink struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId string
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *ExportChatInviteLink) WithClient(c *http.Client) *ExportChatInviteLink {
+	s.client = c
+	return s
+}
+
+func (s ExportChatInviteLink) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *ExportChatInviteLink) WithApiBaseUrl(u string) *ExportChatInviteLink {
+	s.baseUrl = u
+	return s
+}
+
+func (s ExportChatInviteLink) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e ExportChatInviteLink) Validate() error {
@@ -2571,8 +3442,8 @@ func (e ExportChatInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e ExportChatInviteLink) Execute() (*string, error) {
-	return MakePostRequest[string]("exportChatInviteLink", e)
+func (e ExportChatInviteLink) Execute(token string) (*string, error) {
+	return SendTelegramPostRequest[string](token, "exportChatInviteLink", e)
 }
 
 // Use this method to create an additional invite link for a chat.
@@ -2589,6 +3460,32 @@ type CreateInviteLink struct {
 	MemberLimit *int `json:"member_limit,omitempty"`
 	//True, if users joining the chat via the link need to be approved by chat administrators. If True, member_limit can't be specified
 	CreatesJoinRequest *bool `json:"creates_join_request,omitempty"`
+	client             *http.Client
+	baseUrl            string
+}
+
+func (s *CreateInviteLink) WithClient(c *http.Client) *CreateInviteLink {
+	s.client = c
+	return s
+}
+
+func (s CreateInviteLink) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *CreateInviteLink) WithApiBaseUrl(u string) *CreateInviteLink {
+	s.baseUrl = u
+	return s
+}
+
+func (s CreateInviteLink) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (c CreateInviteLink) Validate() error {
@@ -2612,8 +3509,8 @@ func (c CreateInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CreateInviteLink) Execute() (*objects.ChatInviteLink, error) {
-	return MakePostRequest[objects.ChatInviteLink]("createInviteLink", c)
+func (c CreateInviteLink) Execute(token string) (*objects.ChatInviteLink, error) {
+	return SendTelegramPostRequest[objects.ChatInviteLink](token, "createInviteLink", c)
 }
 
 // Use this method to edit a non-primary invite link created by the bot.
@@ -2632,6 +3529,32 @@ type EditChatInviteLink struct {
 	MemberLimit *int `json:"member_limit,omitempty"`
 	//True, if users joining the chat via the link need to be approved by chat administrators. If True, member_limit can't be specified
 	CreatesJoinRequest *bool `json:"creates_join_request,omitempty"`
+	client             *http.Client
+	baseUrl            string
+}
+
+func (s *EditChatInviteLink) WithClient(c *http.Client) *EditChatInviteLink {
+	s.client = c
+	return s
+}
+
+func (s EditChatInviteLink) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *EditChatInviteLink) WithApiBaseUrl(u string) *EditChatInviteLink {
+	s.baseUrl = u
+	return s
+}
+
+func (s EditChatInviteLink) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (c EditChatInviteLink) Validate() error {
@@ -2655,8 +3578,8 @@ func (c EditChatInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c EditChatInviteLink) Execute() (*objects.ChatInviteLink, error) {
-	return MakePostRequest[objects.ChatInviteLink]("editInviteLink", c)
+func (c EditChatInviteLink) Execute(token string) (*objects.ChatInviteLink, error) {
+	return SendTelegramPostRequest[objects.ChatInviteLink](token, "editInviteLink", c)
 }
 
 // Use this method to create a subscription invite link for a channel chat.
@@ -2672,6 +3595,32 @@ type CreateChatSubscriptionInviteLink struct {
 	SubscriptionPeriod int `json:"subscription_period"`
 	//The amount of Telegram Stars a user must pay initially and after each subsequent subscription period to be a member of the chat; 1-2500
 	SubscriptionPrice int `json:"subscription_price"`
+	client            *http.Client
+	baseUrl           string
+}
+
+func (s *CreateChatSubscriptionInviteLink) WithClient(c *http.Client) *CreateChatSubscriptionInviteLink {
+	s.client = c
+	return s
+}
+
+func (s CreateChatSubscriptionInviteLink) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *CreateChatSubscriptionInviteLink) WithApiBaseUrl(u string) *CreateChatSubscriptionInviteLink {
+	s.baseUrl = u
+	return s
+}
+
+func (s CreateChatSubscriptionInviteLink) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (c CreateChatSubscriptionInviteLink) Validate() error {
@@ -2696,8 +3645,8 @@ func (c CreateChatSubscriptionInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CreateChatSubscriptionInviteLink) Execute() (*objects.ChatInviteLink, error) {
-	return MakePostRequest[objects.ChatInviteLink]("createChatSubscriptionInviteLink", c)
+func (c CreateChatSubscriptionInviteLink) Execute(token string) (*objects.ChatInviteLink, error) {
+	return SendTelegramPostRequest[objects.ChatInviteLink](token, "createChatSubscriptionInviteLink", c)
 }
 
 // Use this method to edit a subscription invite link created by the bot.
@@ -2709,7 +3658,33 @@ type EditChatSubscriptionInviteLink struct {
 	//The invite link to edit
 	InviteLink string `json:"invite_link"`
 	//Invite link name; 0-32 characters
-	Name *string `json:"name,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *EditChatSubscriptionInviteLink) WithClient(c *http.Client) *EditChatSubscriptionInviteLink {
+	s.client = c
+	return s
+}
+
+func (s EditChatSubscriptionInviteLink) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *EditChatSubscriptionInviteLink) WithApiBaseUrl(u string) *EditChatSubscriptionInviteLink {
+	s.baseUrl = u
+	return s
+}
+
+func (s EditChatSubscriptionInviteLink) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (c EditChatSubscriptionInviteLink) Validate() error {
@@ -2731,8 +3706,8 @@ func (c EditChatSubscriptionInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c EditChatSubscriptionInviteLink) Execute() (*objects.ChatInviteLink, error) {
-	return MakePostRequest[objects.ChatInviteLink]("editChatSubscriptionInviteLink", c)
+func (c EditChatSubscriptionInviteLink) Execute(token string) (*objects.ChatInviteLink, error) {
+	return SendTelegramPostRequest[objects.ChatInviteLink](token, "editChatSubscriptionInviteLink", c)
 }
 
 // Use this method to revoke an invite link created by the bot.
@@ -2744,6 +3719,32 @@ type RevokeInviteLink struct {
 	ChatId string `json:"chat_id"`
 	//The invite link to revoke
 	InviteLink string `json:"invite_link"`
+	client     *http.Client
+	baseUrl    string
+}
+
+func (s *RevokeInviteLink) WithClient(c *http.Client) *RevokeInviteLink {
+	s.client = c
+	return s
+}
+
+func (s RevokeInviteLink) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *RevokeInviteLink) WithApiBaseUrl(u string) *RevokeInviteLink {
+	s.baseUrl = u
+	return s
+}
+
+func (s RevokeInviteLink) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (c RevokeInviteLink) Validate() error {
@@ -2760,8 +3761,8 @@ func (c RevokeInviteLink) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c RevokeInviteLink) Execute() (*objects.ChatInviteLink, error) {
-	return MakePostRequest[objects.ChatInviteLink]("revokeInviteLink", c)
+func (c RevokeInviteLink) Execute(token string) (*objects.ChatInviteLink, error) {
+	return SendTelegramPostRequest[objects.ChatInviteLink](token, "revokeInviteLink", c)
 }
 
 // Use this method to approve a chat join request.
@@ -2771,7 +3772,33 @@ type ApproveChatJoinRequest struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
 	//Unique identifier of the target user
-	UserId int `json:"user_id"`
+	UserId  int `json:"user_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *ApproveChatJoinRequest) WithClient(c *http.Client) *ApproveChatJoinRequest {
+	s.client = c
+	return s
+}
+
+func (s ApproveChatJoinRequest) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *ApproveChatJoinRequest) WithApiBaseUrl(u string) *ApproveChatJoinRequest {
+	s.baseUrl = u
+	return s
+}
+
+func (s ApproveChatJoinRequest) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s ApproveChatJoinRequest) Validate() error {
@@ -2788,8 +3815,8 @@ func (s ApproveChatJoinRequest) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s ApproveChatJoinRequest) Execute() (*bool, error) {
-	return MakePostRequest[bool]("approveChatJoinRequest", s)
+func (s ApproveChatJoinRequest) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "approveChatJoinRequest", s)
 }
 
 // Use this method to decline a chat join request.
@@ -2799,7 +3826,33 @@ type DeclineChatJoinRequest struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
 	//Unique identifier of the target user
-	UserId int `json:"user_id"`
+	UserId  int `json:"user_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *DeclineChatJoinRequest) WithClient(c *http.Client) *DeclineChatJoinRequest {
+	s.client = c
+	return s
+}
+
+func (s DeclineChatJoinRequest) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *DeclineChatJoinRequest) WithApiBaseUrl(u string) *DeclineChatJoinRequest {
+	s.baseUrl = u
+	return s
+}
+
+func (s DeclineChatJoinRequest) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s DeclineChatJoinRequest) Validate() error {
@@ -2816,13 +3869,39 @@ func (s DeclineChatJoinRequest) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s DeclineChatJoinRequest) Execute() (*bool, error) {
-	return MakePostRequest[bool]("declineChatJoinRequest", s)
+func (s DeclineChatJoinRequest) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "declineChatJoinRequest", s)
 }
 
 type SetChatPhoto struct {
-	ChatId string            `json:"chat_id"`
-	Photo  objects.InputFile `json:"photo"`
+	ChatId  string            `json:"chat_id"`
+	Photo   objects.InputFile `json:"photo"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *SetChatPhoto) WithClient(c *http.Client) *SetChatPhoto {
+	s.client = c
+	return s
+}
+
+func (s SetChatPhoto) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetChatPhoto) WithApiBaseUrl(u string) *SetChatPhoto {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetChatPhoto) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetChatPhoto) Validate() error {
@@ -2862,8 +3941,8 @@ func (s SetChatPhoto) ToMultipartBody() (*bytes.Buffer, *multipart.Writer, error
 	return buf, w, nil
 }
 
-func (s SetChatPhoto) Execute() (*bool, error) {
-	return MakeMultipartRequest[bool]("setChatPhoto", s)
+func (s SetChatPhoto) Execute(token string) (*bool, error) {
+	return SendTelegramMultipartRequest[bool](token, "setChatPhoto", s)
 }
 
 // Use this method to delete a chat photo. Photos can't be changed for private chats.
@@ -2871,7 +3950,33 @@ func (s SetChatPhoto) Execute() (*bool, error) {
 // Returns True on success.
 type DeleteChatPhoto struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *DeleteChatPhoto) WithClient(c *http.Client) *DeleteChatPhoto {
+	s.client = c
+	return s
+}
+
+func (s DeleteChatPhoto) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *DeleteChatPhoto) WithApiBaseUrl(u string) *DeleteChatPhoto {
+	s.baseUrl = u
+	return s
+}
+
+func (s DeleteChatPhoto) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (d DeleteChatPhoto) Validate() error {
@@ -2885,8 +3990,8 @@ func (d DeleteChatPhoto) ToRequestBody() ([]byte, error) {
 	return json.Marshal(d)
 }
 
-func (d DeleteChatPhoto) Execute() (*bool, error) {
-	return MakePostRequest[bool]("deleteChatPhoto", d)
+func (d DeleteChatPhoto) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "deleteChatPhoto", d)
 }
 
 // Use this method to change the title of a chat. Titles can't be changed for private chats.
@@ -2896,7 +4001,33 @@ type SetChatTitle struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
 	//New chat title, 1-128 characters
-	Title string `json:"title"`
+	Title   string `json:"title"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *SetChatTitle) WithClient(c *http.Client) *SetChatTitle {
+	s.client = c
+	return s
+}
+
+func (s SetChatTitle) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetChatTitle) WithApiBaseUrl(u string) *SetChatTitle {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetChatTitle) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetChatTitle) Validate() error {
@@ -2913,8 +4044,8 @@ func (s SetChatTitle) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatTitle) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setChatTitle", s)
+func (s SetChatTitle) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setChatTitle", s)
 }
 
 // Use this method to change the description of a group, a supergroup or a channel.
@@ -2922,9 +4053,35 @@ func (s SetChatTitle) Execute() (*bool, error) {
 // Returns True on success.
 type SetChatDescription struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId string
+	ChatId string `json:"chat_id"`
 	//New chat description, 0-255 characters
-	Description string
+	Description string `json:"description"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SetChatDescription) WithClient(c *http.Client) *SetChatDescription {
+	s.client = c
+	return s
+}
+
+func (s SetChatDescription) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetChatDescription) WithApiBaseUrl(u string) *SetChatDescription {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetChatDescription) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetChatDescription) Validate() error {
@@ -2941,8 +4098,8 @@ func (s SetChatDescription) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatDescription) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setChatTitle", s)
+func (s SetChatDescription) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setChatTitle", s)
 }
 
 // Use this method to add a message to the list of pinned messages in a chat.
@@ -2959,6 +4116,32 @@ type PinChatMessage struct {
 	//Pass True if it is not necessary to send a notification to all chat members about the new pinned message.
 	//Notifications are always disabled in channels and private chats.
 	DisableNotification *bool `json:"disable_notification,omitempty"`
+	client              *http.Client
+	baseUrl             string
+}
+
+func (s *PinChatMessage) WithClient(c *http.Client) *PinChatMessage {
+	s.client = c
+	return s
+}
+
+func (s PinChatMessage) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *PinChatMessage) WithApiBaseUrl(u string) *PinChatMessage {
+	s.baseUrl = u
+	return s
+}
+
+func (s PinChatMessage) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p PinChatMessage) Validate() error {
@@ -2975,8 +4158,8 @@ func (p PinChatMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p PinChatMessage) Execute() (*bool, error) {
-	return MakePostRequest[bool]("pinChatMessage", p)
+func (p PinChatMessage) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "pinChatMessage", p)
 }
 
 // Use this method to remove a message from the list of pinned messages in a chat.
@@ -2990,6 +4173,32 @@ type UnpinChatMessage struct {
 	ChatId string `json:"chat_id"`
 	//Identifier of the message to unpin. Required if business_connection_id is specified. If not specified, the most recent pinned message (by sending date) will be unpinned.
 	MessageId *int `json:"message_id,omitempty"`
+	client    *http.Client
+	baseUrl   string
+}
+
+func (s *UnpinChatMessage) WithClient(c *http.Client) *UnpinChatMessage {
+	s.client = c
+	return s
+}
+
+func (s UnpinChatMessage) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *UnpinChatMessage) WithApiBaseUrl(u string) *UnpinChatMessage {
+	s.baseUrl = u
+	return s
+}
+
+func (s UnpinChatMessage) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p UnpinChatMessage) Validate() error {
@@ -3009,8 +4218,8 @@ func (p UnpinChatMessage) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p UnpinChatMessage) Execute() (*bool, error) {
-	return MakePostRequest[bool]("unpinChatMessage", p)
+func (p UnpinChatMessage) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "unpinChatMessage", p)
 }
 
 // Use this method to clear the list of pinned messages in a chat.
@@ -3019,7 +4228,33 @@ func (p UnpinChatMessage) Execute() (*bool, error) {
 // Returns True on success.
 type UnpinAllChatMessages struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *UnpinAllChatMessages) WithClient(c *http.Client) *UnpinAllChatMessages {
+	s.client = c
+	return s
+}
+
+func (s UnpinAllChatMessages) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *UnpinAllChatMessages) WithApiBaseUrl(u string) *UnpinAllChatMessages {
+	s.baseUrl = u
+	return s
+}
+
+func (s UnpinAllChatMessages) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p UnpinAllChatMessages) Validate() error {
@@ -3033,14 +4268,40 @@ func (p UnpinAllChatMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p UnpinAllChatMessages) Execute() (*bool, error) {
-	return MakePostRequest[bool]("unpinAllChatMessages", p)
+func (p UnpinAllChatMessages) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "unpinAllChatMessages", p)
 }
 
 // Use this method for your bot to leave a group, supergroup or channel. Returns True on success.
 type LeaveChat struct {
 	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *LeaveChat) WithClient(c *http.Client) *LeaveChat {
+	s.client = c
+	return s
+}
+
+func (s LeaveChat) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *LeaveChat) WithApiBaseUrl(u string) *LeaveChat {
+	s.baseUrl = u
+	return s
+}
+
+func (s LeaveChat) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p LeaveChat) Validate() error {
@@ -3054,14 +4315,40 @@ func (p LeaveChat) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p LeaveChat) Execute() (*bool, error) {
-	return MakePostRequest[bool]("leaveChat", p)
+func (p LeaveChat) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "leaveChat", p)
 }
 
 // Use this method to get up-to-date information about the chat. Returns a ChatFullInfo object on success.
 type GetChat struct {
 	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *GetChat) WithClient(c *http.Client) *GetChat {
+	s.client = c
+	return s
+}
+
+func (s GetChat) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetChat) WithApiBaseUrl(u string) *GetChat {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetChat) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p GetChat) Validate() error {
@@ -3075,14 +4362,40 @@ func (p GetChat) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p GetChat) Execute() (*objects.ChatFullInfo, error) {
-	return MakeGetRequest[objects.ChatFullInfo]("getChat", p)
+func (p GetChat) Execute(token string) (*objects.ChatFullInfo, error) {
+	return SendTelegramGetRequest[objects.ChatFullInfo](token, "getChat", p)
 }
 
 // Use this method to get a list of administrators in a chat, which aren't bots. Returns an Array of ChatMember objects.
 type GetChatAdministrators struct {
 	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *GetChatAdministrators) WithClient(c *http.Client) *GetChatAdministrators {
+	s.client = c
+	return s
+}
+
+func (s GetChatAdministrators) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetChatAdministrators) WithApiBaseUrl(u string) *GetChatAdministrators {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetChatAdministrators) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p GetChatAdministrators) Validate() error {
@@ -3096,14 +4409,40 @@ func (p GetChatAdministrators) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p GetChatAdministrators) Execute() (*[]objects.ChatMember, error) {
-	return MakeGetRequest[[]objects.ChatMember]("getChatAdministrators", p)
+func (p GetChatAdministrators) Execute(token string) (*[]objects.ChatMember, error) {
+	return SendTelegramGetRequest[[]objects.ChatMember](token, "getChatAdministrators", p)
 }
 
 // Use this method to get the number of members in a chat. Returns Int on success.
 type GetChatMemberCount struct {
 	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *GetChatMemberCount) WithClient(c *http.Client) *GetChatMemberCount {
+	s.client = c
+	return s
+}
+
+func (s GetChatMemberCount) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetChatMemberCount) WithApiBaseUrl(u string) *GetChatMemberCount {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetChatMemberCount) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p GetChatMemberCount) Validate() error {
@@ -3117,8 +4456,8 @@ func (p GetChatMemberCount) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p GetChatMemberCount) Execute() (*int, error) {
-	return MakeGetRequest[int]("getChatMemberCount", p)
+func (p GetChatMemberCount) Execute(token string) (*int, error) {
+	return SendTelegramGetRequest[int](token, "getChatMemberCount", p)
 }
 
 // Use this method to get information about a member of a chat.
@@ -3128,7 +4467,33 @@ type GetChatMember struct {
 	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
 	//Unique identifier of the target user
-	UserId int `json:"user_id"`
+	UserId  int `json:"user_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *GetChatMember) WithClient(c *http.Client) *GetChatMember {
+	s.client = c
+	return s
+}
+
+func (s GetChatMember) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetChatMember) WithApiBaseUrl(u string) *GetChatMember {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetChatMember) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p GetChatMember) Validate() error {
@@ -3145,8 +4510,8 @@ func (p GetChatMember) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p GetChatMember) Execute() (*objects.ChatMember, error) {
-	return MakeGetRequest[objects.ChatMember]("getChatMember", p)
+func (p GetChatMember) Execute(token string) (*objects.ChatMember, error) {
+	return SendTelegramGetRequest[objects.ChatMember](token, "getChatMember", p)
 }
 
 // Use this method to set a new group sticker set for a supergroup.
@@ -3158,6 +4523,32 @@ type SetChatStickerSet struct {
 	ChatId string `json:"chat_id"`
 	//Name of the sticker set to be set as the group sticker set
 	StickerSetName string `json:"sticker_set_name"`
+	client         *http.Client
+	baseUrl        string
+}
+
+func (s *SetChatStickerSet) WithClient(c *http.Client) *SetChatStickerSet {
+	s.client = c
+	return s
+}
+
+func (s SetChatStickerSet) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetChatStickerSet) WithApiBaseUrl(u string) *SetChatStickerSet {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetChatStickerSet) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p SetChatStickerSet) Validate() error {
@@ -3174,8 +4565,8 @@ func (p SetChatStickerSet) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p SetChatStickerSet) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setChatStickerSet", p)
+func (p SetChatStickerSet) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setChatStickerSet", p)
 }
 
 // Use this method to delete a group sticker set from a supergroup.
@@ -3184,7 +4575,33 @@ func (p SetChatStickerSet) Execute() (*bool, error) {
 // Returns True on success.
 type DeleteChatStickerSet struct {
 	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *DeleteChatStickerSet) WithClient(c *http.Client) *DeleteChatStickerSet {
+	s.client = c
+	return s
+}
+
+func (s DeleteChatStickerSet) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *DeleteChatStickerSet) WithApiBaseUrl(u string) *DeleteChatStickerSet {
+	s.baseUrl = u
+	return s
+}
+
+func (s DeleteChatStickerSet) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (p DeleteChatStickerSet) Validate() error {
@@ -3198,13 +4615,39 @@ func (p DeleteChatStickerSet) ToRequestBody() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p DeleteChatStickerSet) Execute() (*bool, error) {
-	return MakePostRequest[bool]("deleteChatStickerSet", p)
+func (p DeleteChatStickerSet) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "deleteChatStickerSet", p)
 }
 
 // Use this method to get custom emoji stickers, which can be used as a forum topic icon by any user.
 // Requires no parameters. Returns an Array of Sticker objects.
 type GetForumTopicIconStickers struct {
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *GetForumTopicIconStickers) WithClient(c *http.Client) *GetForumTopicIconStickers {
+	s.client = c
+	return s
+}
+
+func (s GetForumTopicIconStickers) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetForumTopicIconStickers) WithApiBaseUrl(u string) *GetForumTopicIconStickers {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetForumTopicIconStickers) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 // always nil
@@ -3217,8 +4660,8 @@ func (g GetForumTopicIconStickers) ToRequestBody() ([]byte, error) {
 	return json.Marshal(struct{}{})
 }
 
-func (g GetForumTopicIconStickers) Execute() (*[]objects.Sticker, error) {
-	return MakeGetRequest[[]objects.Sticker]("getForumTopicStickers", g)
+func (g GetForumTopicIconStickers) Execute(token string) (*[]objects.Sticker, error) {
+	return SendTelegramGetRequest[[]objects.Sticker](token, "getForumTopicStickers", g)
 }
 
 // Use this method to create a topic in a forum supergroup chat.
@@ -3234,6 +4677,32 @@ type CreateForumTopic struct {
 	IconColor *int `json:"icon_color,omitempty"`
 	//Unique identifier of the custom emoji shown as the topic icon. Use getForumTopicIconStickers to get all allowed custom emoji identifiers.
 	IconCustomEmojiId *string `json:"icon_custom_emoji_id,omitempty"`
+	client            *http.Client
+	baseUrl           string
+}
+
+func (s *CreateForumTopic) WithClient(c *http.Client) *CreateForumTopic {
+	s.client = c
+	return s
+}
+
+func (s CreateForumTopic) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *CreateForumTopic) WithApiBaseUrl(u string) *CreateForumTopic {
+	s.baseUrl = u
+	return s
+}
+
+func (s CreateForumTopic) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (c CreateForumTopic) Validate() error {
@@ -3263,8 +4732,8 @@ func (c CreateForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c CreateForumTopic) Execute() (*objects.ForumTopic, error) {
-	return MakePostRequest[objects.ForumTopic]("createForumTopic", c)
+func (c CreateForumTopic) Execute(token string) (*objects.ForumTopic, error) {
+	return SendTelegramPostRequest[objects.ForumTopic](token, "createForumTopic", c)
 }
 
 // Use this method to edit name and icon of a topic in a forum supergroup chat.
@@ -3282,6 +4751,32 @@ type EditForumTopic struct {
 	//Use getForumTopicIconStickers to get all allowed custom emoji identifiers.
 	//Pass an empty string to remove the icon. If not specified, the current icon will be kept
 	IconCustomEmojiId *string `json:"icon_custom_emoji_id,omitempty"`
+	client            *http.Client
+	baseUrl           string
+}
+
+func (s *EditForumTopic) WithClient(c *http.Client) *EditForumTopic {
+	s.client = c
+	return s
+}
+
+func (s EditForumTopic) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *EditForumTopic) WithApiBaseUrl(u string) *EditForumTopic {
+	s.baseUrl = u
+	return s
+}
+
+func (s EditForumTopic) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e EditForumTopic) Validate() error {
@@ -3303,8 +4798,8 @@ func (e EditForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditForumTopic) Execute() (*bool, error) {
-	return MakePostRequest[bool]("editForumTopic", e)
+func (e EditForumTopic) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "editForumTopic", e)
 }
 
 // Use this method to close an open topic in a forum supergroup chat.
@@ -3315,6 +4810,32 @@ type CloseForumTopic struct {
 	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread of the forum topic
 	MessageThreadId string `json:"message_thread_id"`
+	client          *http.Client
+	baseUrl         string
+}
+
+func (s *CloseForumTopic) WithClient(c *http.Client) *CloseForumTopic {
+	s.client = c
+	return s
+}
+
+func (s CloseForumTopic) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *CloseForumTopic) WithApiBaseUrl(u string) *CloseForumTopic {
+	s.baseUrl = u
+	return s
+}
+
+func (s CloseForumTopic) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e CloseForumTopic) Validate() error {
@@ -3331,8 +4852,8 @@ func (e CloseForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e CloseForumTopic) Execute() (*bool, error) {
-	return MakePostRequest[bool]("closeForumTopic", e)
+func (e CloseForumTopic) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "closeForumTopic", e)
 }
 
 // Use this method to reopen a closed topic in a forum supergroup chat.
@@ -3344,6 +4865,32 @@ type ReopenForumTopic struct {
 	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread of the forum topic
 	MessageThreadId string `json:"message_thread_id"`
+	client          *http.Client
+	baseUrl         string
+}
+
+func (s *ReopenForumTopic) WithClient(c *http.Client) *ReopenForumTopic {
+	s.client = c
+	return s
+}
+
+func (s ReopenForumTopic) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *ReopenForumTopic) WithApiBaseUrl(u string) *ReopenForumTopic {
+	s.baseUrl = u
+	return s
+}
+
+func (s ReopenForumTopic) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e ReopenForumTopic) Validate() error {
@@ -3360,8 +4907,8 @@ func (e ReopenForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e ReopenForumTopic) Execute() (*bool, error) {
-	return MakePostRequest[bool]("reopenForumTopic", e)
+func (e ReopenForumTopic) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "reopenForumTopic", e)
 }
 
 // Use this method to delete a forum topic along with all its messages in a forum supergroup chat.
@@ -3372,6 +4919,32 @@ type DeleteForumTopic struct {
 	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread of the forum topic
 	MessageThreadId string `json:"message_thread_id"`
+	client          *http.Client
+	baseUrl         string
+}
+
+func (s *DeleteForumTopic) WithClient(c *http.Client) *DeleteForumTopic {
+	s.client = c
+	return s
+}
+
+func (s DeleteForumTopic) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *DeleteForumTopic) WithApiBaseUrl(u string) *DeleteForumTopic {
+	s.baseUrl = u
+	return s
+}
+
+func (s DeleteForumTopic) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e DeleteForumTopic) Validate() error {
@@ -3388,8 +4961,8 @@ func (e DeleteForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e DeleteForumTopic) Execute() (*bool, error) {
-	return MakePostRequest[bool]("deleteForumTopic", e)
+func (e DeleteForumTopic) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "deleteForumTopic", e)
 }
 
 // Use this method to clear the list of pinned messages in a forum topic.
@@ -3401,6 +4974,32 @@ type UnpinAllForumTopicMessages struct {
 	ChatId string `json:"chat_id"`
 	//Unique identifier for the target message thread of the forum topic
 	MessageThreadId string `json:"message_thread_id"`
+	client          *http.Client
+	baseUrl         string
+}
+
+func (s *UnpinAllForumTopicMessages) WithClient(c *http.Client) *UnpinAllForumTopicMessages {
+	s.client = c
+	return s
+}
+
+func (s UnpinAllForumTopicMessages) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *UnpinAllForumTopicMessages) WithApiBaseUrl(u string) *UnpinAllForumTopicMessages {
+	s.baseUrl = u
+	return s
+}
+
+func (s UnpinAllForumTopicMessages) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e UnpinAllForumTopicMessages) Validate() error {
@@ -3417,8 +5016,8 @@ func (e UnpinAllForumTopicMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e UnpinAllForumTopicMessages) Execute() (*bool, error) {
-	return MakePostRequest[bool]("unpinAllForumTopicMessages", e)
+func (e UnpinAllForumTopicMessages) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "unpinAllForumTopicMessages", e)
 }
 
 // Use this method to edit the name of the 'General' topic in a forum supergroup chat.
@@ -3428,7 +5027,33 @@ type EditGeneralForumTopic struct {
 	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
 	ChatId string `json:"chat_id"`
 	//New topic name, 1-128 characters
-	Name string `json:"name"`
+	Name    string `json:"name"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *EditGeneralForumTopic) WithClient(c *http.Client) *EditGeneralForumTopic {
+	s.client = c
+	return s
+}
+
+func (s EditGeneralForumTopic) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *EditGeneralForumTopic) WithApiBaseUrl(u string) *EditGeneralForumTopic {
+	s.baseUrl = u
+	return s
+}
+
+func (s EditGeneralForumTopic) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e EditGeneralForumTopic) Validate() error {
@@ -3445,8 +5070,8 @@ func (e EditGeneralForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e EditGeneralForumTopic) Execute() (*bool, error) {
-	return MakePostRequest[bool]("editGeneralForumTopic", e)
+func (e EditGeneralForumTopic) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "editGeneralForumTopic", e)
 }
 
 // Use this method to close an open 'General' topic in a forum supergroup chat.
@@ -3455,7 +5080,33 @@ func (e EditGeneralForumTopic) Execute() (*bool, error) {
 // Returns True on success.
 type CloseGeneralForumTopic struct {
 	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *CloseGeneralForumTopic) WithClient(c *http.Client) *CloseGeneralForumTopic {
+	s.client = c
+	return s
+}
+
+func (s CloseGeneralForumTopic) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *CloseGeneralForumTopic) WithApiBaseUrl(u string) *CloseGeneralForumTopic {
+	s.baseUrl = u
+	return s
+}
+
+func (s CloseGeneralForumTopic) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e CloseGeneralForumTopic) Validate() error {
@@ -3469,8 +5120,8 @@ func (e CloseGeneralForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e CloseGeneralForumTopic) Execute() (*bool, error) {
-	return MakePostRequest[bool]("closeGeneralForumTopic", e)
+func (e CloseGeneralForumTopic) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "closeGeneralForumTopic", e)
 }
 
 // Use this method to reopen a closed 'General' topic in a forum supergroup chat.
@@ -3479,7 +5130,33 @@ func (e CloseGeneralForumTopic) Execute() (*bool, error) {
 // Returns True on success.
 type ReopenGeneralForumTopic struct {
 	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *ReopenGeneralForumTopic) WithClient(c *http.Client) *ReopenGeneralForumTopic {
+	s.client = c
+	return s
+}
+
+func (s ReopenGeneralForumTopic) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *ReopenGeneralForumTopic) WithApiBaseUrl(u string) *ReopenGeneralForumTopic {
+	s.baseUrl = u
+	return s
+}
+
+func (s ReopenGeneralForumTopic) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e ReopenGeneralForumTopic) Validate() error {
@@ -3493,8 +5170,8 @@ func (e ReopenGeneralForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e ReopenGeneralForumTopic) Execute() (*bool, error) {
-	return MakePostRequest[bool]("reopenGeneralForumTopic", e)
+func (e ReopenGeneralForumTopic) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "reopenGeneralForumTopic", e)
 }
 
 // Use this method to hide the 'General' topic in a forum supergroup chat.
@@ -3502,7 +5179,33 @@ func (e ReopenGeneralForumTopic) Execute() (*bool, error) {
 // The topic will be automatically closed if it was open. Returns True on success.
 type HideGeneralForumTopic struct {
 	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *HideGeneralForumTopic) WithClient(c *http.Client) *HideGeneralForumTopic {
+	s.client = c
+	return s
+}
+
+func (s HideGeneralForumTopic) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *HideGeneralForumTopic) WithApiBaseUrl(u string) *HideGeneralForumTopic {
+	s.baseUrl = u
+	return s
+}
+
+func (s HideGeneralForumTopic) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e HideGeneralForumTopic) Validate() error {
@@ -3516,8 +5219,8 @@ func (e HideGeneralForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e HideGeneralForumTopic) Execute() (*bool, error) {
-	return MakePostRequest[bool]("hideGeneralForumTopic", e)
+func (e HideGeneralForumTopic) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "hideGeneralForumTopic", e)
 }
 
 // Use this method to unhide the 'General' topic in a forum supergroup chat.
@@ -3525,7 +5228,33 @@ func (e HideGeneralForumTopic) Execute() (*bool, error) {
 // Returns True on success.
 type UnhideGeneralForumTopic struct {
 	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *UnhideGeneralForumTopic) WithClient(c *http.Client) *UnhideGeneralForumTopic {
+	s.client = c
+	return s
+}
+
+func (s UnhideGeneralForumTopic) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *UnhideGeneralForumTopic) WithApiBaseUrl(u string) *UnhideGeneralForumTopic {
+	s.baseUrl = u
+	return s
+}
+
+func (s UnhideGeneralForumTopic) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e UnhideGeneralForumTopic) Validate() error {
@@ -3539,8 +5268,8 @@ func (e UnhideGeneralForumTopic) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e UnhideGeneralForumTopic) Execute() (*bool, error) {
-	return MakePostRequest[bool]("unhideGeneralForumTopic", e)
+func (e UnhideGeneralForumTopic) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "unhideGeneralForumTopic", e)
 }
 
 // Use this method to clear the list of pinned messages in a General forum topic.
@@ -3549,7 +5278,33 @@ func (e UnhideGeneralForumTopic) Execute() (*bool, error) {
 // Returns True on success.
 type UnpinAllGeneralForumTopicMessages struct {
 	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-	ChatId string `json:"chat_id"`
+	ChatId  string `json:"chat_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *UnpinAllGeneralForumTopicMessages) WithClient(c *http.Client) *UnpinAllGeneralForumTopicMessages {
+	s.client = c
+	return s
+}
+
+func (s UnpinAllGeneralForumTopicMessages) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *UnpinAllGeneralForumTopicMessages) WithApiBaseUrl(u string) *UnpinAllGeneralForumTopicMessages {
+	s.baseUrl = u
+	return s
+}
+
+func (s UnpinAllGeneralForumTopicMessages) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (e UnpinAllGeneralForumTopicMessages) Validate() error {
@@ -3563,8 +5318,8 @@ func (e UnpinAllGeneralForumTopicMessages) ToRequestBody() ([]byte, error) {
 	return json.Marshal(e)
 }
 
-func (e UnpinAllGeneralForumTopicMessages) Execute() (*bool, error) {
-	return MakePostRequest[bool]("unpinAllGeneralForumTopicMessages", e)
+func (e UnpinAllGeneralForumTopicMessages) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "unpinAllGeneralForumTopicMessages", e)
 }
 
 // Use this method to send answers to callback queries sent from inline keyboards.
@@ -3590,6 +5345,32 @@ type AnswerCallbackQuery struct {
 	//The maximum amount of time in seconds that the result of the callback query may be cached client-side.
 	//Telegram apps will support caching starting in version 3.14. Defaults to 0.
 	CacheTime *int `json:"cache_time"`
+	client    *http.Client
+	baseUrl   string
+}
+
+func (s *AnswerCallbackQuery) WithClient(c *http.Client) *AnswerCallbackQuery {
+	s.client = c
+	return s
+}
+
+func (s AnswerCallbackQuery) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *AnswerCallbackQuery) WithApiBaseUrl(u string) *AnswerCallbackQuery {
+	s.baseUrl = u
+	return s
+}
+
+func (s AnswerCallbackQuery) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (a AnswerCallbackQuery) Validate() error {
@@ -3608,8 +5389,8 @@ func (a AnswerCallbackQuery) ToRequestBody() ([]byte, error) {
 	return json.Marshal(a)
 }
 
-func (a AnswerCallbackQuery) Execute() (*bool, error) {
-	return MakePostRequest[bool]("answerCallbackQuery", a)
+func (a AnswerCallbackQuery) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "answerCallbackQuery", a)
 }
 
 // Use this method to get the list of boosts added to a chat by a user. Requires administrator rights in the chat. Returns a UserChatBoosts object.
@@ -3617,7 +5398,33 @@ type GetUserChatBoosts struct {
 	//Unique identifier for the chat or username of the channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
 	//Unique identifier of the target user
-	UserId int `json:"user_id"`
+	UserId  int `json:"user_id"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *GetUserChatBoosts) WithClient(c *http.Client) *GetUserChatBoosts {
+	s.client = c
+	return s
+}
+
+func (s GetUserChatBoosts) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetUserChatBoosts) WithApiBaseUrl(u string) *GetUserChatBoosts {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetUserChatBoosts) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (g GetUserChatBoosts) Validate() error {
@@ -3634,8 +5441,8 @@ func (g GetUserChatBoosts) ToRequestBody() ([]byte, error) {
 	return json.Marshal(g)
 }
 
-func (g GetUserChatBoosts) Execute() (*objects.UserChatBoosts, error) {
-	return MakeGetRequest[objects.UserChatBoosts]("getUserChatBoosts", g)
+func (g GetUserChatBoosts) Execute(token string) (*objects.UserChatBoosts, error) {
+	return SendTelegramGetRequest[objects.UserChatBoosts](token, "getUserChatBoosts", g)
 }
 
 // Use this method to get information about the connection of the bot with a business account.
@@ -3643,6 +5450,32 @@ func (g GetUserChatBoosts) Execute() (*objects.UserChatBoosts, error) {
 type GetBusinessConnection struct {
 	//Unique identifier of the business connection
 	BusinessConnectionId string `json:"business_connection_id"`
+	client               *http.Client
+	baseUrl              string
+}
+
+func (s *GetBusinessConnection) WithClient(c *http.Client) *GetBusinessConnection {
+	s.client = c
+	return s
+}
+
+func (s GetBusinessConnection) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetBusinessConnection) WithApiBaseUrl(u string) *GetBusinessConnection {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetBusinessConnection) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (g GetBusinessConnection) Validate() error {
@@ -3656,8 +5489,8 @@ func (g GetBusinessConnection) ToRequestBody() ([]byte, error) {
 	return json.Marshal(g)
 }
 
-func (g GetBusinessConnection) Execute() (*objects.BusinessConnection, error) {
-	return MakeGetRequest[objects.BusinessConnection]("getBusinessConnection", g)
+func (g GetBusinessConnection) Execute(token string) (*objects.BusinessConnection, error) {
+	return SendTelegramGetRequest[objects.BusinessConnection](token, "getBusinessConnection", g)
 }
 
 // Use this method to change the list of the bot's commands. See this manual for more details about bot commands. Returns True on success.
@@ -3668,6 +5501,32 @@ type SetMyCommands struct {
 	Scope objects.BotCommandScope `json:"scope,omitempty"`
 	//A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands
 	LanguageCode *string `json:"language_code,omitempty"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *SetMyCommands) WithClient(c *http.Client) *SetMyCommands {
+	s.client = c
+	return s
+}
+
+func (s SetMyCommands) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetMyCommands) WithApiBaseUrl(u string) *SetMyCommands {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetMyCommands) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetMyCommands) Validate() error {
@@ -3695,8 +5554,8 @@ func (s SetMyCommands) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetMyCommands) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setMyCommands", s)
+func (s SetMyCommands) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setMyCommands", s)
 }
 
 // Use this method to delete the list of the bot's commands for the given scope and user language.
@@ -3706,6 +5565,32 @@ type DeleteMyCommands struct {
 	Scope objects.BotCommandScope `json:"scope,omitempty"`
 	//A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands
 	LanguageCode *string `json:"language_code,omitempty"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *DeleteMyCommands) WithClient(c *http.Client) *DeleteMyCommands {
+	s.client = c
+	return s
+}
+
+func (s DeleteMyCommands) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *DeleteMyCommands) WithApiBaseUrl(u string) *DeleteMyCommands {
+	s.baseUrl = u
+	return s
+}
+
+func (s DeleteMyCommands) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s DeleteMyCommands) Validate() error {
@@ -3726,8 +5611,8 @@ func (s DeleteMyCommands) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s DeleteMyCommands) Execute() (*bool, error) {
-	return MakePostRequest[bool]("deleteMyCommands", s)
+func (s DeleteMyCommands) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "deleteMyCommands", s)
 }
 
 // Use this method to get the current list of the bot's commands for the given scope and user language.
@@ -3737,6 +5622,32 @@ type GetMyCommands struct {
 	Scope objects.BotCommandScope `json:"scope,omitempty"`
 	//A two-letter ISO 639-1 language code or an empty string
 	LanguageCode *string `json:"language_code,omitempty"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *GetMyCommands) WithClient(c *http.Client) *GetMyCommands {
+	s.client = c
+	return s
+}
+
+func (s GetMyCommands) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetMyCommands) WithApiBaseUrl(u string) *GetMyCommands {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetMyCommands) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s GetMyCommands) Validate() error {
@@ -3757,8 +5668,8 @@ func (s GetMyCommands) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s GetMyCommands) Execute() (*[]objects.BotCommand, error) {
-	return MakeGetRequest[[]objects.BotCommand]("getMyCommands", s)
+func (s GetMyCommands) Execute(token string) (*[]objects.BotCommand, error) {
+	return SendTelegramGetRequest[[]objects.BotCommand](token, "getMyCommands", s)
 }
 
 // Use this method to change the bot's name. Returns True on success.
@@ -3767,6 +5678,32 @@ type SetMyName struct {
 	Name *string `json:"name,omitempty"`
 	//A two-letter ISO 639-1 language code. If empty, the name will be shown to all users for whose language there is no dedicated name.
 	LanguageCode *string `json:"language_code,omitempty"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *SetMyName) WithClient(c *http.Client) *SetMyName {
+	s.client = c
+	return s
+}
+
+func (s SetMyName) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetMyName) WithApiBaseUrl(u string) *SetMyName {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetMyName) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetMyName) Validate() error {
@@ -3787,14 +5724,40 @@ func (s SetMyName) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetMyName) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setMyName", s)
+func (s SetMyName) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setMyName", s)
 }
 
 // Use this method to get the current bot name for the given user language. Returns BotName on success.
 type GetMyName struct {
 	//A two-letter ISO 639-1 language code or an empty string
 	LanguageCode *string `json:"language_code,omitempty"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *GetMyName) WithClient(c *http.Client) *GetMyName {
+	s.client = c
+	return s
+}
+
+func (s GetMyName) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetMyName) WithApiBaseUrl(u string) *GetMyName {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetMyName) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s GetMyName) Validate() error {
@@ -3810,8 +5773,8 @@ func (s GetMyName) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s GetMyName) Execute() (*objects.BotName, error) {
-	return MakeGetRequest[objects.BotName]("getMyName", s)
+func (s GetMyName) Execute(token string) (*objects.BotName, error) {
+	return SendTelegramGetRequest[objects.BotName](token, "getMyName", s)
 }
 
 // Use this method to change the bot's description, which is shown in the chat with the bot if the chat is empty. Returns True on success.
@@ -3820,6 +5783,32 @@ type SetMyDescription struct {
 	Description *string `json:"description,omitempty"`
 	//A two-letter ISO 639-1 language code. If empty, the description will be applied to all users for whose language there is no dedicated description.
 	LanguageCode *string `json:"language_code,omitempty"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *SetMyDescription) WithClient(c *http.Client) *SetMyDescription {
+	s.client = c
+	return s
+}
+
+func (s SetMyDescription) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetMyDescription) WithApiBaseUrl(u string) *SetMyDescription {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetMyDescription) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetMyDescription) Validate() error {
@@ -3840,14 +5829,40 @@ func (s SetMyDescription) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetMyDescription) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setMyDescription", s)
+func (s SetMyDescription) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setMyDescription", s)
 }
 
 // Use this method to get the current bot description for the given user language. Returns BotDescription on success.
 type GetMyDescription struct {
 	//A two-letter ISO 639-1 language code or an empty string
 	LanguageCode *string `json:"language_code,omitempty"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *GetMyDescription) WithClient(c *http.Client) *GetMyDescription {
+	s.client = c
+	return s
+}
+
+func (s GetMyDescription) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetMyDescription) WithApiBaseUrl(u string) *GetMyDescription {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetMyDescription) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s GetMyDescription) Validate() error {
@@ -3863,8 +5878,8 @@ func (s GetMyDescription) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s GetMyDescription) Execute() (*objects.BotDescription, error) {
-	return MakeGetRequest[objects.BotDescription]("getMyDescription", s)
+func (s GetMyDescription) Execute(token string) (*objects.BotDescription, error) {
+	return SendTelegramGetRequest[objects.BotDescription](token, "getMyDescription", s)
 }
 
 // Use this method to change the bot's short description, which is shown on the bot's profile page and is sent together with the link when users share the bot.
@@ -3874,6 +5889,32 @@ type SetMyShortDescription struct {
 	ShortDescription *string `json:"short_description,omitempty"`
 	//A two-letter ISO 639-1 language code. If empty, the short description will be applied to all users for whose language there is no dedicated short description.
 	LanguageCode *string `json:"language_code,omitempty"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *SetMyShortDescription) WithClient(c *http.Client) *SetMyShortDescription {
+	s.client = c
+	return s
+}
+
+func (s SetMyShortDescription) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetMyShortDescription) WithApiBaseUrl(u string) *SetMyShortDescription {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetMyShortDescription) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetMyShortDescription) Validate() error {
@@ -3894,14 +5935,40 @@ func (s SetMyShortDescription) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetMyShortDescription) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setMyShortDescription", s)
+func (s SetMyShortDescription) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setMyShortDescription", s)
 }
 
 // Use this method to get the current bot short description for the given user language. Returns BotShortDescription on success.
 type GetMyShortDescription struct {
 	//A two-letter ISO 639-1 language code or an empty string
 	LanguageCode *string `json:"language_code,omitempty"`
+	client       *http.Client
+	baseUrl      string
+}
+
+func (s *GetMyShortDescription) WithClient(c *http.Client) *GetMyShortDescription {
+	s.client = c
+	return s
+}
+
+func (s GetMyShortDescription) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetMyShortDescription) WithApiBaseUrl(u string) *GetMyShortDescription {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetMyShortDescription) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s GetMyShortDescription) Validate() error {
@@ -3917,8 +5984,8 @@ func (s GetMyShortDescription) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s GetMyShortDescription) Execute() (*bool, error) {
-	return MakeGetRequest[bool]("getMyShortDescription", s)
+func (s GetMyShortDescription) Execute(token string) (*objects.BotShortDescription, error) {
+	return SendTelegramGetRequest[objects.BotShortDescription](token, "getMyShortDescription", s)
 }
 
 // Use this method to change the bot's menu button in a private chat, or the default menu button. Returns True on success.
@@ -3927,6 +5994,32 @@ type SetChatMenuButton struct {
 	ChatId *string `json:"chat_id,omitempty"`
 	//A JSON-serialized object for the bot's new menu button. Defaults to MenuButtonDefault
 	MenuButton objects.MenuButton `json:"menu_button,omitempty"`
+	client     *http.Client
+	baseUrl    string
+}
+
+func (s *SetChatMenuButton) WithClient(c *http.Client) *SetChatMenuButton {
+	s.client = c
+	return s
+}
+
+func (s SetChatMenuButton) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetChatMenuButton) WithApiBaseUrl(u string) *SetChatMenuButton {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetChatMenuButton) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s SetChatMenuButton) Validate() error {
@@ -3947,15 +6040,41 @@ func (s SetChatMenuButton) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetChatMenuButton) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setChatMenuButton", s)
+func (s SetChatMenuButton) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setChatMenuButton", s)
 }
 
 // Use this method to get the current value of the bot's menu button in a private chat, or the default menu button.
 // Returns MenuButton on success.
 type GetChatMenuButton struct {
 	//Unique identifier for the target private chat. If not specified, default bot's menu button will be returned
-	ChatId *int `json:"chat_id,omitempty"`
+	ChatId  *int `json:"chat_id,omitempty"`
+	client  *http.Client
+	baseUrl string
+}
+
+func (s *GetChatMenuButton) WithClient(c *http.Client) *GetChatMenuButton {
+	s.client = c
+	return s
+}
+
+func (s GetChatMenuButton) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetChatMenuButton) WithApiBaseUrl(u string) *GetChatMenuButton {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetChatMenuButton) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 func (s GetChatMenuButton) Validate() error {
@@ -3971,8 +6090,8 @@ func (s GetChatMenuButton) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s GetChatMenuButton) Execute() (*objects.MenuButtonResponse, error) {
-	return MakeGetRequest[objects.MenuButtonResponse]("setChatMenuButton", s)
+func (s GetChatMenuButton) Execute(token string) (*objects.MenuButton, error) {
+	return SendTelegramGetRequest[objects.MenuButton](token, "setChatMenuButton", s)
 }
 
 // Use this method to change the default administrator rights requested by the bot when it's added as an administrator to groups or channels.
@@ -3984,6 +6103,32 @@ type SetMyDefaultAdministratorRights struct {
 	//Pass True to change the default administrator rights of the bot in channels.
 	//Otherwise, the default administrator rights of the bot for groups and supergroups will be changed.
 	ForChannels *bool `json:"for_channels,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *SetMyDefaultAdministratorRights) WithClient(c *http.Client) *SetMyDefaultAdministratorRights {
+	s.client = c
+	return s
+}
+
+func (s SetMyDefaultAdministratorRights) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *SetMyDefaultAdministratorRights) WithApiBaseUrl(u string) *SetMyDefaultAdministratorRights {
+	s.baseUrl = u
+	return s
+}
+
+func (s SetMyDefaultAdministratorRights) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 // always nil
@@ -3995,8 +6140,8 @@ func (s SetMyDefaultAdministratorRights) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s SetMyDefaultAdministratorRights) Execute() (*bool, error) {
-	return MakePostRequest[bool]("setMyDefaultAdministratorRights", s)
+func (s SetMyDefaultAdministratorRights) Execute(token string) (*bool, error) {
+	return SendTelegramPostRequest[bool](token, "setMyDefaultAdministratorRights", s)
 }
 
 // Use this method to get the current default administrator rights of the bot. Returns ChatAdministratorRights on success.
@@ -4004,6 +6149,32 @@ type GetMyDefaultAdministratorRights struct {
 	//Pass True to get default administrator rights of the bot in channels.
 	//Otherwise, default administrator rights of the bot for groups and supergroups will be returned.
 	ForChannels *bool `json:"for_channels,omitempty"`
+	client      *http.Client
+	baseUrl     string
+}
+
+func (s *GetMyDefaultAdministratorRights) WithClient(c *http.Client) *GetMyDefaultAdministratorRights {
+	s.client = c
+	return s
+}
+
+func (s GetMyDefaultAdministratorRights) Client() *http.Client {
+	if s.client == nil {
+		return &http.Client{}
+	}
+	return s.client
+}
+
+func (s *GetMyDefaultAdministratorRights) WithApiBaseUrl(u string) *GetMyDefaultAdministratorRights {
+	s.baseUrl = u
+	return s
+}
+
+func (s GetMyDefaultAdministratorRights) ApiBaseUrl() string {
+	if s.baseUrl == "" {
+		return "https://api.telegram.org/bot%s/%s"
+	}
+	return s.baseUrl
 }
 
 // always nil
@@ -4015,6 +6186,6 @@ func (s GetMyDefaultAdministratorRights) ToRequestBody() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s GetMyDefaultAdministratorRights) Execute() (*objects.ChatAdministratorRights, error) {
-	return MakePostRequest[objects.ChatAdministratorRights]("getMyDefaultAdministratorRights", s)
+func (s GetMyDefaultAdministratorRights) Execute(token string) (*objects.ChatAdministratorRights, error) {
+	return SendTelegramPostRequest[objects.ChatAdministratorRights](token, "getMyDefaultAdministratorRights", s)
 }
