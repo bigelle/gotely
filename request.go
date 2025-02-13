@@ -1,7 +1,6 @@
 package gotely
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,11 +9,16 @@ import (
 
 // ApiResponse represents a response from a request to Telegram Bot API
 type ApiResponse[T any] struct {
-	Ok          bool                `json:"ok"`
-	ErrorCode   *int                `json:"error_code,omitempty"`
-	Description *string             `json:"description,omitempty"`
-	Parameters  *ResponseParameters `json:"parameters,omitempty"`
-	Result      *T                  `json:"result,omitempty"`
+	//true if request was successful, otherwise false
+	Ok bool `json:"ok"`
+	//error code of unsuccessful request
+	ErrorCode *int `json:"error_code,omitempty"`
+	//a human-readable description of the result
+	Description *string `json:"description,omitempty"`
+	//Describes why a request was unsuccessful.
+	Parameters *ResponseParameters `json:"parameters,omitempty"`
+	//result of request
+	Result *T `json:"result,omitempty"`
 }
 
 // ResponseParameters describes why a request was unsuccessful.
@@ -35,30 +39,43 @@ type Method interface {
 	Endpoint() string
 	//Returns an error if request contains invalid data or a nil
 	Validate() error
+	//Returns `io.Reader` of this method struct
+	Reader() (io.Reader, error)
 }
 
+// SendRequest is a wrapper around `SendRequestWith` with no `RequestOption` specified,
+// and is used to send a set of request parameters `body` using API Token `token` and HTTP Method `method`.
+// Returns a pointer to specified expected object T or an error if something is went wrong
 func SendRequest[T any](body Method, token string, method string) (*T, error) {
 	return SendRequestWith[T](body, token, method)
 }
 
+// SendPostRequest is a wrapper around SendRequest that is using `http.MethodPost` as HTTP Method
+// and is used to send a set of request parameters `body` using API Token `token`
+// Returns a pointer to specified expected object T or an error if something is went wrong
 func SendPostRequest[T any](body Method, token string) (*T, error) {
 	return SendRequest[T](body, token, http.MethodPost)
 }
 
+// SendGetRequest is a wrapper around SendRequest that is using `http.MethodGet` as HTTP Method
+// and is used to send a set of request parameters `body` using API Token `token`
+// Returns a pointer to specified expected object T or an error if something is went wrong
 func SendGetRequest[T any](body Method, token string) (*T, error) {
 	return SendRequest[T](body, token, http.MethodGet)
 }
 
+// SendRequestWith is used to send a set of request parameters `body` using API Token `token`, HTTP Method `method`
+// and a list of request options `opts`.
+// Returns a pointer to specified expected object T or an error if something is went wrong
 func SendRequestWith[T any](body Method, token string, method string, opts ...RequestOption) (*T, error) {
 	if err := body.Validate(); err != nil {
 		return nil, err
 	}
 
-	b, err := json.Marshal(body)
+	r, err := body.Reader()
 	if err != nil {
 		return nil, err
 	}
-	r := bytes.NewReader(b)
 
 	cfg := RequestConfig{
 		Client:         *&http.DefaultClient,
@@ -79,7 +96,7 @@ func SendRequestWith[T any](body Method, token string, method string, opts ...Re
 		return nil, err
 	}
 	defer resp.Body.Close()
-	b, err = io.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -95,17 +112,54 @@ func SendRequestWith[T any](body Method, token string, method string, opts ...Re
 	return result.Result, nil
 }
 
+// SendPostRequest is a wrapper around SendRequestWith that is using `http.MethodPost` as HTTP Method
+// and is used to send a set of request parameters `body` using API Token `token` and a list of request options `opts`
+// Returns a pointer to specified expected object T or an error if something is went wrong
 func SendPostRequestWith[T any](body Method, token string, opts ...RequestOption) (*T, error) {
 	return SendRequestWith[T](body, token, http.MethodPost, opts...)
 }
 
+// SendGetRequest is a wrapper around SendRequestWith that is using `http.MethodPost` as HTTP Method
+// and is used to send a set of request parameters `body` using API Token `token` and a list of request options `opts`
+// Returns a pointer to specified expected object T or an error if something is went wrong
 func SendGetRequestWith[T any](body Method, token string, opts ...RequestOption) (*T, error) {
 	return SendRequestWith[T](body, token, http.MethodGet, opts...)
 }
 
+// RequestOption is a type based on a function that is accepting a pointer to a `RequestConfig`
+// and is used when sending a request using `SendRequestWith` with specified options
 type RequestOption func(*RequestConfig)
 
+// RequestConfig is a structured configuration that will be used while sending a request to Telegram Bot API
 type RequestConfig struct {
-	Client         *http.Client
+	//custom client. Defaults to `http.DefaultClient`
+	Client *http.Client
+	//Custom Telegram Bot API URL. Defaults to "https://api.telegram.org/bot%s/%s",
+	//where the first placeholder is used for API token and the second one is for API endpoint.
+	//Please use %s placeholders to properly use Bot API token and API endpoint
 	RequestBaseUrl string
+}
+
+// WithClient is a functional option that is used when sending a request using `SendRequestWith`.
+// Use it to provide a custom `http.Client` that will be used when doing the request
+func WithClient(c *http.Client) RequestOption {
+	return func(rc *RequestConfig) {
+		rc.Client = c
+	}
+}
+
+// WithUrl is a functional option that is used when sending a request using `SendRequestWith`.
+// Use it to provide your own Telegram Bot API URL in case you're running it locally
+func WithUrl(url string) RequestOption {
+	return func(rc *RequestConfig) {
+		rc.RequestBaseUrl = url
+	}
+}
+
+// WithConfig is a functional option that is used when sending a request using `SendRequestWith`.
+// Use it to configure the request all at once
+func WithConfig(cfg RequestConfig) RequestOption {
+	return func(rc *RequestConfig) {
+		rc = &cfg
+	}
 }
