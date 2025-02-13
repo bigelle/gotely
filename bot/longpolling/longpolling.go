@@ -15,8 +15,6 @@ import (
 //
 // Default configuration (without options):
 //
-// bot := longpolling.New("YOUR_TOKEN", upd_handler)
-//
 //   - HTTP client: http.DefaultClient
 //
 //   - API URL: "https://api.telegram.org/bot%s/%s"

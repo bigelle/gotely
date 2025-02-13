@@ -34,13 +34,16 @@ type ResponseParameters struct {
 
 // Method represents a Telegram Bot API method as a structured set of request parameters.
 type Method interface {
-	//Returns an API endpoint of this method as a string.
-	//For example, `SendMessage` will return "sendMessage".
+	//Should return an API endpoint of this method as a string.
+	//For example, in case with `SendMessage` it will return "sendMessage".
 	Endpoint() string
-	//Returns an error if request contains invalid data or a nil
+	//Should return an error if request contains invalid data or a nil
 	Validate() error
-	//Returns `io.Reader` of this method struct
+	//Should return `io.Reader` of this method body
 	Reader() (io.Reader, error)
+	//Returns "application/json" for regular methods
+	//and "multipart/form-data" with pre-generated boundary
+	ContentType() string
 }
 
 // SendRequest is a wrapper around `SendRequestWith` with no `RequestOption` specified,
@@ -72,13 +75,15 @@ func SendRequestWith[T any](body Method, token string, method string, opts ...Re
 		return nil, err
 	}
 
+	//its important to call Reader() before using ContentType()
+	//since content-type boundary is generated inside Reader() and stored inside of a struct
 	r, err := body.Reader()
 	if err != nil {
 		return nil, err
 	}
 
 	cfg := RequestConfig{
-		Client:         *&http.DefaultClient,
+		Client:         http.DefaultClient,
 		RequestBaseUrl: "https://api.telegram.org/bot%s/%s",
 	}
 	for _, opt := range opts {
@@ -90,6 +95,7 @@ func SendRequestWith[T any](body Method, token string, method string, opts ...Re
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Content-Type", body.ContentType())
 
 	resp, err := cfg.Client.Do(req)
 	if err != nil {
