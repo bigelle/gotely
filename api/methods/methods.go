@@ -1920,6 +1920,7 @@ func (s SendMediaGroup) Validate() error {
 func (s SendMediaGroup) Reader() (io.Reader, error) {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
 
 	go func() {
 		if s.BusinessConnectionId != nil {

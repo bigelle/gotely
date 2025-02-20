@@ -1,12 +1,19 @@
 package longpolling
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
+	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/api/objects"
 	"github.com/bigelle/gotely/bot"
 )
@@ -66,7 +73,7 @@ type LongPollingBot struct {
 	//will be used to asynchronously respond to every incoming update
 	chContext chan *bot.Context
 	//calculated automatically, used to poll for new updates
-	offset int
+	offset *int
 	//cancel func to gracefully stop go-routines
 	cancel context.CancelFunc
 }
@@ -145,6 +152,15 @@ func (l *LongPollingBot) Start() {
 
 	wg := &sync.WaitGroup{}
 
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		l.logger.Info("shutting down...")
+		l.Stop()
+		cancel()
+	}()
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -157,7 +173,9 @@ func (l *LongPollingBot) Start() {
 		l.respond(ctx)
 	}()
 
+	l.logger.Info("bot started")
 	wg.Wait()
+	l.logger.Info("bot stopped")
 }
 
 func (l *LongPollingBot) Validate() error {
@@ -177,17 +195,22 @@ func (l *LongPollingBot) poll(ctx context.Context) {
 				l.logger.Error("failed to get new updates", "error", err)
 				continue
 			}
-			for _, upd := range *upds {
-				select {
-				case l.chContext <- &bot.Context{
-					Update: upd,
-					Client: l.client,
-					ApiUrl: l.apiUrl,
-				}:
-					l.logger.Info("new incoming update", "update_id", upd.UpdateId)
-				case <-ctx.Done():
-					l.logger.Info("bot stopped, exiting polling loop")
-					return
+			if len(*upds) > 0 {
+				for _, upd := range *upds {
+					select {
+					case l.chContext <- &bot.Context{
+						Token:  l.token,
+						Update: upd,
+						Client: l.client,
+						ApiUrl: l.apiUrl,
+					}:
+						l.logger.Info("new incoming update", "update_id", upd.UpdateId)
+						newOffset := (*upds)[len(*upds)-1].UpdateId + 1
+						l.offset = &newOffset
+					case <-ctx.Done():
+						l.logger.Info("bot stopped, exiting polling loop")
+						return
+					}
 				}
 			}
 		}
@@ -195,8 +218,56 @@ func (l *LongPollingBot) poll(ctx context.Context) {
 }
 
 func (l *LongPollingBot) getUpdates() (*[]objects.Update, error) {
-	//FIXME
-	return nil, nil
+	b := getUpdates{
+		Offset:         l.offset,
+		Timeout:        &l.timeout,
+		Limit:          &l.limit,
+		AllowedUpdates: l.allowedUpdates,
+	}
+	return gotely.SendGetRequestWith[[]objects.Update](
+		b,
+		l.token,
+		gotely.WithClient(l.client),
+		gotely.WithUrl(l.apiUrl),
+	)
+}
+
+type getUpdates struct {
+	Offset         *int      `json:"offset,omitempty"`
+	Limit          *int      `json:"limit,omitempty"`
+	Timeout        *int      `json:"timeout,omitempty"`
+	AllowedUpdates *[]string `json:"allowed_updates,omitempty"`
+}
+
+func (g getUpdates) Endpoint() string {
+	return "getUpdates"
+}
+
+func (g getUpdates) Validate() error {
+	if g.Limit != nil {
+		if *g.Limit < 1 || *g.Limit > 100 {
+			return fmt.Errorf("limit must be between 1 and 100")
+		}
+	}
+	if g.Timeout != nil {
+		if *g.Timeout < 0 {
+			return fmt.Errorf("timeout must be positive")
+		}
+	}
+	//FIXME allowed updates validation
+	return nil
+}
+
+func (g getUpdates) Reader() (io.Reader, error) {
+	b, err := json.Marshal(g)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (g getUpdates) ContentType() string {
+	return "application/json"
 }
 
 func (l *LongPollingBot) respond(ctx context.Context) {

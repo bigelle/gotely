@@ -83,7 +83,9 @@ func SendRequestWith[T any](body Method, token string, method string, opts ...Re
 	}
 
 	cfg := RequestConfig{
-		Client:         http.DefaultClient,
+		Client: http.DefaultClient,
+		//FIXME possibly would be better if url will already contain token
+		//and will be used as url+endpoint
 		RequestBaseUrl: "https://api.telegram.org/bot%s/%s",
 	}
 	for _, opt := range opts {
