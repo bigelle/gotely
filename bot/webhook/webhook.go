@@ -1,49 +1,22 @@
 package webhook
 
 import (
-	"bytes"
-	"encoding/json"
 	"io"
-	"net/http"
-	"strings"
+	"mime/multipart"
 
 	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/api/objects"
 )
 
-func Connect(url, token string, opts ...Option) error {
-	swh := setWebhook{
-		Url:    url,
-		client: http.DefaultClient,
-		apiUrl: "https://api.telegram.org/bot%s/%s",
-	}
-	for _, opt := range opts {
-		opt(&swh)
-	}
-	_, err := gotely.SendPostRequestWith[bool](
-		&swh,
-		token,
-		gotely.WithClient(swh.client),
-		gotely.WithUrl(swh.apiUrl),
-	)
-	return err
-}
-
-type Option func(*setWebhook)
-
-// TODO opts
-
 type setWebhook struct {
-	Url                string            `json:"url"`
-	Certificate        objects.InputFile `json:"certificate,omitzero"`
-	IpAddress          string            `json:"ip_address,omitzero"`
-	MaxConnections     int               `json:"max_connections,omitzero"`
-	AllowedUpdates     *[]string         `json:"allowed_updates,omitempty"`
-	DropPendingUpdates bool              `json:"drop_pending_updates,omitzero"`
-	SecretToken        string            `json:"secret_token,omitzero"`
+	Url                string             `json:"url"`
+	Certificate        *objects.InputFile `json:"certificate,omitempty"`
+	IpAddress          *string            `json:"ip_address,omitempty"`
+	MaxConnections     *int               `json:"max_connections,omitempty"`
+	AllowedUpdates     *[]string          `json:"allowed_updates,omitempty"`
+	DropPendingUpdates *bool              `json:"drop_pending_updates,omitempty"`
+	SecretToken        *string            `json:"secret_token,omitempty"`
 	contentType        string
-	client             *http.Client
-	apiUrl             string
 }
 
 func (s setWebhook) Endpoint() string {
@@ -51,85 +24,60 @@ func (s setWebhook) Endpoint() string {
 }
 
 func (s setWebhook) Validate() error {
-	//FIXME
+	//TODO
 	return nil
 }
 
 func (s *setWebhook) Reader() (io.Reader, error) {
-	//FIXME multipart
-	return nil, nil
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+
+	go func() {
+		defer pw.Close()
+		if err := mw.WriteField("url", s.Url); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if s.Certificate != nil {
+			if c, ok := (*s.Certificate).(objects.InputFileFromRemote); ok {
+				part, err := mw.CreateFormFile("certificate", c.Name())
+				if err != nil {
+					pw.CloseWithError(err)
+					return
+				}
+				r, err := c.Reader()
+				if err != nil {
+					pw.CloseWithError(err)
+					return
+				}
+				if _, err := io.Copy(part, r); err != nil {
+					pw.CloseWithError(err)
+					return
+				}
+			}
+		}
+		if s.IpAddress != nil {
+			if err := mw.WriteField("ip_address", *s.IpAddress); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		//TODO other fields
+	}()
+
+	mw.Close()
+	return pr, nil
 }
 
 func (s setWebhook) ContentType() string {
 	return s.contentType
 }
 
-func Disconnect(token string, dropPendingUpdates ...bool) error {
-	_, err := gotely.SendPostRequestWith[bool](
-		deleteWebhook{
-			DropPendingUpdates: dropPendingUpdates[0],
-		},
-		token,
-	)
-	return err
-}
-
-type deleteWebhook struct {
-	DropPendingUpdates bool `json:"drop_pending_updates,omitzero"`
-}
-
-func (d deleteWebhook) Endpoint() string {
-	return "deleteWebhook"
-}
-
-func (d deleteWebhook) Validate() error {
-	return nil
-}
-
-func (d deleteWebhook) Reader() (io.Reader, error) {
-	b, err := json.Marshal(d)
-	if err != nil {
-		return nil, err
+func SetWebhook(token, toUrl string) error {
+	sw := setWebhook{
+		Url: toUrl,
 	}
-	return bytes.NewReader(b), nil
-}
 
-func (d deleteWebhook) ContentType() string {
-	return "application/json"
-}
-
-// FIXME maybe should make a WebhookBot struct and make all of this methods part of the struct
-func GetWebhookInfo(token string) (*WebHookInfo, error) {
-	return gotely.SendGetRequestWith[WebHookInfo](getWebhookInfo{}, token)
-}
-
-type getWebhookInfo struct {
-}
-
-func (g getWebhookInfo) Endpoint() string {
-	return "getWebhookInfo"
-}
-
-func (g getWebhookInfo) Validate() error {
-	return nil
-}
-
-func (g getWebhookInfo) Reader() (io.Reader, error) {
-	return io.NopCloser(strings.NewReader("")), nil
-}
-
-func (g getWebhookInfo) ContentType() string {
-	return ""
-}
-
-type WebHookInfo struct {
-	Url                          string    `json:"url"`
-	HasCustomCertificate         bool      `json:"has_custom_certificate"`
-	PendingUpdateCount           int       `json:"pending_update_count"`
-	IpAddress                    *string   `json:"ip_address,omitempty"`
-	LastErrorDate                *int      `json:"last_error_date,omitempty"`
-	LastErrorMessage             *string   `json:"last_error_message,omitempty"`
-	LastSynchronizationErrorDate *int      `json:"last_synchronization_error_date,omitempty"`
-	MaxConnections               *int      `json:"max_connections,omitempty"`
-	AllowedUpdates               *[]string `json:"allowed_updates,omitempty"`
+	_, err := gotely.SendPostRequestWith[bool](&sw, token)
+	return err
 }
