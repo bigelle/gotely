@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// ApiResponse represents a response from a request to Telegram Bot API
+// ApiResponse represents a response from Telegram Bot API
 type ApiResponse[T any] struct {
 	//true if request was successful, otherwise false
 	Ok bool `json:"ok"`
@@ -34,42 +34,47 @@ type ResponseParameters struct {
 
 // Method represents a Telegram Bot API method as a structured set of request parameters.
 type Method interface {
-	//Should return an API endpoint of this method as a string.
-	//For example, in case with `SendMessage` it will return "sendMessage".
+	// Endpoint returns the API method name as a string.
+	// For example, `SendMessage` should return "sendMessage".
 	Endpoint() string
-	//Should return an error if request contains invalid data or a nil
+
+	// Validate checks if the request contains valid data.
+	// Returns an error if the request is invalid, otherwise nil.
 	Validate() error
-	//Should return `io.Reader` of this method body
+
+	// Reader returns an `io.Reader` representing the request body.
 	Reader() (io.Reader, error)
-	//Returns "application/json" for regular methods
-	//and "multipart/form-data" with pre-generated boundary
+
+	// ContentType returns the appropriate content type:
+	// - "application/json" for standard requests
+	// - "multipart/form-data" (with a pre-generated boundary) for file uploads
 	ContentType() string
 }
 
-// SendRequest is a wrapper around `SendRequestWith` with no `RequestOption` specified,
-// and is used to send a set of request parameters `body` using API Token `token` and HTTP Method `method`.
-// Returns a pointer to specified expected object T or an error if something is went wrong
+// SendRequest sends a request using the given API `method` and `token` with `body` as parameters.
+// It is a wrapper around `SendRequestWith`, without additional request options (`RequestOption`).
+// Returns a pointer to the expected response object `T` or an error if the request fails.
 func SendRequest[T any](body Method, token string, method string) (*T, error) {
 	return SendRequestWith[T](body, token, method)
 }
 
-// SendPostRequest is a wrapper around SendRequest that is using `http.MethodPost` as HTTP Method
-// and is used to send a set of request parameters `body` using API Token `token`
-// Returns a pointer to specified expected object T or an error if something is went wrong
+// SendPostRequest sends a request using `http.MethodPost` as the HTTP method.
+// It is a wrapper around `SendRequest`.
+// Returns a pointer to the expected response object `T` or an error if the request fails.
 func SendPostRequest[T any](body Method, token string) (*T, error) {
 	return SendRequest[T](body, token, http.MethodPost)
 }
 
-// SendGetRequest is a wrapper around SendRequest that is using `http.MethodGet` as HTTP Method
-// and is used to send a set of request parameters `body` using API Token `token`
-// Returns a pointer to specified expected object T or an error if something is went wrong
+// SendGetRequest sends a request using `http.MethodGet` as the HTTP method.
+// It is a wrapper around `SendRequest`.
+// Returns a pointer to the expected response object `T` or an error if the request fails.
 func SendGetRequest[T any](body Method, token string) (*T, error) {
 	return SendRequest[T](body, token, http.MethodGet)
 }
 
-// SendRequestWith is used to send a set of request parameters `body` using API Token `token`, HTTP Method `method`
-// and a list of request options `opts`.
-// Returns a pointer to specified expected object T or an error if something is went wrong
+// SendRequestWith sends a request using the given API `method`, `token`, request parameters `body`,
+// and additional request options (`opts`).
+// Returns a pointer to the expected response object `T` or an error if the request fails.
 func SendRequestWith[T any](body Method, token string, method string, opts ...RequestOption) (*T, error) {
 	if err := body.Validate(); err != nil {
 		return nil, err
@@ -86,13 +91,13 @@ func SendRequestWith[T any](body Method, token string, method string, opts ...Re
 		Client: http.DefaultClient,
 		//FIXME possibly would be better if url will already contain token
 		//and will be used as url+endpoint
-		RequestBaseUrl: "https://api.telegram.org/bot%s/%s",
+		ApiUrl: "https://api.telegram.org/bot%s/%s",
 	}
 	for _, opt := range opts {
 		opt(&cfg)
 	}
 
-	url := fmt.Sprintf(cfg.RequestBaseUrl, token, body.Endpoint())
+	url := fmt.Sprintf(cfg.ApiUrl, token, body.Endpoint())
 	req, err := http.NewRequest(method, url, r)
 	if err != nil {
 		return nil, err
@@ -120,54 +125,50 @@ func SendRequestWith[T any](body Method, token string, method string, opts ...Re
 	return result.Result, nil
 }
 
-// SendPostRequest is a wrapper around SendRequestWith that is using `http.MethodPost` as HTTP Method
-// and is used to send a set of request parameters `body` using API Token `token` and a list of request options `opts`
-// Returns a pointer to specified expected object T or an error if something is went wrong
+// SendPostRequestWith is a wrapper around `SendRequestWith` that uses `http.MethodPost`
+// as the HTTP method and sends the request parameters `body` using the API token `token`
+// and additional request options `opts`.
+// Returns a pointer to the expected response object `T` or an error if the request fails.
 func SendPostRequestWith[T any](body Method, token string, opts ...RequestOption) (*T, error) {
 	return SendRequestWith[T](body, token, http.MethodPost, opts...)
 }
 
-// SendGetRequest is a wrapper around SendRequestWith that is using `http.MethodPost` as HTTP Method
-// and is used to send a set of request parameters `body` using API Token `token` and a list of request options `opts`
-// Returns a pointer to specified expected object T or an error if something is went wrong
+// SendGetRequestWith is a wrapper around `SendRequestWith` that uses `http.MethodGet`
+// as the HTTP method and sends the request parameters `body` using the API token `token`
+// and additional request options `opts`.
+// Returns a pointer to the expected response object `T` or an error if the request fails.
 func SendGetRequestWith[T any](body Method, token string, opts ...RequestOption) (*T, error) {
 	return SendRequestWith[T](body, token, http.MethodGet, opts...)
 }
 
-// RequestOption is a type based on a function that is accepting a pointer to a `RequestConfig`
-// and is used when sending a request using `SendRequestWith` with specified options
+// RequestOption represents a function that modifies `RequestConfig`.
+// It is used to customize request settings when calling `SendRequestWith`.
 type RequestOption func(*RequestConfig)
 
-// RequestConfig is a structured configuration that will be used while sending a request to Telegram Bot API
+// RequestConfig defines configuration options for sending a request to the Telegram Bot API.
 type RequestConfig struct {
-	//custom client. Defaults to `http.DefaultClient`
+	// Client is the HTTP client used to send the request.
+	// Defaults to `http.DefaultClient`.
 	Client *http.Client
-	//Custom Telegram Bot API URL. Defaults to "https://api.telegram.org/bot%s/%s",
-	//where the first placeholder is used for API token and the second one is for API endpoint.
-	//Please use %s placeholders to properly use Bot API token and API endpoint
-	RequestBaseUrl string
+	// ApiUrl is the Telegram Bot API base URL.
+	// Defaults to "https://api.telegram.org/bot%s/%s",
+	// where the first placeholder is replaced by the bot token and the second by the API method.
+	// Use `%s` placeholders to properly insert the token and API method.
+	ApiUrl string
 }
 
-// WithClient is a functional option that is used when sending a request using `SendRequestWith`.
-// Use it to provide a custom `http.Client` that will be used when doing the request
+// WithClient sets a custom HTTP client for `SendRequestWith`.
+// Use this option to provide a specific `http.Client` for making requests.
 func WithClient(c *http.Client) RequestOption {
 	return func(rc *RequestConfig) {
 		rc.Client = c
 	}
 }
 
-// WithUrl is a functional option that is used when sending a request using `SendRequestWith`.
-// Use it to provide your own Telegram Bot API URL in case you're running it locally
+// WithUrl sets a custom Telegram Bot API URL for `SendRequestWith`.
+// Use this option if running a local instance of the Telegram Bot API.
 func WithUrl(url string) RequestOption {
 	return func(rc *RequestConfig) {
-		rc.RequestBaseUrl = url
-	}
-}
-
-// WithConfig is a functional option that is used when sending a request using `SendRequestWith`.
-// Use it to configure the request all at once
-func WithConfig(cfg RequestConfig) RequestOption {
-	return func(rc *RequestConfig) {
-		rc = &cfg
+		rc.ApiUrl = url
 	}
 }

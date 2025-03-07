@@ -13,25 +13,25 @@ import (
 	"github.com/bigelle/gotely/bot"
 )
 
-// WebhookBot is a `http.Server` that is built for responding to any updates
-// that are coming to "/webhook" WebhookEndpoint
+// WebhookBot is an `http.Server` designed to handle updates
+// arriving at the "/webhook" WebhookEndpoint.
 type WebhookBot struct {
 	//configurable:
 
 	http.Server
-	//used to send Telegram Bot API requests
+	// Used to send Telegram Bot API requests.
 	Client *http.Client
-	//an endpoint that will be used when registering a `http.HandlerFunc` for responding to new updates.
-	//defaults to "/webhook"
+	// The endpoint used when registering an `http.HandlerFunc` to handle new updates.
+	// Defaults to "/webhook".
 	WebhookEndpoint string
-	//Telegram Bot API url. You can replace this value in case you're running Bot API locally
+	// The Telegram Bot API URL. You can replace this value if running the Bot API locally.
 	ApiUrl string
-	//Telegram Bot API Token
+	// The Telegram Bot API token.
 	Token string
-	//a function that will be used on every incoming update
+	// A function called for every incoming update.
 	OnUpdate bot.OnUpdateFunc
-	//a list of middlewares that will be called with every call to OnUpdate function.
-	//defaults to a list with only recovery middleware
+	// A list of middleware functions executed on every call to OnUpdate.
+	// Defaults to a list containing only the recovery middleware.
 	Middleware []bot.MiddlewareFunc
 
 	//sending in SetWebhook:
@@ -65,7 +65,7 @@ type WebhookBot struct {
 	cancel context.CancelFunc
 }
 
-// New is a function that creates a WebhookBot with WebhookUrl url and Telegram Bot API Token token.
+// New creates a WebhookBot with the given Webhook URL and Telegram Bot API token.
 func New(url, token string, onUpdate bot.OnUpdateFunc, opts ...Option) *WebhookBot {
 	bot := WebhookBot{
 		Server:          http.Server{Addr: ":80"},
@@ -134,7 +134,8 @@ func (whb *WebhookBot) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// Start is sending SetWebhook request to Telegram Bot API. On success, it is beginning to listening and serving with current configuration
+// Start sends a SetWebhook request to the Telegram Bot API.
+// On success, it begins listening and serving with the current configuration.
 func (whb *WebhookBot) Start() {
 	_, err := gotely.SendPostRequestWith[bool](
 		&SetWebhook{
@@ -175,7 +176,7 @@ func (whb *WebhookBot) Start() {
 	}
 }
 
-// Stop is making a graceful shutdown on currently running WebhookBot server
+// Stop gracefully shuts down the currently running WebhookBot server.
 func (whb *WebhookBot) Stop() {
 	if whb.cancel != nil {
 		whb.cancel()
@@ -189,13 +190,15 @@ func (whb *WebhookBot) Stop() {
 	}
 }
 
-// Use is appending middleware to current WebhookBot
+// Use appends middleware to the current WebhookBot
 func (wb *WebhookBot) Use(middleware ...bot.MiddlewareFunc) {
 	wb.Middleware = append(wb.Middleware, middleware...)
 }
 
 type Option func(*WebhookBot)
 
+// WithServerConfig is a functional option used to configure
+// the `http.Server` of the WebhookBot.
 func WithServerConfig(s *http.Server) Option {
 	return func(wb *WebhookBot) {
 		wb.Addr = s.Addr
@@ -212,42 +215,61 @@ func WithServerConfig(s *http.Server) Option {
 	}
 }
 
+// WithWebhookEndpoint is a functional option used to configure
+// the endpoint for handling webhooks.
 func WithWebhookEndpoint(e string) Option {
 	return func(wb *WebhookBot) {
 		wb.WebhookEndpoint = e
 	}
 }
 
+// WithCertificate is a functional option used to
+// set the HTTPS certificate.
 func WithCertificate(c objects.InputFile) Option {
 	return func(wb *WebhookBot) {
 		wb.Certificate = c
 	}
 }
 
+// WithIpAddress is a functional option used to
+// set the IP address for sending webhook requests
+// instead of the DNS-resolved address.
 func WithIpAddress(a string) Option {
 	return func(wb *WebhookBot) {
 		wb.IpAddress = &a
 	}
 }
 
+// WithMaxConnections is a functional option used to
+// set the maximum number of simultaneous HTTPS connections
+// to the webhook for update delivery.
 func WithMaxConnections(c int) Option {
 	return func(wb *WebhookBot) {
 		wb.MaxConnections = &c
 	}
 }
 
+// WithAllowedUpdates is a functional option used to
+// set the list of updates the bot will receive through the webhook.
 func WithAllowedUpdates(upds *[]string) Option {
 	return func(wb *WebhookBot) {
 		wb.AllowedUpdates = upds
 	}
 }
 
+// WithDropPendingUpdates is a functional option used to
+// determine whether the SetWebhook method should drop
+// all currently pending updates.
 func WithDropPendingUpdates(d bool) Option {
 	return func(wb *WebhookBot) {
 		wb.DropPendingUpdates = &d
 	}
 }
 
+// WithSecretToken is a functional option used to
+// set the secret token sent through the webhook
+// inside the "X-Telegram-Bot-Api-Secret-Token" header.
+// It can be used to ensure that the webhook was set by you.
 func WithSecretToken(t string) Option {
 	return func(wb *WebhookBot) {
 		wb.SecretToken = &t

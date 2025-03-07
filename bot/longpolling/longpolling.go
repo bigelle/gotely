@@ -38,46 +38,52 @@ import (
 // The bot requires an update handler (`OnUpdateFunc`) to process incoming updates.
 // Middlewares can be added using `Use()`.
 type LongPollingBot struct {
-	//IMPORTANT:
+	// IMPORTANT:
 
-	//Telegram bot API access token
+	// Telegram Bot API access token
 	token string
-	//A function which is called on every incoming update
+	// A function called on every incoming update
 	onUpdate bot.OnUpdateFunc
 
-	//CONFIGURABLE:
+	// CONFIGURABLE:
 
-	//A list of functions that will be called before `OnUpdate`.
-	// Good spot for additional logging, caching, etc.
+	// A list of middleware functions called before `OnUpdate`.
+	// Useful for logging, caching, etc.
 	middleWare []bot.MiddlewareFunc
-	//A client that will be used when making any API request.
-	//Defaults to default http.Client
+	// An HTTP client used for making API requests.
+	// Defaults to http.DefaultClient
 	client *http.Client
+	// Telegram Bot API URL
 	apiUrl string
-	//Limits the number of updates to be retrieved. Values between 1-100 are accepted.
-	//Defaults to 100.
+	// Limits the number of updates to retrieve (1-100).
+	// Defaults to 100.
 	limit int
-	//Timeout in seconds for long polling. Should be positive, short polling should be used for testing purposes only.
-	//Defaults to 30
+	// Timeout in seconds for long polling.
+	// Should be positive; short polling is for testing purposes only.
+	// Defaults to 30.
 	timeout int
-	//A list of the update types you want your bot to receive.
-	//See https://core.telegram.org/bots/api#update for a complete list of available update types.
-	//Specify an empty list to receive all update types except chat_member, message_reaction, and message_reaction_count (default).
-	//If not specified, the previous setting will be used.
+	// A list of update types the bot should receive.
+	// See https://core.telegram.org/bots/api#update for available types.
+	// An empty list receives all types except chat_member, message_reaction, and message_reaction_count (default).
+	// If unspecified, the previous setting is used.
 	allowedUpdates *[]string
-	//Logger that will be used to display information about any incoming updates, errors, responses, etc
+	// Logger used for logging incoming updates, errors, and responses.
 	logger slog.Logger
 
-	//AUTO:
+	// AUTO:
 
-	//will be used to asynchronously respond to every incoming update
+	// Used asynchronously to respond to incoming updates
 	chContext chan *bot.Context
-	//calculated automatically, used to poll for new updates
+	// Automatically calculated offset for polling new updates
 	offset *int
-	//cancel func to gracefully stop go-routines
+	// Cancel function for gracefully stopping goroutines
 	cancel context.CancelFunc
 }
 
+// New creates a LongPollingBot with the given Telegram Bot API token
+// and an update handler function (`OnUpdateFunc`).
+//
+// Additional configuration can be provided via functional options (`opts`).
 func New(token string, onUpdate bot.OnUpdateFunc, opts ...Option) *LongPollingBot {
 	bot := LongPollingBot{
 		token:    token,
@@ -100,48 +106,60 @@ func New(token string, onUpdate bot.OnUpdateFunc, opts ...Option) *LongPollingBo
 	return &bot
 }
 
+// Option defines a functional option for configuring a LongPollingBot.
 type Option func(*LongPollingBot)
 
+// Use adds middleware functions to the bot.
+// Middleware functions are executed before the update handler (`OnUpdate`).
 func (l *LongPollingBot) Use(mw ...bot.MiddlewareFunc) {
 	l.middleWare = append(l.middleWare, mw...)
 }
 
+// WithClient sets a custom HTTP client for API requests.
 func WithClient(c *http.Client) Option {
 	return func(lpb *LongPollingBot) {
 		lpb.client = c
 	}
 }
 
+// WithUrl sets a custom Telegram Bot API URL.
 func WithUrl(url string) Option {
 	return func(lpb *LongPollingBot) {
 		lpb.apiUrl = url
 	}
 }
 
+// WithLimit sets the maximum number of updates to be retrieved per request (1-100).
 func WithLimit(l int) Option {
 	return func(lpb *LongPollingBot) {
 		lpb.limit = l
 	}
 }
 
+// WithTimeout sets the long polling timeout in seconds.
+// A positive value is required; short polling should be used for testing only.
 func WithTimeout(t int) Option {
 	return func(lpb *LongPollingBot) {
 		lpb.timeout = t
 	}
 }
 
+// WithAllowedUpdates sets the list of update types the bot should receive.
+// If nil, Telegram's default or previously used settings will be applied.
 func WithAllowedUpdates(upds *[]string) Option {
 	return func(lpb *LongPollingBot) {
 		lpb.allowedUpdates = upds
 	}
 }
 
+// WithLogger sets a custom logger for logging incoming updates, errors, and responses.
 func WithLogger(l slog.Logger) Option {
 	return func(lpb *LongPollingBot) {
 		lpb.logger = l
 	}
 }
 
+// Start begins polling for updates using the current configuration.
 func (l *LongPollingBot) Start() {
 	if err := l.Validate(); err != nil {
 		panic(fmt.Errorf("can't start bot because it failed the validation: %w", err))
@@ -218,7 +236,7 @@ func (l *LongPollingBot) poll(ctx context.Context) {
 }
 
 func (l *LongPollingBot) getUpdates() (*[]objects.Update, error) {
-	b := getUpdates{
+	b := GetUpdates{
 		Offset:         l.offset,
 		Timeout:        &l.timeout,
 		Limit:          &l.limit,
@@ -232,18 +250,18 @@ func (l *LongPollingBot) getUpdates() (*[]objects.Update, error) {
 	)
 }
 
-type getUpdates struct {
+type GetUpdates struct {
 	Offset         *int      `json:"offset,omitempty"`
 	Limit          *int      `json:"limit,omitempty"`
 	Timeout        *int      `json:"timeout,omitempty"`
 	AllowedUpdates *[]string `json:"allowed_updates,omitempty"`
 }
 
-func (g getUpdates) Endpoint() string {
+func (g GetUpdates) Endpoint() string {
 	return "getUpdates"
 }
 
-func (g getUpdates) Validate() error {
+func (g GetUpdates) Validate() error {
 	if g.Limit != nil {
 		if *g.Limit < 1 || *g.Limit > 100 {
 			return fmt.Errorf("limit must be between 1 and 100")
@@ -258,7 +276,7 @@ func (g getUpdates) Validate() error {
 	return nil
 }
 
-func (g getUpdates) Reader() (io.Reader, error) {
+func (g GetUpdates) Reader() (io.Reader, error) {
 	b, err := json.Marshal(g)
 	if err != nil {
 		return nil, err
@@ -266,7 +284,7 @@ func (g getUpdates) Reader() (io.Reader, error) {
 	return bytes.NewReader(b), nil
 }
 
-func (g getUpdates) ContentType() string {
+func (g GetUpdates) ContentType() string {
 	return "application/json"
 }
 
@@ -294,6 +312,7 @@ func (l *LongPollingBot) respond(ctx context.Context) {
 	}
 }
 
+// Stop gracefully shuts down the bot, stopping all active polling and background processes.
 func (l *LongPollingBot) Stop() {
 	if l.cancel != nil {
 		l.cancel()
