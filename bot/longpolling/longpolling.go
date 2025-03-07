@@ -277,12 +277,13 @@ func (l *LongPollingBot) respond(ctx context.Context) {
 			l.logger.Info("bot stopped, exiting responding loop")
 			return
 		case upd := <-l.chContext:
-			for i, mw := range l.middleWare {
-				if err := mw(*upd); err != nil {
-					//							telling which middleware failed, 0 based
-					l.logger.Error("failed middleware", "middleware", i, "error", err)
-				}
-			}
+			//FIXME: middleware
+			// for i, mw := range l.middleWare {
+			// 	if err := mw(*upd); err != nil {
+			// 		//							telling which middleware failed, 0 based
+			// 		l.logger.Error("failed middleware", "middleware", i, "error", err)
+			// 	}
+			// }
 
 			if err := l.onUpdate(*upd); err != nil {
 				l.logger.Error("failed to respond to an update", "update_id", upd.Update.UpdateId, "error", err)
