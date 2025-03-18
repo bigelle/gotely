@@ -513,19 +513,27 @@ type DeleteMessages struct {
 }
 
 func (d DeleteMessages) Validate() error {
-	if c, ok := any(d.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(d.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+	if strings.TrimSpace(d.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(d.MessageIds) < 1 || len(d.MessageIds) > 100 {
 		return objects.ErrInvalidParam("message_ids parameter must be between 1 and 100")
 	}
-
 	return nil
+}
+
+func (s DeleteMessages) Endpoint() string {
+	return "deleteMessages"
+}
+
+func (s DeleteMessages) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s DeleteMessages) ContentType() string {
+	return "application/json"
 }
