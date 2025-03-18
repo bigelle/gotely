@@ -269,16 +269,16 @@ func (r RevenueWithdrawalStateFailed) GetRevenueWithdrawalStateType() string {
 // Contains information about the affiliate that received a commission via this transaction.
 type AffiliateInfo struct {
 	//Optional. The bot or the user that received an affiliate commission if it was received by a bot or a user
-	AffiliateUser *User
+	AffiliateUser *User `json:"affiliate_user,omitempty"`
 	//Optional. The chat that received an affiliate commission if it was received by a chat
-	AffiliateChat *Chat
+	AffiliateChat *Chat `json:"affiliate_chat,omitempty"`
 	//The number of Telegram Stars received by the affiliate for each 1000 Telegram Stars received by the bot from referred users
-	CommissionPerMile int
+	CommissionPerMile int `json:"commission_per_mile"`
 	//Integer amount of Telegram Stars received by the affiliate from the transaction, rounded to 0; can be negative for refunds
-	Amount int
+	Amount int `json:"amount"`
 	//Optional. The number of 1/1000000000 shares of Telegram Stars received by the affiliate;
 	//from -999999999 to 999999999; can be negative for refunds
-	NanostarAmount *int
+	NanostarAmount *int `json:"nanostar_amount,omitempty"`
 }
 
 // This object describes the source of a transaction, or its recipient for outgoing transactions.

@@ -1,5 +1,4 @@
 // TODO: make optional and required fields more obvious
-// TODO: replace iso6391 dependency with self-made function OR package (do i need it?)
 package methods
 
 import (
@@ -11,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/bigelle/gotely/api/objects"
-	iso6391 "github.com/emvi/iso-639-1"
 )
 
 // Use this method to send text messages.
@@ -62,12 +60,22 @@ type SendMessage struct {
 }
 
 func (s SendMessage) Validate() error {
-	if strings.TrimSpace(s.Text) == "" {
-		return objects.ErrInvalidParam("text parameter can't be empty")
+	l := len(s.Text)
+	if l < 1 || l > 4096 {
+		return objects.ErrInvalidParam("text parameter must be between 1 and 4096 characters")
 	}
-
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+	}
+	if s.LinkPreviewOptions != nil {
+		if err := s.LinkPreviewOptions.Validate(); err != nil {
+			return err
+		}
+	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -258,6 +266,11 @@ func (c CopyMessage) Validate() error {
 	if c.MessageId < 1 {
 		return objects.ErrInvalidParam("message_ids parameter can't be empty")
 	}
+	if c.ReplyParameters != nil {
+		if err := c.ReplyParameters.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -380,6 +393,11 @@ func (s SendPhoto) Validate() error {
 	}
 	if err := s.Photo.Validate(); err != nil {
 		return err
+	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -581,6 +599,11 @@ func (s SendAudio) Validate() error {
 	}
 	if err := s.Audio.Validate(); err != nil {
 		return err
+	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -806,6 +829,11 @@ func (s SendDocument) Validate() error {
 
 	if err := s.Document.Validate(); err != nil {
 		return err
+	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -1197,7 +1225,27 @@ func (s *SendVideo) Reader() (io.Reader, error) {
 }
 
 func (s SendVideo) Validate() error {
-	//TODO
+	if s.ChatId == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+	}
+	if err := s.Video.Validate(); err != nil {
+		return err
+	}
+	if s.Thumbnail != nil {
+		if err := s.Thumbnail.Validate(); err != nil {
+			return err
+		}
+	}
+	if s.Caption != nil {
+		if len(*s.Caption) > 1024 {
+			return objects.ErrInvalidParam("caption must not be longer than 1024 characters if specified")
+		}
+	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -1271,6 +1319,11 @@ func (s SendAnimation) Validate() error {
 	}
 	if err := s.Animation.Validate(); err != nil {
 		return err
+	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -1495,6 +1548,11 @@ func (s SendVoice) Validate() error {
 	if err := s.Voice.Validate(); err != nil {
 		return err
 	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -1681,6 +1739,11 @@ func (s SendVideoNote) Validate() error {
 	}
 	if err := s.VideoNote.Validate(); err != nil {
 		return err
+	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -1876,6 +1939,11 @@ func (s SendPaidMedia) Validate() error {
 			return err
 		}
 	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -1884,6 +1952,7 @@ func (s SendPaidMedia) Endpoint() string {
 }
 
 // FIXME should be multipart
+// depends on paid media interface
 func (s SendPaidMedia) Reader() (io.Reader, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
@@ -1938,6 +2007,11 @@ func (s SendMediaGroup) Validate() error {
 	}
 	for _, m := range s.Media {
 		if err := m.Validate(); err != nil {
+			return err
+		}
+	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
 			return err
 		}
 	}
@@ -2090,7 +2164,11 @@ func (s SendLocation) Validate() error {
 	if s.Longitude == nil {
 		return objects.ErrInvalidParam("longitude parameter can't be empty")
 	}
-	// TODO: validate reply parameters everywhere
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -2156,6 +2234,11 @@ func (s SendVenue) Validate() error {
 	if s.Longitude == nil {
 		return objects.ErrInvalidParam("longitude parameter can't be empty")
 	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -2216,6 +2299,11 @@ func (s SendContact) Validate() error {
 	}
 	if strings.TrimSpace(s.FirstName) == "" {
 		return objects.ErrInvalidParam("first_name parameter can't be empty")
+	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -2310,6 +2398,11 @@ func (s SendPoll) Validate() error {
 			return objects.ErrInvalidParam("type parameter must be 'regular' or 'quiz' if specified")
 		}
 	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -2363,6 +2456,11 @@ func (s SendDice) Validate() error {
 	}
 	if strings.TrimSpace(s.Emoji) == "" {
 		return objects.ErrInvalidParam("emoji parameter can't be empty")
+	}
+	if s.ReplyParameters != nil {
+		if err := s.ReplyParameters.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -4411,14 +4509,6 @@ func (s SetMyCommands) Validate() error {
 			return err
 		}
 	}
-	if s.LanguageCode != nil && *s.LanguageCode != "" {
-		// FIXME: should validate it using no dependencies
-		//https://ru.wikipedia.org/wiki/%D0%A1%D0%BF%D0%B8%D1%81%D0%BE%D0%BA_%D0%BA%D0%BE%D0%B4%D0%BE%D0%B2_ISO_639-1
-		//or maybe i should not validate any country and language codes and leave it to API
-		if !iso6391.ValidCode(*s.LanguageCode) {
-			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
-		}
-	}
 	return nil
 }
 
@@ -4448,11 +4538,6 @@ type DeleteMyCommands struct {
 }
 
 func (s DeleteMyCommands) Validate() error {
-	if s.LanguageCode != nil && *s.LanguageCode != "" {
-		if !iso6391.ValidCode(*s.LanguageCode) {
-			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
-		}
-	}
 	if s.Scope != nil {
 		if err := s.Scope.Validate(); err != nil {
 			return err
@@ -4487,11 +4572,6 @@ type GetMyCommands struct {
 }
 
 func (s GetMyCommands) Validate() error {
-	if s.LanguageCode != nil && *s.LanguageCode != "" {
-		if !iso6391.ValidCode(*s.LanguageCode) {
-			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
-		}
-	}
 	if s.Scope != nil {
 		if err := s.Scope.Validate(); err != nil {
 			return err
@@ -4530,11 +4610,6 @@ func (s SetMyName) Validate() error {
 			return objects.ErrInvalidParam("name parameter must not be longer than 64 characters")
 		}
 	}
-	if s.LanguageCode != nil && *s.LanguageCode != "" {
-		if !iso6391.ValidCode(*s.LanguageCode) {
-			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
-		}
-	}
 	return nil
 }
 
@@ -4561,11 +4636,6 @@ type GetMyName struct {
 }
 
 func (s GetMyName) Validate() error {
-	if s.LanguageCode != nil && *s.LanguageCode != "" {
-		if !iso6391.ValidCode(*s.LanguageCode) {
-			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
-		}
-	}
 	return nil
 }
 
@@ -4599,11 +4669,6 @@ func (s SetMyDescription) Validate() error {
 			return objects.ErrInvalidParam("name parameter must not be longer than 64 characters")
 		}
 	}
-	if s.LanguageCode != nil && *s.LanguageCode != "" {
-		if !iso6391.ValidCode(*s.LanguageCode) {
-			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
-		}
-	}
 	return nil
 }
 
@@ -4630,11 +4695,6 @@ type GetMyDescription struct {
 }
 
 func (s GetMyDescription) Validate() error {
-	if s.LanguageCode != nil && *s.LanguageCode != "" {
-		if !iso6391.ValidCode(*s.LanguageCode) {
-			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
-		}
-	}
 	return nil
 }
 
@@ -4669,11 +4729,6 @@ func (s SetMyShortDescription) Validate() error {
 			return objects.ErrInvalidParam("name parameter must not be longer than 64 characters")
 		}
 	}
-	if s.LanguageCode != nil && *s.LanguageCode != "" {
-		if !iso6391.ValidCode(*s.LanguageCode) {
-			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
-		}
-	}
 	return nil
 }
 
@@ -4700,11 +4755,6 @@ type GetMyShortDescription struct {
 }
 
 func (s GetMyShortDescription) Validate() error {
-	if s.LanguageCode != nil && *s.LanguageCode != "" {
-		if !iso6391.ValidCode(*s.LanguageCode) {
-			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
-		}
-	}
 	return nil
 }
 

@@ -49,7 +49,7 @@ type LongPollingBot struct {
 
 	// A list of middleware functions called before `OnUpdate`.
 	// Useful for logging, caching, etc.
-	middleWare []bot.MiddlewareFunc
+	middleware []bot.MiddlewareFunc
 	// An HTTP client used for making API requests.
 	// Defaults to http.DefaultClient
 	client *http.Client
@@ -112,7 +112,7 @@ type Option func(*LongPollingBot)
 // Use adds middleware functions to the bot.
 // Middleware functions are executed before the update handler (`OnUpdate`).
 func (l *LongPollingBot) Use(mw ...bot.MiddlewareFunc) {
-	l.middleWare = append(l.middleWare, mw...)
+	l.middleware = append(l.middleware, mw...)
 }
 
 // WithClient sets a custom HTTP client for API requests.
@@ -302,15 +302,12 @@ func (l *LongPollingBot) respond(ctx context.Context) {
 			l.logger.Info("bot stopped, exiting responding loop")
 			return
 		case upd := <-l.chContext:
-			//FIXME: middleware
-			// for i, mw := range l.middleWare {
-			// 	if err := mw(*upd); err != nil {
-			// 		//							telling which middleware failed, 0 based
-			// 		l.logger.Error("failed middleware", "middleware", i, "error", err)
-			// 	}
-			// }
+			handler := l.onUpdate
+			for i := len(l.middleware) - 1; i >= 0; i-- {
+				handler = l.middleware[i](handler)
+			}
 
-			if err := l.onUpdate(*upd); err != nil {
+			if err := handler(*upd); err != nil {
 				l.logger.Error("failed to respond to an update", "update_id", upd.Update.UpdateId, "error", err)
 				continue
 			}

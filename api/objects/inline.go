@@ -1573,8 +1573,6 @@ func (i InputInvoiceMessageContent) Validate() error {
 	if l := len([]byte(i.Payload)); l < 1 || l > 128 {
 		return ErrInvalidParam("payload parameter must be between 1 and 128 bytes")
 	}
-	//FIXME: should properly validate currency codes as in
-	//https://en.wikipedia.org/wiki/ISO_4217#Active_codes_(list_one)
 	if len(i.Currency) > 3 {
 		return ErrInvalidParam("currency parameter accepts only valid three-letter ISO 4217 currency codes")
 	}

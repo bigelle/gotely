@@ -2141,7 +2141,7 @@ type LoginUrl struct {
 	//
 	//IMPORTANT: You must always check the hash of the received data to verify the authentication and
 	//the integrity of the data as described in https://core.telegram.org/widgets/login#checking-authorization.
-	Url string `json:"url"` // FIXME: should somehow check the hash of the received data
+	Url string `json:"url"`
 	//Optional. New text of the button in forwarded messages.
 	ForwardText *string `json:"forward_text,omitempty"`
 	//Optional. Username of a bot, which will be used for user authorization.

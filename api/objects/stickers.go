@@ -99,7 +99,7 @@ type InputSticker struct {
 	//Optional. List of 0-20 search keywords for the sticker with total length of up to 64 characters.
 	//For “regular” and “custom_emoji” stickers only.
 	Keywords *[]string `json:"keywords,omitempty"`
-}
+} //TODO: add method to write all of the parameters into multipart writer
 
 func (i InputSticker) Validate() error {
 	if len(i.EmojiList) < 1 || len(i.EmojiList) > 20 {
