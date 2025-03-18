@@ -8,7 +8,7 @@ import (
 )
 
 // ApiResponse represents a response from Telegram Bot API
-type ApiResponse[T any] struct {
+type ApiResponse struct {
 	//true if request was successful, otherwise false
 	Ok bool `json:"ok"`
 	//error code of unsuccessful request
@@ -18,7 +18,7 @@ type ApiResponse[T any] struct {
 	//Describes why a request was unsuccessful.
 	Parameters *ResponseParameters `json:"parameters,omitempty"`
 	//result of request
-	Result *T `json:"result,omitempty"`
+	Result json.RawMessage `json:"result,omitempty"`
 }
 
 // ResponseParameters describes why a request was unsuccessful.
@@ -51,40 +51,26 @@ type Method interface {
 	ContentType() string
 }
 
-// SendRequest sends a request using the given API `method` and `token` with `body` as parameters.
+// SendRequest sends a request using the given HTTP `method` and `token` with `body` as parameters.
 // It is a wrapper around `SendRequestWith`, without additional request options (`RequestOption`).
 // Returns a pointer to the expected response object `T` or an error if the request fails.
-func SendRequest[T any](body Method, token string, method string) (*T, error) {
-	return SendRequestWith[T](body, token, method)
-}
-
-// SendPostRequest sends a request using `http.MethodPost` as the HTTP method.
-// It is a wrapper around `SendRequest`.
-// Returns a pointer to the expected response object `T` or an error if the request fails.
-func SendPostRequest[T any](body Method, token string) (*T, error) {
-	return SendRequest[T](body, token, http.MethodPost)
-}
-
-// SendGetRequest sends a request using `http.MethodGet` as the HTTP method.
-// It is a wrapper around `SendRequest`.
-// Returns a pointer to the expected response object `T` or an error if the request fails.
-func SendGetRequest[T any](body Method, token string) (*T, error) {
-	return SendRequest[T](body, token, http.MethodGet)
+func SendRequest(body Method, dest any, token string) error {
+	return SendRequestWith(body, dest, token)
 }
 
 // SendRequestWith sends a request using the given API `method`, `token`, request parameters `body`,
 // and additional request options (`opts`).
 // Returns a pointer to the expected response object `T` or an error if the request fails.
-func SendRequestWith[T any](body Method, token string, method string, opts ...RequestOption) (*T, error) {
+func SendRequestWith(body Method, dest any, token string, opts ...RequestOption) error {
 	if err := body.Validate(); err != nil {
-		return nil, err
+		return err
 	}
 
 	//its important to call Reader() before using ContentType()
 	//since content-type boundary is generated inside Reader() and stored inside of a struct
 	r, err := body.Reader()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	cfg := RequestConfig{
@@ -98,47 +84,31 @@ func SendRequestWith[T any](body Method, token string, method string, opts ...Re
 	}
 
 	url := fmt.Sprintf(cfg.ApiUrl, token, body.Endpoint())
-	req, err := http.NewRequest(method, url, r)
+	req, err := http.NewRequest(http.MethodPost, url, r)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	req.Header.Set("Content-Type", body.ContentType())
 
 	resp, err := cfg.Client.Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer resp.Body.Close()
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var result ApiResponse[T]
+	var result ApiResponse
 	if err := json.Unmarshal(b, &result); err != nil {
-		return nil, err
+		return err
 	}
 
 	if !result.Ok {
-		return nil, fmt.Errorf("bad request: %s", *result.Description)
+		return fmt.Errorf("bad request: %s", *result.Description)
 	}
-	return result.Result, nil
-}
-
-// SendPostRequestWith is a wrapper around `SendRequestWith` that uses `http.MethodPost`
-// as the HTTP method and sends the request parameters `body` using the API token `token`
-// and additional request options `opts`.
-// Returns a pointer to the expected response object `T` or an error if the request fails.
-func SendPostRequestWith[T any](body Method, token string, opts ...RequestOption) (*T, error) {
-	return SendRequestWith[T](body, token, http.MethodPost, opts...)
-}
-
-// SendGetRequestWith is a wrapper around `SendRequestWith` that uses `http.MethodGet`
-// as the HTTP method and sends the request parameters `body` using the API token `token`
-// and additional request options `opts`.
-// Returns a pointer to the expected response object `T` or an error if the request fails.
-func SendGetRequestWith[T any](body Method, token string, opts ...RequestOption) (*T, error) {
-	return SendRequestWith[T](body, token, http.MethodGet, opts...)
+	return json.Unmarshal(result.Result, dest)
 }
 
 // RequestOption represents a function that modifies `RequestConfig`.

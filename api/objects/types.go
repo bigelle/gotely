@@ -518,7 +518,7 @@ type MessageId struct {
 }
 
 // This object describes a message that was deleted or is otherwise inaccessible to the bot.
-type InaccesibleMessage struct {
+type InaccessibleMessage struct {
 	//Chat the message belonged to
 	Chat Chat `json:"chat"`
 	//Unique message identifier inside the chat
@@ -629,21 +629,21 @@ func (m MaybeInaccessibleMessage) MessageType() (*Message, error) {
 	if !m.IsAccessible() {
 		return nil, ErrInvalidSubtypeConversion{
 			Expected: "message",
-			Got:      "inaccesible_message",
+			Got:      "inaccessible_message",
 		}
 	}
 	msg := Message(m)
 	return &msg, nil
 }
 
-func (m MaybeInaccessibleMessage) InaccesibleMessageType() (*InaccesibleMessage, error) {
+func (m MaybeInaccessibleMessage) InaccessibleMessageType() (*InaccessibleMessage, error) {
 	if m.IsAccessible() {
 		return nil, ErrInvalidSubtypeConversion{
-			Expected: "inaccesible_message",
+			Expected: "inaccessible_message",
 			Got:      "message",
 		}
 	}
-	return &InaccesibleMessage{
+	return &InaccessibleMessage{
 		Chat:      m.Chat,
 		MessageId: m.MessageId,
 		Date:      m.Date,
@@ -1789,7 +1789,7 @@ type WebAppInfo struct {
 
 func (w WebAppInfo) Validate() error {
 	if strings.TrimSpace(w.Url) == "" {
-		return ErrInvalidParam("url paramter can't be empty")
+		return ErrInvalidParam("url parameter can't be empty")
 	}
 	return nil
 }
@@ -1877,7 +1877,7 @@ type KeyboardButton struct {
 
 func (k KeyboardButton) Validate() error {
 	if strings.TrimSpace(k.Text) == "" {
-		return ErrInvalidParam("text paramter can't be empty")
+		return ErrInvalidParam("text parameter can't be empty")
 	}
 
 	requestsProvided := 0
@@ -1943,7 +1943,7 @@ type KeyboardButtonRequestUsers struct {
 
 func (k KeyboardButtonRequestUsers) Validate() error {
 	if k.RequestId == 0 {
-		return ErrInvalidParam("request_id paramter can't be empty")
+		return ErrInvalidParam("request_id parameter can't be empty")
 	}
 	if *k.MaxQuantity < 1 || *k.MaxQuantity > 10 {
 		return fmt.Errorf("MaxQuantity parameter must be between 1 and 10")
@@ -1988,7 +1988,7 @@ type KeyboardButtonRequestChat struct {
 
 func (k KeyboardButtonRequestChat) Validate() error {
 	if k.RequestId == 0 {
-		return ErrInvalidParam("request_id paramter can't be empty")
+		return ErrInvalidParam("request_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2003,7 +2003,7 @@ type KeyboardButtonPollType struct {
 func (k KeyboardButtonPollType) Validate() error {
 	if k.Type != nil {
 		if *k.Type != "regular" && *k.Type != "quiz" {
-			return ErrInvalidParam("type must be reqular or quiz if specified")
+			return ErrInvalidParam("type must be regular or quiz if specified")
 		}
 	}
 	return nil
@@ -2104,7 +2104,7 @@ type InlineKeyboardButton struct {
 
 func (b InlineKeyboardButton) Validate() error {
 	if strings.TrimSpace(b.Text) == "" {
-		return ErrInvalidParam("text paramter can't be empty")
+		return ErrInvalidParam("text parameter can't be empty")
 	}
 	if b.CallbackData != nil {
 		if len([]byte(*b.CallbackData)) > 64 {
@@ -2149,12 +2149,12 @@ type LoginUrl struct {
 	//The url's domain must be the same as the domain linked with the bot. See Linking your domain to the bot for more details.
 	BotUsername *string `json:"bot_username,omitempty"`
 	//Optional. Pass True to request the permission for your bot to send messages to the user.
-	RequestWriteAcess *bool `json:"request_write_acess,omitempty"`
+	RequestWriteAccess *bool `json:"request_write_access,omitempty"`
 }
 
 func (l LoginUrl) Validate() error {
 	if strings.TrimSpace(l.Url) == "" {
-		return ErrInvalidParam("url paramter can't be empty")
+		return ErrInvalidParam("url parameter can't be empty")
 	}
 	return nil
 }
@@ -3003,7 +3003,7 @@ func (b BotCommandScopeChat[T]) Validate() error {
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return ErrInvalidParam("chat_id paramter can't be empty")
+			return ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
@@ -3032,7 +3032,7 @@ func (b BotCommandScopeChatAdministrators[T]) Validate() error {
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return ErrInvalidParam("chat_id paramter can't be empty")
+			return ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
@@ -3063,7 +3063,7 @@ func (b BotCommandScopeChatMember[T]) Validate() error {
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return ErrInvalidParam("chat_id paramter can't be empty")
+			return ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
@@ -3418,7 +3418,7 @@ type InputMedia interface {
 	Detach() string
 	GetReader() io.Reader
 	Validate() error
-} //TODO: media field should be referring to file name inside multipart part, as "media": "attach://filename" (or should it?)
+} //TODO maybe it should have only 1 method that will accept multipart writer and will write all of the fields into it
 
 // Represents a photo to be sent.
 //
@@ -3458,7 +3458,7 @@ func (i InputMediaPhoto) IsLocalFile() bool {
 	return i.IsLocal
 }
 
-func (i InputMediaPhoto) Deattach() string {
+func (i InputMediaPhoto) Detach() string {
 	return i.Media[9:]
 }
 
@@ -3751,7 +3751,8 @@ type InputFile interface {
 	Name() string               // Returns the file name.
 	Reader() (io.Reader, error) // Returns an io.Reader for the file content.
 	IsLocal() bool              // Indicates if the file is stored locally.
-}
+} //TODO: maybe it should accept a multipart writer, and write itself
+// including all of the text fields
 
 // InputFileFromPath represents a file stored on the local filesystem.
 type InputFileFromPath struct {
@@ -3848,9 +3849,12 @@ func (i InputFileFromRemote) IsLocal() bool {
 //
 // - InputPaidMediaVideo
 type InputPaidMedia interface {
-	SetInputPaidMedia(media string, isNew bool)
+	SetPaidMedia(r io.Reader)
+	IsLocalFile() bool
+	Detach() string
+	GetReader() io.Reader
 	Validate() error
-} // TODO: rework all of the implementations to support multipart sending
+}
 
 // The paid media to send is a photo.
 //

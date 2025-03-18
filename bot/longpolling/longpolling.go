@@ -242,12 +242,15 @@ func (l *LongPollingBot) getUpdates() (*[]objects.Update, error) {
 		Limit:          &l.limit,
 		AllowedUpdates: l.allowedUpdates,
 	}
-	return gotely.SendGetRequestWith[[]objects.Update](
+	var result []objects.Update
+	err := gotely.SendRequestWith(
 		b,
+		&result,
 		l.token,
 		gotely.WithClient(l.client),
 		gotely.WithUrl(l.apiUrl),
 	)
+	return &result, err
 }
 
 type GetUpdates struct {
@@ -286,6 +289,10 @@ func (g GetUpdates) Reader() (io.Reader, error) {
 
 func (g GetUpdates) ContentType() string {
 	return "application/json"
+}
+
+func (g GetUpdates) HttpMethod() string {
+	return http.MethodGet
 }
 
 func (l *LongPollingBot) respond(ctx context.Context) {

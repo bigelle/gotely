@@ -137,7 +137,8 @@ func (whb *WebhookBot) handleUpdate(w http.ResponseWriter, r *http.Request) {
 // Start sends a SetWebhook request to the Telegram Bot API.
 // On success, it begins listening and serving with the current configuration.
 func (whb *WebhookBot) Start() {
-	_, err := gotely.SendPostRequestWith[bool](
+	var result bool
+	err := gotely.SendRequestWith(
 		&SetWebhook{
 			Url:                whb.WebhookUrl + whb.WebhookEndpoint,
 			Certificate:        whb.Certificate,
@@ -147,6 +148,7 @@ func (whb *WebhookBot) Start() {
 			DropPendingUpdates: whb.DropPendingUpdates,
 			SecretToken:        whb.SecretToken,
 		},
+		result,
 		whb.Token,
 		gotely.WithClient(whb.Client),
 		gotely.WithUrl(whb.ApiUrl),

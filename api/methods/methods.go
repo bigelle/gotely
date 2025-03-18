@@ -1,5 +1,4 @@
 // TODO: make optional and required fields more obvious
-// TODO: add documentation for struct methods in Go style
 // TODO: replace iso6391 dependency with self-made function OR package (do i need it?)
 package methods
 
@@ -9,14 +8,14 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"net/http"
 	"strings"
 
 	"github.com/bigelle/gotely/api/objects"
 	iso6391 "github.com/emvi/iso-639-1"
 )
 
-// Use this method to send text messages. On success, the sent Message is returned.
+// Use this method to send text messages.
+// On success, the sent [objects.Message] is returned.
 type SendMessage struct {
 	//Required
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
@@ -590,12 +589,13 @@ func (s SendAudio) Endpoint() string {
 	return "sendAudio"
 }
 
-func (s SendAudio) Reader() (io.Reader, error) {
+func (s *SendAudio) Reader() (io.Reader, error) {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
 
 	go func() {
+		defer pw.Close()
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -814,12 +814,13 @@ func (s SendDocument) Endpoint() string {
 	return "sendDocument"
 }
 
-func (s SendDocument) Reader() (io.Reader, error) {
+func (s *SendDocument) Reader() (io.Reader, error) {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
 
 	go func() {
+		defer pw.Close()
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -1022,12 +1023,17 @@ type SendVideo struct {
 	contentType string
 }
 
-func (s SendVideo) Reader() (io.Reader, error) {
+func (s SendVideo) Endpoint() string {
+	return "sendVideo"
+}
+
+func (s *SendVideo) Reader() (io.Reader, error) {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
 
 	go func() {
+		defer pw.Close()
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -1190,6 +1196,11 @@ func (s SendVideo) Reader() (io.Reader, error) {
 	return pr, nil
 }
 
+func (s SendVideo) Validate() error {
+	//TODO
+	return nil
+}
+
 func (s SendVideo) ContentType() string {
 	if s.contentType == "" {
 		return "multipart/form-data"
@@ -1250,6 +1261,10 @@ type SendAnimation struct {
 	contentType string
 }
 
+func (s SendAnimation) Endpoint() string {
+	return "sendAnimation"
+}
+
 func (s SendAnimation) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -1260,12 +1275,13 @@ func (s SendAnimation) Validate() error {
 	return nil
 }
 
-func (s SendAnimation) Reader() (io.Reader, error) {
+func (s *SendAnimation) Reader() (io.Reader, error) {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
 
 	go func() {
+		defer pw.Close()
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -1482,16 +1498,17 @@ func (s SendVoice) Validate() error {
 	return nil
 }
 
-func (s SendVoice) ToRequestBody() ([]byte, error) {
-	return json.Marshal(s)
+func (s SendVoice) Endpoint() string {
+	return "sendVoice"
 }
 
-func (s SendVoice) Reader() (io.Reader, error) {
+func (s *SendVoice) Reader() (io.Reader, error) {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
 
 	go func() {
+		defer pw.Close()
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -1654,6 +1671,10 @@ type SendVideoNote struct {
 	contentType string
 }
 
+func (s SendVideoNote) Endpoint() string {
+	return "sendVideoNote"
+}
+
 func (s SendVideoNote) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -1664,12 +1685,13 @@ func (s SendVideoNote) Validate() error {
 	return nil
 }
 
-func (s SendVideoNote) Reader() (io.Reader, error) {
+func (s *SendVideoNote) Reader() (io.Reader, error) {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
 
 	go func() {
+		defer pw.Close()
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -1834,7 +1856,7 @@ type SendPaidMedia struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
-} //FIXME should be multipart
+}
 
 func (s SendPaidMedia) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
@@ -1861,6 +1883,7 @@ func (s SendPaidMedia) Endpoint() string {
 	return "sendPaidMedia"
 }
 
+// FIXME should be multipart
 func (s SendPaidMedia) Reader() (io.Reader, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
@@ -1899,6 +1922,10 @@ type SendMediaGroup struct {
 	contentType     string
 }
 
+func (s SendMediaGroup) Endpoint() string {
+	return "sendMediaGroup"
+}
+
 func (s SendMediaGroup) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
@@ -1917,12 +1944,13 @@ func (s SendMediaGroup) Validate() error {
 	return nil
 }
 
-func (s SendMediaGroup) Reader() (io.Reader, error) {
+func (s *SendMediaGroup) Reader() (io.Reader, error) {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
 
 	go func() {
+		defer pw.Close()
 		if s.BusinessConnectionId != nil {
 			if err := mw.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
 				pw.CloseWithError(err)
@@ -2046,7 +2074,10 @@ type SendLocation struct {
 	//Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	//instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
-	contentType string
+}
+
+func (s SendLocation) Endpoint() string {
+	return "sendLocation"
 }
 
 func (s SendLocation) Validate() error {
@@ -2061,6 +2092,18 @@ func (s SendLocation) Validate() error {
 	}
 	// TODO: validate reply parameters everywhere
 	return nil
+}
+
+func (s SendLocation) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SendLocation) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to send information about a venue. On success, the sent Message is returned.
@@ -2116,6 +2159,22 @@ func (s SendVenue) Validate() error {
 	return nil
 }
 
+func (s SendVenue) Endpoint() string {
+	return "sendVenue"
+}
+
+func (s SendVenue) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SendVenue) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to send phone contacts. On success, the sent Message is returned.
 type SendContact struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
@@ -2159,6 +2218,22 @@ func (s SendContact) Validate() error {
 		return objects.ErrInvalidParam("first_name parameter can't be empty")
 	}
 	return nil
+}
+
+func (s SendContact) Endpoint() string {
+	return "sendContact"
+}
+
+func (s SendContact) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SendContact) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to send a native poll. On success, the sent Message is returned.
@@ -2238,6 +2313,22 @@ func (s SendPoll) Validate() error {
 	return nil
 }
 
+func (s SendPoll) Endpoint() string {
+	return "sendPoll"
+}
+
+func (s SendPoll) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SendPoll) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to send an animated emoji that will display a random value. On success, the sent Message is returned.
 type SendDice struct {
 	//Unique identifier of the business connection on behalf of which the message will be sent
@@ -2274,6 +2365,22 @@ func (s SendDice) Validate() error {
 		return objects.ErrInvalidParam("emoji parameter can't be empty")
 	}
 	return nil
+}
+
+func (s SendDice) Endpoint() string {
+	return "sendDice"
+}
+
+func (s SendDice) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SendDice) ContentType() string {
+	return "application/json"
 }
 
 // Use this method when you need to tell the user that something is happening on the bot's side.
@@ -2325,6 +2432,22 @@ func (s SendChatAction) Validate() error {
 	return nil
 }
 
+func (s SendChatAction) Endpoint() string {
+	return "sendChatAction"
+}
+
+func (s SendChatAction) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SendChatAction) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to change the chosen reactions on a message.
 // Service messages can't be reacted to.
 // Automatically forwarded messages from a channel to its discussion group have the same available reactions as messages in the channel.
@@ -2358,6 +2481,22 @@ func (s SetMessageReaction) Validate() error {
 	return nil
 }
 
+func (s SetMessageReaction) Endpoint() string {
+	return "setMessageReaction"
+}
+
+func (s SetMessageReaction) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetMessageReaction) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get a list of profile pictures for a user. Returns a UserProfilePhotos object.
 type GetUserProfilePhotos struct {
 	//Unique identifier of the target user
@@ -2380,6 +2519,22 @@ func (g GetUserProfilePhotos) Validate() error {
 	return nil
 }
 
+func (s GetUserProfilePhotos) Endpoint() string {
+	return "getUserProfilePhotos"
+}
+
+func (s GetUserProfilePhotos) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetUserProfilePhotos) ContentType() string {
+	return "application/json"
+}
+
 // Changes the emoji status for a given user that previously allowed the bot to manage their emoji status via the
 // Mini App method requestEmojiStatusAccess. Returns True on success.
 type SetUserEmojiStatus struct {
@@ -2398,6 +2553,22 @@ func (s SetUserEmojiStatus) Validate() error {
 	return nil
 }
 
+func (s SetUserEmojiStatus) Endpoint() string {
+	return "setUserEmojiStatus"
+}
+
+func (s SetUserEmojiStatus) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetUserEmojiStatus) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get basic information about a file and prepare it for downloading.
 // For the moment, bots can download files of up to 20MB in size. On success, a File object is returned.
 // The file can then be downloaded via the link https://api.telegram.org/file/bot<token>/<file_path>,
@@ -2409,13 +2580,29 @@ func (s SetUserEmojiStatus) Validate() error {
 type GetFile struct {
 	//File identifier to get information about
 	FileId string `json:"file_id"`
-} //TODO: probably a good idea to add a method that will download the file and will return it as reader
+}
 
 func (g GetFile) Validate() error {
 	if strings.TrimSpace(g.FileId) == "" {
 		return objects.ErrInvalidParam("file_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s GetFile) Endpoint() string {
+	return "getFile"
+}
+
+func (s GetFile) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetFile) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to ban a user in a group, a supergroup or a channel.
@@ -2435,8 +2622,6 @@ type BanChatMember struct {
 	//If False, the user will be able to see messages in the group that were sent before the user was removed.
 	//Always True for supergroups and channels.
 	RevokeMessages *bool `json:"revoke_messages,omitempty"`
-	client         *http.Client
-	baseUrl        string
 }
 
 func (b BanChatMember) Validate() error {
@@ -2447,6 +2632,22 @@ func (b BanChatMember) Validate() error {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s BanChatMember) Endpoint() string {
+	return "banChatMember"
+}
+
+func (s BanChatMember) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s BanChatMember) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to unban a previously banned user in a supergroup or channel.
@@ -2472,6 +2673,22 @@ func (b UnbanChatMember) Validate() error {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s UnbanChatMember) Endpoint() string {
+	return "unbanChatMember"
+}
+
+func (s UnbanChatMember) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s UnbanChatMember) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to restrict a user in a supergroup.
@@ -2502,6 +2719,22 @@ func (r RestrictChatMember) Validate() error {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s RestrictChatMember) Endpoint() string {
+	return "restrictChatMember"
+}
+
+func (s RestrictChatMember) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s RestrictChatMember) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to promote or demote a user in a supergroup or a channel.
@@ -2558,6 +2791,22 @@ func (p PromoteChatMember) Validate() error {
 	return nil
 }
 
+func (s PromoteChatMember) Endpoint() string {
+	return "promoteChatMember"
+}
+
+func (s PromoteChatMember) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s PromoteChatMember) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to set a custom title for an administrator in a supergroup promoted by the bot. Returns True on success.
 type SetChatAdministratorCustomTitle struct {
 	//Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
@@ -2566,7 +2815,6 @@ type SetChatAdministratorCustomTitle struct {
 	UserId int `json:"user_id"`
 	//New custom title for the administrator; 0-16 characters, emoji are not allowed
 	CustomTitle string `json:"custom_title"`
-	contentType string
 }
 
 func (s SetChatAdministratorCustomTitle) Validate() error {
@@ -2590,6 +2838,22 @@ func (s SetChatAdministratorCustomTitle) Validate() error {
 	return nil
 }
 
+func (s SetChatAdministratorCustomTitle) Endpoint() string {
+	return "setChatAdministratorCustomTitle"
+}
+
+func (s SetChatAdministratorCustomTitle) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetChatAdministratorCustomTitle) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to ban a channel chat in a supergroup or a channel. Until the chat is unbanned,
 // the owner of the banned chat won't be able to send messages on behalf of any of their channels.
 // The bot must be an administrator in the supergroup or channel for this to work and must have the appropriate administrator rights.
@@ -2611,6 +2875,22 @@ func (b BanChatSenderChat) Validate() error {
 	return nil
 }
 
+func (s BanChatSenderChat) Endpoint() string {
+	return "banChatSenderChat"
+}
+
+func (s BanChatSenderChat) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s BanChatSenderChat) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to unban a previously banned channel chat in a supergroup or channel.
 // The bot must be an administrator for this to work and must have the appropriate administrator rights.
 // Returns True on success.
@@ -2629,6 +2909,22 @@ func (b UnbanChatSenderChat) Validate() error {
 		return objects.ErrInvalidParam("sender_chat_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s UnbanChatSenderChat) Endpoint() string {
+	return "unbanChatSenderChat"
+}
+
+func (s UnbanChatSenderChat) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s UnbanChatSenderChat) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to set default chat permissions for all members.
@@ -2654,6 +2950,22 @@ func (s SetChatPermissions) Validate() error {
 	return nil
 }
 
+func (s SetChatPermissions) Endpoint() string {
+	return "setChatPermissions"
+}
+
+func (s SetChatPermissions) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetChatPermissions) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to generate a new primary invite link for a chat; any previously generated primary link is revoked.
 // The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
 // Returns the new invite link as String on success.
@@ -2671,6 +2983,22 @@ func (e ExportChatInviteLink) Validate() error {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s ExportChatInviteLink) Endpoint() string {
+	return "exportChatInviteLink"
+}
+
+func (s ExportChatInviteLink) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s ExportChatInviteLink) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to create an additional invite link for a chat.
@@ -2704,6 +3032,22 @@ func (c CreateInviteLink) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (s CreateInviteLink) Endpoint() string {
+	return "createInviteLink"
+}
+
+func (s CreateInviteLink) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s CreateInviteLink) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to edit a non-primary invite link created by the bot.
@@ -2741,6 +3085,22 @@ func (c EditChatInviteLink) Validate() error {
 	return nil
 }
 
+func (s EditChatInviteLink) Endpoint() string {
+	return "editChatInviteLink"
+}
+
+func (s EditChatInviteLink) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s EditChatInviteLink) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to create a subscription invite link for a channel chat.
 // The bot must have the can_invite_users administrator rights.
 // The link can be edited using the method editChatSubscriptionInviteLink or revoked using the method revokeChatInviteLink.
@@ -2774,6 +3134,22 @@ func (c CreateChatSubscriptionInviteLink) Validate() error {
 	return nil
 }
 
+func (s CreateChatSubscriptionInviteLink) Endpoint() string {
+	return "createChatSubscriptionInviteLink"
+}
+
+func (s CreateChatSubscriptionInviteLink) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s CreateChatSubscriptionInviteLink) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to edit a subscription invite link created by the bot.
 // The bot must have the can_invite_users administrator rights.
 // Returns the edited invite link as a ChatInviteLink object.
@@ -2801,6 +3177,22 @@ func (c EditChatSubscriptionInviteLink) Validate() error {
 	return nil
 }
 
+func (s EditChatSubscriptionInviteLink) Endpoint() string {
+	return "editChatSubscriptionInviteLink"
+}
+
+func (s EditChatSubscriptionInviteLink) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s EditChatSubscriptionInviteLink) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to revoke an invite link created by the bot.
 // If the primary link is revoked, a new link is automatically generated.
 // The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
@@ -2820,6 +3212,22 @@ func (c RevokeInviteLink) Validate() error {
 		return objects.ErrInvalidParam("invite_link parameter can't be empty")
 	}
 	return nil
+}
+
+func (s RevokeInviteLink) Endpoint() string {
+	return "revokeInviteLink"
+}
+
+func (s RevokeInviteLink) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s RevokeInviteLink) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to approve a chat join request.
@@ -2842,6 +3250,22 @@ func (s ApproveChatJoinRequest) Validate() error {
 	return nil
 }
 
+func (s ApproveChatJoinRequest) Endpoint() string {
+	return "approveChatJoinRequest"
+}
+
+func (s ApproveChatJoinRequest) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s ApproveChatJoinRequest) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to decline a chat join request.
 // The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right.
 // Returns True on success.
@@ -2862,8 +3286,30 @@ func (s DeclineChatJoinRequest) Validate() error {
 	return nil
 }
 
+func (s DeclineChatJoinRequest) Endpoint() string {
+	return "declineChatJoinRequest"
+}
+
+func (s DeclineChatJoinRequest) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s DeclineChatJoinRequest) ContentType() string {
+	return "application/json"
+}
+
+// Use this method to set a new profile photo for the chat.
+// Photos can't be changed for private chats.
+// The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
+// Returns True on success.
 type SetChatPhoto struct {
-	ChatId      string            `json:"chat_id"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//New chat photo, uploaded using multipart/form-data
 	Photo       objects.InputFile `json:"photo"`
 	contentType string
 }
@@ -2911,6 +3357,14 @@ func (s SetChatPhoto) Reader() (io.Reader, error) {
 	return pr, nil
 }
 
+func (s SetChatPhoto) Endpoint() string {
+	return "setChatPhoto"
+}
+
+func (s SetChatPhoto) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to delete a chat photo. Photos can't be changed for private chats.
 // The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
 // Returns True on success.
@@ -2924,6 +3378,22 @@ func (d DeleteChatPhoto) Validate() error {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s DeleteChatPhoto) Endpoint() string {
+	return "deleteChatPhoto"
+}
+
+func (s DeleteChatPhoto) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s DeleteChatPhoto) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to change the title of a chat. Titles can't be changed for private chats.
@@ -2946,6 +3416,22 @@ func (s SetChatTitle) Validate() error {
 	return nil
 }
 
+func (s SetChatTitle) Endpoint() string {
+	return "setChatTitle"
+}
+
+func (s SetChatTitle) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetChatTitle) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to change the description of a group, a supergroup or a channel.
 // The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
 // Returns True on success.
@@ -2964,6 +3450,22 @@ func (s SetChatDescription) Validate() error {
 		return objects.ErrInvalidParam("description parameter must not be longer than 255 characters")
 	}
 	return nil
+}
+
+func (s SetChatDescription) Endpoint() string {
+	return "setChatDescription"
+}
+
+func (s SetChatDescription) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetChatDescription) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to add a message to the list of pinned messages in a chat.
@@ -2992,6 +3494,22 @@ func (p PinChatMessage) Validate() error {
 	return nil
 }
 
+func (s PinChatMessage) Endpoint() string {
+	return "pinChatMessage"
+}
+
+func (s PinChatMessage) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s PinChatMessage) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to remove a message from the list of pinned messages in a chat.
 // If the chat is not a private chat, the bot must be an administrator in the chat for this to work and
 // must have the 'can_pin_messages' administrator right in a supergroup or 'can_edit_messages' administrator right in a channel.
@@ -3001,7 +3519,8 @@ type UnpinChatMessage struct {
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
-	//Identifier of the message to unpin. Required if business_connection_id is specified. If not specified, the most recent pinned message (by sending date) will be unpinned.
+	//Identifier of the message to unpin. Required if business_connection_id is specified.
+	// If not specified, the most recent pinned message (by sending date) will be unpinned.
 	MessageId *int `json:"message_id,omitempty"`
 }
 
@@ -3017,6 +3536,22 @@ func (p UnpinChatMessage) Validate() error {
 	return nil
 }
 
+func (s UnpinChatMessage) Endpoint() string {
+	return "unpinChatMessage"
+}
+
+func (s UnpinChatMessage) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s UnpinChatMessage) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to clear the list of pinned messages in a chat.
 // If the chat is not a private chat, the bot must be an administrator in the chat for this to work and
 // must have the 'can_pin_messages' administrator right in a supergroup or 'can_edit_messages' administrator right in a channel.
@@ -3024,6 +3559,22 @@ func (p UnpinChatMessage) Validate() error {
 type UnpinAllChatMessages struct {
 	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
+}
+
+func (s UnpinAllChatMessages) Endpoint() string {
+	return "unpinAllChatMessages"
+}
+
+func (s UnpinAllChatMessages) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s UnpinAllChatMessages) ContentType() string {
+	return "application/json"
 }
 
 func (p UnpinAllChatMessages) Validate() error {
@@ -3046,6 +3597,22 @@ func (p LeaveChat) Validate() error {
 	return nil
 }
 
+func (s LeaveChat) Endpoint() string {
+	return "leaveChat"
+}
+
+func (s LeaveChat) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s LeaveChat) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get up-to-date information about the chat. Returns a ChatFullInfo object on success.
 type GetChat struct {
 	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
@@ -3057,6 +3624,22 @@ func (p GetChat) Validate() error {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s GetChat) Endpoint() string {
+	return "getChat"
+}
+
+func (s GetChat) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetChat) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to get a list of administrators in a chat, which aren't bots. Returns an Array of ChatMember objects.
@@ -3072,6 +3655,22 @@ func (p GetChatAdministrators) Validate() error {
 	return nil
 }
 
+func (s GetChatAdministrators) Endpoint() string {
+	return "getChatAdministrators"
+}
+
+func (s GetChatAdministrators) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetChatAdministrators) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get the number of members in a chat. Returns Int on success.
 type GetChatMemberCount struct {
 	//Unique identifier for the target chat or username of the target supergroup or channel (in the format @channelusername)
@@ -3083,6 +3682,22 @@ func (p GetChatMemberCount) Validate() error {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s GetChatMemberCount) Endpoint() string {
+	return "getChatMemberCount"
+}
+
+func (s GetChatMemberCount) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetChatMemberCount) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to get information about a member of a chat.
@@ -3103,6 +3718,22 @@ func (p GetChatMember) Validate() error {
 		return objects.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s GetChatMember) Endpoint() string {
+	return "getChatMember"
+}
+
+func (s GetChatMember) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetChatMember) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to set a new group sticker set for a supergroup.
@@ -3126,6 +3757,22 @@ func (p SetChatStickerSet) Validate() error {
 	return nil
 }
 
+func (s SetChatStickerSet) Endpoint() string {
+	return "setChatStickerSet"
+}
+
+func (s SetChatStickerSet) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetChatStickerSet) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to delete a group sticker set from a supergroup.
 // The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights.
 // Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method.
@@ -3142,6 +3789,22 @@ func (p DeleteChatStickerSet) Validate() error {
 	return nil
 }
 
+func (s DeleteChatStickerSet) Endpoint() string {
+	return "deleteChatStickerSet"
+}
+
+func (s DeleteChatStickerSet) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s DeleteChatStickerSet) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get custom emoji stickers, which can be used as a forum topic icon by any user.
 // Requires no parameters. Returns an Array of Sticker objects.
 type GetForumTopicIconStickers struct {
@@ -3150,6 +3813,22 @@ type GetForumTopicIconStickers struct {
 // always nil
 func (g GetForumTopicIconStickers) Validate() error {
 	return nil
+}
+
+func (s GetForumTopicIconStickers) Endpoint() string {
+	return "getForumTopicIconStickers"
+}
+
+func (s GetForumTopicIconStickers) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetForumTopicIconStickers) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to create a topic in a forum supergroup chat.
@@ -3190,6 +3869,22 @@ func (c CreateForumTopic) Validate() error {
 	return nil
 }
 
+func (s CreateForumTopic) Endpoint() string {
+	return "createForumTopic"
+}
+
+func (s CreateForumTopic) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s CreateForumTopic) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to edit name and icon of a topic in a forum supergroup chat.
 // The bot must be an administrator in the chat for this to work and
 // must have the can_manage_topics administrator rights, unless it is the creator of the topic.
@@ -3222,6 +3917,22 @@ func (e EditForumTopic) Validate() error {
 	return nil
 }
 
+func (s EditForumTopic) Endpoint() string {
+	return "editForumTopic"
+}
+
+func (s EditForumTopic) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s EditForumTopic) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to close an open topic in a forum supergroup chat.
 // The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights, unless it is the creator of the topic.
 // Returns True on success.
@@ -3240,6 +3951,22 @@ func (e CloseForumTopic) Validate() error {
 		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s CloseForumTopic) Endpoint() string {
+	return "closeForumTopic"
+}
+
+func (s CloseForumTopic) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s CloseForumTopic) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to reopen a closed topic in a forum supergroup chat.
@@ -3263,6 +3990,22 @@ func (e ReopenForumTopic) Validate() error {
 	return nil
 }
 
+func (s ReopenForumTopic) Endpoint() string {
+	return "reopenForumTopic"
+}
+
+func (s ReopenForumTopic) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s ReopenForumTopic) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to delete a forum topic along with all its messages in a forum supergroup chat.
 // The bot must be an administrator in the chat for this to work and must have the can_delete_messages administrator rights.
 // Returns True on success.
@@ -3281,6 +4024,22 @@ func (e DeleteForumTopic) Validate() error {
 		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s DeleteForumTopic) Endpoint() string {
+	return "deleteForumTopic"
+}
+
+func (s DeleteForumTopic) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s DeleteForumTopic) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to clear the list of pinned messages in a forum topic.
@@ -3304,6 +4063,22 @@ func (e UnpinAllForumTopicMessages) Validate() error {
 	return nil
 }
 
+func (s UnpinAllForumTopicMessages) Endpoint() string {
+	return "unpinAllForumTopicMessages"
+}
+
+func (s UnpinAllForumTopicMessages) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s UnpinAllForumTopicMessages) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to edit the name of the 'General' topic in a forum supergroup chat.
 // The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights.
 // Returns True on success.
@@ -3324,6 +4099,22 @@ func (e EditGeneralForumTopic) Validate() error {
 	return nil
 }
 
+func (s EditGeneralForumTopic) Endpoint() string {
+	return "editGeneralForumTopic"
+}
+
+func (s EditGeneralForumTopic) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s EditGeneralForumTopic) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to close an open 'General' topic in a forum supergroup chat.
 // The bot must be an administrator in the chat for this to work and
 // must have the can_manage_topics administrator rights.
@@ -3338,6 +4129,22 @@ func (e CloseGeneralForumTopic) Validate() error {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s CloseGeneralForumTopic) Endpoint() string {
+	return "closeGeneralForumTopic"
+}
+
+func (s CloseGeneralForumTopic) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s CloseGeneralForumTopic) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to reopen a closed 'General' topic in a forum supergroup chat.
@@ -3356,6 +4163,22 @@ func (e ReopenGeneralForumTopic) Validate() error {
 	return nil
 }
 
+func (s ReopenGeneralForumTopic) Endpoint() string {
+	return "reopenGeneralForumTopic"
+}
+
+func (s ReopenGeneralForumTopic) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s ReopenGeneralForumTopic) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to hide the 'General' topic in a forum supergroup chat.
 // The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights.
 // The topic will be automatically closed if it was open. Returns True on success.
@@ -3369,6 +4192,22 @@ func (e HideGeneralForumTopic) Validate() error {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s HideGeneralForumTopic) Endpoint() string {
+	return "hideGeneralForumTopic"
+}
+
+func (s HideGeneralForumTopic) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s HideGeneralForumTopic) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to unhide the 'General' topic in a forum supergroup chat.
@@ -3386,6 +4225,22 @@ func (e UnhideGeneralForumTopic) Validate() error {
 	return nil
 }
 
+func (s UnhideGeneralForumTopic) Endpoint() string {
+	return "unhideGeneralForumTopic"
+}
+
+func (s UnhideGeneralForumTopic) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s UnhideGeneralForumTopic) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to clear the list of pinned messages in a General forum topic.
 // The bot must be an administrator in the chat for this to work and
 // must have the can_pin_messages administrator right in the supergroup.
@@ -3400,6 +4255,22 @@ func (e UnpinAllGeneralForumTopicMessages) Validate() error {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s UnpinAllGeneralForumTopicMessages) Endpoint() string {
+	return "unpinAllGeneralForumTopicMessages"
+}
+
+func (s UnpinAllGeneralForumTopicMessages) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s UnpinAllGeneralForumTopicMessages) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to send answers to callback queries sent from inline keyboards.
@@ -3439,6 +4310,22 @@ func (a AnswerCallbackQuery) Validate() error {
 	return nil
 }
 
+func (s AnswerCallbackQuery) Endpoint() string {
+	return "answerCallbackQuery"
+}
+
+func (s AnswerCallbackQuery) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s AnswerCallbackQuery) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get the list of boosts added to a chat by a user. Requires administrator rights in the chat. Returns a UserChatBoosts object.
 type GetUserChatBoosts struct {
 	//Unique identifier for the chat or username of the channel (in the format @channelusername)
@@ -3457,6 +4344,22 @@ func (g GetUserChatBoosts) Validate() error {
 	return nil
 }
 
+func (s GetUserChatBoosts) Endpoint() string {
+	return "getUserChatBoosts"
+}
+
+func (s GetUserChatBoosts) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetUserChatBoosts) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get information about the connection of the bot with a business account.
 // Returns a BusinessConnection object on success.
 type GetBusinessConnection struct {
@@ -3469,6 +4372,22 @@ func (g GetBusinessConnection) Validate() error {
 		return objects.ErrInvalidParam("business_connection_id parameter can't be empty")
 	}
 	return nil
+}
+
+func (s GetBusinessConnection) Endpoint() string {
+	return "getBusinessConnection"
+}
+
+func (s GetBusinessConnection) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetBusinessConnection) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to change the list of the bot's commands. See this manual for more details about bot commands. Returns True on success.
@@ -3495,11 +4414,28 @@ func (s SetMyCommands) Validate() error {
 	if s.LanguageCode != nil && *s.LanguageCode != "" {
 		// FIXME: should validate it using no dependencies
 		//https://ru.wikipedia.org/wiki/%D0%A1%D0%BF%D0%B8%D1%81%D0%BE%D0%BA_%D0%BA%D0%BE%D0%B4%D0%BE%D0%B2_ISO_639-1
+		//or maybe i should not validate any country and language codes and leave it to API
 		if !iso6391.ValidCode(*s.LanguageCode) {
 			return objects.ErrInvalidParam(fmt.Sprintf("invalid language code: %s", *s.LanguageCode))
 		}
 	}
 	return nil
+}
+
+func (s SetMyCommands) Endpoint() string {
+	return "setMyCommands"
+}
+
+func (s SetMyCommands) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetMyCommands) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to delete the list of the bot's commands for the given scope and user language.
@@ -3525,6 +4461,22 @@ func (s DeleteMyCommands) Validate() error {
 	return nil
 }
 
+func (s DeleteMyCommands) Endpoint() string {
+	return "deleteMyCommands"
+}
+
+func (s DeleteMyCommands) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s DeleteMyCommands) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get the current list of the bot's commands for the given scope and user language.
 // Returns an Array of BotCommand objects. If commands aren't set, an empty list is returned.
 type GetMyCommands struct {
@@ -3546,6 +4498,22 @@ func (s GetMyCommands) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (s GetMyCommands) Endpoint() string {
+	return "getMyCommands"
+}
+
+func (s GetMyCommands) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetMyCommands) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to change the bot's name. Returns True on success.
@@ -3570,6 +4538,22 @@ func (s SetMyName) Validate() error {
 	return nil
 }
 
+func (s SetMyName) Endpoint() string {
+	return "setMyName"
+}
+
+func (s SetMyName) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetMyName) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get the current bot name for the given user language. Returns BotName on success.
 type GetMyName struct {
 	//A two-letter ISO 639-1 language code or an empty string
@@ -3583,6 +4567,22 @@ func (s GetMyName) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (s GetMyName) Endpoint() string {
+	return "getMyName"
+}
+
+func (s GetMyName) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetMyName) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to change the bot's description, which is shown in the chat with the bot if the chat is empty. Returns True on success.
@@ -3607,6 +4607,22 @@ func (s SetMyDescription) Validate() error {
 	return nil
 }
 
+func (s SetMyDescription) Endpoint() string {
+	return "setMyDescription"
+}
+
+func (s SetMyDescription) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetMyDescription) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get the current bot description for the given user language. Returns BotDescription on success.
 type GetMyDescription struct {
 	//A two-letter ISO 639-1 language code or an empty string
@@ -3620,6 +4636,22 @@ func (s GetMyDescription) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (s GetMyDescription) Endpoint() string {
+	return "getMyDescription"
+}
+
+func (s GetMyDescription) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetMyDescription) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to change the bot's short description, which is shown on the bot's profile page and is sent together with the link when users share the bot.
@@ -3645,6 +4677,22 @@ func (s SetMyShortDescription) Validate() error {
 	return nil
 }
 
+func (s SetMyShortDescription) Endpoint() string {
+	return "setMyShortDescription"
+}
+
+func (s SetMyShortDescription) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetMyShortDescription) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get the current bot short description for the given user language. Returns BotShortDescription on success.
 type GetMyShortDescription struct {
 	//A two-letter ISO 639-1 language code or an empty string
@@ -3658,6 +4706,22 @@ func (s GetMyShortDescription) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (s GetMyShortDescription) Endpoint() string {
+	return "getMyShortDescription"
+}
+
+func (s GetMyShortDescription) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetMyShortDescription) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to change the bot's menu button in a private chat, or the default menu button. Returns True on success.
@@ -3682,6 +4746,22 @@ func (s SetChatMenuButton) Validate() error {
 	return nil
 }
 
+func (s SetChatMenuButton) Endpoint() string {
+	return "setChatMenuButton"
+}
+
+func (s SetChatMenuButton) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetChatMenuButton) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get the current value of the bot's menu button in a private chat, or the default menu button.
 // Returns MenuButton on success.
 type GetChatMenuButton struct {
@@ -3696,6 +4776,22 @@ func (s GetChatMenuButton) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (s GetChatMenuButton) Endpoint() string {
+	return "getChatMenuButton"
+}
+
+func (s GetChatMenuButton) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetChatMenuButton) ContentType() string {
+	return "application/json"
 }
 
 // Use this method to change the default administrator rights requested by the bot when it's added as an administrator to groups or channels.
@@ -3714,6 +4810,22 @@ func (s SetMyDefaultAdministratorRights) Validate() error {
 	return nil
 }
 
+func (s SetMyDefaultAdministratorRights) Endpoint() string {
+	return "setMyDefaultAdministratorRights"
+}
+
+func (s SetMyDefaultAdministratorRights) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s SetMyDefaultAdministratorRights) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to get the current default administrator rights of the bot. Returns ChatAdministratorRights on success.
 type GetMyDefaultAdministratorRights struct {
 	//Pass True to get default administrator rights of the bot in channels.
@@ -3724,4 +4836,20 @@ type GetMyDefaultAdministratorRights struct {
 // always nil
 func (s GetMyDefaultAdministratorRights) Validate() error {
 	return nil
+}
+
+func (s GetMyDefaultAdministratorRights) Endpoint() string {
+	return "getMyDefaultAdministratorRights"
+}
+
+func (s GetMyDefaultAdministratorRights) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetMyDefaultAdministratorRights) ContentType() string {
+	return "application/json"
 }

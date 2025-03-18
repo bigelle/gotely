@@ -1,27 +1,16 @@
 package methods
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"strings"
 
 	"github.com/bigelle/gotely/api/objects"
 )
 
-// MessageOrBool represents the result of "edit-" methods in the Telegram Bot API.
-// These methods can return either a Message or a boolean value depending on
-// whether the method was used to edit a regular message or an inline message.
-//
-// - If the method edits a regular message, a Message object is returned.
-//
-// - If the method edits an inline message, a boolean value is returned to indicate success.
-//
-// This structure encapsulates both possible return objects for easier handling in Go.
-type MessageOrBool struct {
-	Message *objects.Message
-	Bool    *bool
-}
-
 // Use this method to edit text and game messages.
-// On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned.
+// On success, if the edited message is not an inline message, the edited [objects.Message] is returned, otherwise True is returned.
 // Note that business messages that were not sent by the bot and
 // do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
 type EditMessageText struct {
@@ -66,26 +55,11 @@ func (e EditMessageText) Validate() error {
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil && len(*e.ChatId) == 0 {
+		if e.ChatId == nil || len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if c, ok := any(*e.ChatId).(string); ok {
-				if strings.TrimSpace(c) == "" {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
-			if c, ok := any(*e.ChatId).(int); ok {
-				if c < 1 {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
 		}
-		if e.MessageId == nil {
+		if e.MessageId == nil || *e.MessageId < 1 {
 			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if *e.MessageId < 1 {
-				return objects.ErrInvalidParam("message_id parameter can't be empty")
-			}
 		}
 	}
 	if e.Entities != nil && e.ParseMode != nil {
@@ -96,11 +70,32 @@ func (e EditMessageText) Validate() error {
 			return err
 		}
 	}
+	if e.LinkPreviewOptions != nil {
+		if err := e.LinkPreviewOptions.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
+func (s EditMessageText) Endpoint() string {
+	return "editMessageText"
+}
+
+func (s EditMessageText) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s EditMessageText) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to edit captions of messages.
-// On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned.
+// On success, if the edited message is not an inline message, the edited [objects.Message] is returned, otherwise True is returned.
 // Note that business messages that were not sent by the bot and
 // do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
 type EditMessageCaption struct {
@@ -147,26 +142,11 @@ func (e EditMessageCaption) Validate() error {
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil && len(*e.ChatId) == 0 {
+		if e.ChatId == nil || len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if c, ok := any(*e.ChatId).(string); ok {
-				if strings.TrimSpace(c) == "" {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
-			if c, ok := any(*e.ChatId).(int); ok {
-				if c < 1 {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
 		}
-		if e.MessageId == nil {
+		if e.MessageId == nil || *e.MessageId < 1 {
 			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if *e.MessageId < 1 {
-				return objects.ErrInvalidParam("message_id parameter can't be empty")
-			}
 		}
 	}
 	if e.CaptionEntities != nil && e.ParseMode != nil {
@@ -180,22 +160,44 @@ func (e EditMessageCaption) Validate() error {
 	return nil
 }
 
+func (s EditMessageCaption) Endpoint() string {
+	return "editMessageCaption"
+}
+
+func (s EditMessageCaption) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s EditMessageCaption) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to edit animation, audio, document, photo, or video messages, or to add media to text messages.
 // If a message is part of a message album, then it can be edited only to an audio for audio albums,
 // only to a document for document albums and to a photo or a video otherwise. When an inline message is edited,
 // a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL.
-// On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned.
+// On success, if the edited message is not an inline message, the edited [objects.Message] is returned, otherwise True is returned.
 // Note that business messages that were not sent by the bot and
 // do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
 type EditMessageMedia struct {
-	Media                 objects.InputMedia            `json:"media"`
-	ChatId                *string                       `json:"chat_id,omitempty"`
-	BusinessConnectionId  *string                       `json:"business_connection_id,omitempty"`
-	MessageId             *int                          `json:"message_id,omitempty"`
-	InlineMessageId       *string                       `json:"inline_message_id,omitempty"`
-	ShowCaptionAboveMedia *bool                         `json:"show_caption_above_media,omitempty"`
-	ReplyMarkup           *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-}
+	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Required if inline_message_id is not specified.
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId *string `json:"chat_id,omitempty"`
+	//Required if inline_message_id is not specified. Identifier of the message to edit
+	MessageId *int `json:"message_id,omitempty"`
+	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	InlineMessageId *string `json:"inline_message_id,omitempty"`
+	//A JSON-serialized object for a new media content of the message
+	Media objects.InputMedia `json:"media"`
+	//A JSON-serialized object for a new inline keyboard.
+	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+} //TODO multipart
 
 func (e EditMessageMedia) Validate() error {
 	if err := e.Media.Validate(); err != nil {
@@ -207,26 +209,11 @@ func (e EditMessageMedia) Validate() error {
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil && len(*e.ChatId) == 0 {
+		if e.ChatId == nil || len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if c, ok := any(*e.ChatId).(string); ok {
-				if strings.TrimSpace(c) == "" {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
-			if c, ok := any(*e.ChatId).(int); ok {
-				if c < 1 {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
 		}
-		if e.MessageId == nil {
+		if e.MessageId == nil || *e.MessageId < 1 {
 			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if *e.MessageId < 1 {
-				return objects.ErrInvalidParam("message_id parameter can't be empty")
-			}
 		}
 	}
 	if e.ReplyMarkup != nil {
@@ -237,18 +224,54 @@ func (e EditMessageMedia) Validate() error {
 	return nil
 }
 
+func (s EditMessageMedia) Endpoint() string {
+	return "editMessageMedia"
+}
+
+func (s EditMessageMedia) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s EditMessageMedia) ContentType() string {
+	return "application/json"
+}
+
+// Use this method to edit live location messages.
+// A location can be edited until its live_period expires or editing is explicitly disabled by a call to [StopMessageLiveLocation].
+// On success, if the edited message is not an inline message, the edited [objects.Message] is returned, otherwise True is returned.
 type EditMessageLiveLocation struct {
-	Latitude             *float64                      `json:"latitude"`
-	Longitude            *float64                      `json:"longitude"`
-	LivePeriod           *int                          `json:"live_period,omitempty"`
-	HorizontalAccuracy   *float64                      `json:"horizontal_accuracy,omitempty"`
-	Heading              *int                          `json:"heading,omitempty"`
-	ProximityAlertRadius *int                          `json:"proximity_alert_radius,omitempty"`
-	ChatId               *string                       `json:"chat_id,omitempty"`
-	BusinessConnectionId *string                       `json:"business_connection_id,omitempty"`
-	MessageId            *int                          `json:"message_id,omitempty"`
-	InlineMessageId      *string                       `json:"inline_message_id,omitempty"`
-	ReplyMarkup          *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Required if inline_message_id is not specified.
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId *string `json:"chat_id,omitempty"`
+	//Required if inline_message_id is not specified. Identifier of the message to edit
+	MessageId *int `json:"message_id,omitempty"`
+	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	InlineMessageId *string `json:"inline_message_id,omitempty"`
+	//Latitude of new location
+	Latitude *float64 `json:"latitude"`
+	//Longitude of new location
+	Longitude *float64 `json:"longitude"`
+	//New period in seconds during which the location can be updated, starting from the message send date.
+	//If 0x7FFFFFFF is specified, then the location can be updated forever.
+	//Otherwise, the new value must not exceed the current live_period by more than a day,
+	//and the live location expiration date must remain within the next 90 days.
+	//If not specified, then live_period remains unchanged
+	LivePeriod *int `json:"live_period,omitempty"`
+	//The radius of uncertainty for the location, measured in meters; 0-1500
+	HorizontalAccuracy *float64 `json:"horizontal_accuracy,omitempty"`
+	//Direction in which the user is moving, in degrees. Must be between 1 and 360 if specified.
+	Heading *int `json:"heading,omitempty"`
+	//The maximum distance for proximity alerts about approaching another chat member, in meters.
+	//Must be between 1 and 100000 if specified.
+	ProximityAlertRadius *int `json:"proximity_alert_radius,omitempty"`
+	//A JSON-serialized object for a new inline keyboard.
+	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
 func (e EditMessageLiveLocation) Validate() error {
@@ -274,26 +297,11 @@ func (e EditMessageLiveLocation) Validate() error {
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil && len(*e.ChatId) == 0 {
+		if e.ChatId == nil || len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if c, ok := any(*e.ChatId).(string); ok {
-				if strings.TrimSpace(c) == "" {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
-			if c, ok := any(*e.ChatId).(int); ok {
-				if c < 1 {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
 		}
-		if e.MessageId == nil {
+		if e.MessageId == nil || *e.MessageId < 1 {
 			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if *e.MessageId < 1 {
-				return objects.ErrInvalidParam("message_id parameter can't be empty")
-			}
 		}
 	}
 	if e.ReplyMarkup != nil {
@@ -304,12 +312,36 @@ func (e EditMessageLiveLocation) Validate() error {
 	return nil
 }
 
+func (s EditMessageLiveLocation) Endpoint() string {
+	return "editMessageLiveLocation"
+}
+
+func (s EditMessageLiveLocation) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s EditMessageLiveLocation) ContentType() string {
+	return "application/json"
+}
+
+// Use this method to stop updating a live location message before live_period expires.
+// On success, if the message is not an inline message, the edited [objects.Message] is returned, otherwise True is returned.
 type StopMessageLiveLocation struct {
-	ChatId               *string                       `json:"chat_id,omitempty"`
-	BusinessConnectionId *string                       `json:"business_connection_id,omitempty"`
-	MessageId            *int                          `json:"message_id,omitempty"`
-	InlineMessageId      *string                       `json:"inline_message_id,omitempty"`
-	ReplyMarkup          *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Required if inline_message_id is not specified.
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername
+	ChatId *string `json:"chat_id,omitempty"`
+	//Required if inline_message_id is not specified. Identifier of the message with live location to stop
+	MessageId *int `json:"message_id,omitempty"`
+	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	InlineMessageId *string `json:"inline_message_id,omitempty"`
+	//A JSON-serialized object for a new inline keyboard.
+	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
 func (e StopMessageLiveLocation) Validate() error {
@@ -319,26 +351,11 @@ func (e StopMessageLiveLocation) Validate() error {
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil && len(*e.ChatId) == 0 {
+		if e.ChatId == nil || len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if c, ok := any(*e.ChatId).(string); ok {
-				if strings.TrimSpace(c) == "" {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
-			if c, ok := any(*e.ChatId).(int); ok {
-				if c < 1 {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
 		}
-		if e.MessageId == nil {
+		if e.MessageId == nil || *e.MessageId < 1 {
 			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if *e.MessageId < 1 {
-				return objects.ErrInvalidParam("message_id parameter can't be empty")
-			}
 		}
 	}
 	if e.ReplyMarkup != nil {
@@ -349,12 +366,22 @@ func (e StopMessageLiveLocation) Validate() error {
 	return nil
 }
 
+// Use this method to edit only the reply markup of messages.
+// On success, if the edited message is not an inline message, the edited [objects.Message] is returned,
+// otherwise True is returned. Note that business messages that were not sent by the bot and
+// do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
 type EditMessageReplyMarkup struct {
-	ChatId               *string                       `json:"chat_id,omitempty"`
-	BusinessConnectionId *string                       `json:"business_connection_id,omitempty"`
-	MessageId            *int                          `json:"message_id,omitempty"`
-	InlineMessageId      *string                       `json:"inline_message_id,omitempty"`
-	ReplyMarkup          *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Required if inline_message_id is not specified.
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId *string `json:"chat_id,omitempty"`
+	//Required if inline_message_id is not specified. Identifier of the message to edit
+	MessageId *int `json:"message_id,omitempty"`
+	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	InlineMessageId *string `json:"inline_message_id,omitempty"`
+	//A JSON-serialized object for an inline keyboard.
+	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
 func (e EditMessageReplyMarkup) Validate() error {
@@ -364,26 +391,11 @@ func (e EditMessageReplyMarkup) Validate() error {
 		}
 	}
 	if e.InlineMessageId == nil {
-		if e.ChatId == nil && len(*e.ChatId) == 0 {
+		if e.ChatId == nil || len(*e.ChatId) == 0 {
 			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if c, ok := any(*e.ChatId).(string); ok {
-				if strings.TrimSpace(c) == "" {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
-			if c, ok := any(*e.ChatId).(int); ok {
-				if c < 1 {
-					return objects.ErrInvalidParam("chat_id parameter can't be empty")
-				}
-			}
 		}
-		if e.MessageId == nil {
+		if e.MessageId == nil || *e.MessageId < 1 {
 			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
-		} else {
-			if *e.MessageId < 1 {
-				return objects.ErrInvalidParam("message_id parameter can't be empty")
-			}
 		}
 	}
 	if e.ReplyMarkup != nil {
@@ -394,23 +406,22 @@ func (e EditMessageReplyMarkup) Validate() error {
 	return nil
 }
 
+// Use this method to stop a poll which was sent by the bot.
+// On success, the stopped [objects.Poll] is returned.
 type StopPoll struct {
-	ChatId               string                        `json:"chat_id"`
-	MessageId            int                           `json:"message_id"`
-	BusinessConnectionId *string                       `json:"business_connection_id,omitempty"`
-	ReplyMarkup          *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Identifier of the original message with the poll
+	MessageId int `json:"message_id"`
+	//A JSON-serialized object for a new message inline keyboard.
+	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
 func (s StopPoll) Validate() error {
-	if c, ok := any(s.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(s.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+	if strings.TrimSpace(s.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.MessageId < 1 {
 		return objects.ErrInvalidParam("message_id parameter can't be empty")
@@ -423,21 +434,51 @@ func (s StopPoll) Validate() error {
 	return nil
 }
 
+func (s StopPoll) Endpoint() string {
+	return "stopPoll"
+}
+
+func (s StopPoll) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s StopPoll) ContentType() string {
+	return "application/json"
+}
+
+// Use this method to delete a message, including service messages, with the following limitations:
+//
+//   - A message can only be deleted if it was sent less than 48 hours ago.
+//
+//   - Service messages about a supergroup, channel, or forum topic creation can't be deleted.
+//
+//   - A dice message in a private chat can only be deleted if it was sent more than 24 hours ago.
+//
+//   - Bots can delete outgoing messages in private chats, groups, and supergroups.
+//
+//   - Bots can delete incoming messages in private chats.
+//
+//   - Bots granted can_post_messages permissions can delete outgoing messages in channels.
+//
+//   - If the bot is an administrator of a group, it can delete any message there.
+//
+//   - If the bot has can_delete_messages permission in a supergroup or a channel, it can delete any message there.
+//
+// Returns True on success.
 type DeleteMessage struct {
-	ChatId    string `json:"chat_id"`
-	MessageId int    `json:"message_id"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//Identifier of the message to delete
+	MessageId int `json:"message_id"`
 }
 
 func (d DeleteMessage) Validate() error {
-	if c, ok := any(d.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(d.ChatId).(int); ok {
-		if c < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty")
-		}
+	if strings.TrimSpace(d.ChatId) == "" {
+		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if d.MessageId < 1 {
 		return objects.ErrInvalidParam("message_id parameter can't be empty")
@@ -445,9 +486,30 @@ func (d DeleteMessage) Validate() error {
 	return nil
 }
 
+func (s DeleteMessage) Endpoint() string {
+	return "deleteMessage"
+}
+
+func (s DeleteMessage) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s DeleteMessage) ContentType() string {
+	return "application/json"
+}
+
+// Use this method to delete multiple messages simultaneously.
+// If some of the specified messages can't be found, they are skipped. Returns True on success.
 type DeleteMessages struct {
-	ChatId     string `json:"chat_id"`
-	MessageIds []int  `json:"message_ids"`
+	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+	//A JSON-serialized list of 1-100 identifiers of messages to delete.
+	//See deleteMessage for limitations on which messages can be deleted
+	MessageIds []int `json:"message_ids"`
 }
 
 func (d DeleteMessages) Validate() error {

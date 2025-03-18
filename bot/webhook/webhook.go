@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 
 	"github.com/bigelle/gotely/api/objects"
 )
@@ -109,4 +110,8 @@ func (s *SetWebhook) Reader() (io.Reader, error) {
 
 func (s SetWebhook) ContentType() string {
 	return s.contentType
+}
+
+func (s SetWebhook) HttpMethod() string {
+	return http.MethodPost
 }

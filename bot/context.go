@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/bigelle/gotely"
-	"github.com/bigelle/gotely/api/methods"
 	"github.com/bigelle/gotely/api/objects"
 )
 
@@ -21,18 +20,10 @@ type Context struct {
 	ApiUrl string
 }
 
-func (c *Context) SendMessage(m methods.SendMessage) (*objects.Message, error) {
-	return gotely.SendPostRequestWith[objects.Message](
-		m,
-		c.Token,
-		gotely.WithClient(c.Client),
-		gotely.WithUrl(c.ApiUrl),
-	)
-}
-
-func (c *Context) SendPhoto(m methods.SendPhoto) (*objects.Message, error) {
-	return gotely.SendPostRequestWith[objects.Message](
-		&m,
+func (c *Context) Call(body gotely.Method, dest any) error {
+	return gotely.SendRequestWith(
+		body,
+		dest,
 		c.Token,
 		gotely.WithClient(c.Client),
 		gotely.WithUrl(c.ApiUrl),
