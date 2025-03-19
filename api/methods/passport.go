@@ -17,9 +17,11 @@ import (
 // For example, if a birthday date seems invalid, a submitted document is blurry, a scan shows evidence of tampering, etc.
 // Supply some details in the error message to make sure the user knows how to correct the issues.
 type SetPassportDataErrors struct {
-	//User identifier
+	// REQUIRED:
+	// User identifier
 	UserId int `json:"user_id"`
-	//A JSON-serialized array describing the errors
+	// REQUIRED:
+	// A JSON-serialized array describing the errors
 	Errors []objects.PassportElementError `json:"errors"`
 }
 

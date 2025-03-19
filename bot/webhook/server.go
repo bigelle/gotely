@@ -16,7 +16,7 @@ import (
 // WebhookBot is an `http.Server` designed to handle updates
 // arriving at the "/webhook" WebhookEndpoint.
 type WebhookBot struct {
-	//configurable:
+	// configurable:
 
 	http.Server
 	// Used to send Telegram Bot API requests.
@@ -34,32 +34,32 @@ type WebhookBot struct {
 	// Defaults to a list containing only the recovery middleware.
 	Middleware []bot.MiddlewareFunc
 
-	//sending in SetWebhook:
+	// sending in SetWebhook:
 
-	//HTTPS URL to send updates to. Use an empty string to remove webhook integration
+	// HTTPS URL to send updates to. Use an empty string to remove webhook integration
 	WebhookUrl string `json:"url"`
-	//Upload your public key certificate so that the root certificate in use can be checked.
-	//See https://core.telegram.org/bots/self-signed for details.
+	// Upload your public key certificate so that the root certificate in use can be checked.
+	// See https://core.telegram.org/bots/self-signed for details.
 	Certificate objects.InputFile `json:"certificate,omitempty"`
-	//The fixed IP address which will be used to send webhook requests instead of the IP address resolved through DNS
+	// The fixed IP address which will be used to send webhook requests instead of the IP address resolved through DNS
 	IpAddress *string `json:"ip_address,omitempty"`
-	//The maximum allowed number of simultaneous HTTPS connections to the webhook for update delivery, 1-100.
-	//Defaults to 40. Use lower values to limit the load on your bot's server, and higher values to increase your bot's throughput.
+	// The maximum allowed number of simultaneous HTTPS connections to the webhook for update delivery, 1-100.
+	// Defaults to 40. Use lower values to limit the load on your bot's server, and higher values to increase your bot's throughput.
 	MaxConnections *int `json:"max_connections,omitempty"`
-	//A list of the update types you want your bot to receive.
+	// A list of the update types you want your bot to receive.
 	// For example, specify ["message", "edited_channel_post", "callback_query"] to only receive updates of these types.
 	// See https://core.telegram.org/bots/api#update for a complete list of available update types.
 	// Specify an empty list to receive all update types except chat_member, message_reaction, and message_reaction_count (default).
 	// If not specified, the previous setting will be used.
 	// Please note that this parameter doesn't affect updates created before the call to the setWebhook, so unwanted updates may be received for a short period of time.
 	AllowedUpdates *[]string `json:"allowed_updates,omitempty"`
-	//Pass True to drop all pending updates
+	// Pass True to drop all pending updates
 	DropPendingUpdates *bool `json:"drop_pending_updates,omitempty"`
-	//A secret token to be sent in a header “X-Telegram-Bot-Api-Secret-Token” in every webhook request, 1-256 characters.
+	// A secret token to be sent in a header “X-Telegram-Bot-Api-Secret-Token” in every webhook request, 1-256 characters.
 	// Only characters A-Z, a-z, 0-9, _ and - are allowed. The header is useful to ensure that the request comes from a webhook set by you.
 	SecretToken *string `json:"secret_token,omitempty"`
 
-	//service
+	// service
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -71,17 +71,17 @@ func New(url, token string, onUpdate bot.OnUpdateFunc, opts ...Option) *WebhookB
 		Server:          http.Server{Addr: ":80"},
 		Client:          http.DefaultClient,
 		WebhookEndpoint: "/webhook",
-		ApiUrl:          "https://api.telegram.org/bot%s/%s", //FIXME add support for <token> <method> placeholders
+		ApiUrl:          "https://api.telegram.org/bot%s/%s", // FIXME add support for <token> <method> placeholders
 		Token:           token,
 		OnUpdate:        onUpdate,
 		Middleware:      []bot.MiddlewareFunc{recoveryMiddleware},
 		WebhookUrl:      url,
-		//no cert by default
-		//no ip address
-		//not specifying max connections
+		// no cert by default
+		// no ip address
+		// not specifying max connections
 		// not specifying allowed updates
-		//not dropping pending updates
-		//no secret token
+		// not dropping pending updates
+		// no secret token
 	}
 
 	for _, opt := range opts {

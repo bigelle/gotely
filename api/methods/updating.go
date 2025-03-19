@@ -1,3 +1,4 @@
+// TODO: make optional and required fields more obvious
 package methods
 
 import (
@@ -14,34 +15,34 @@ import (
 // Note that business messages that were not sent by the bot and
 // do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
 type EditMessageText struct {
-	//Optional:
-	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	// Optional:
+	// Unique identifier of the business connection on behalf of which the message to be edited was sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
-	//Optional:
-	//Required if inline_message_id is not specified.
-	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	// Optional:
+	// Required if inline_message_id is not specified.
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId *string `json:"chat_id,omitempty"`
-	//Optional:
-	//Required if inline_message_id is not specified. Identifier of the message to edit
+	// Optional:
+	// Required if inline_message_id is not specified. Identifier of the message to edit
 	MessageId *int `json:"message_id,omitempty"`
-	//Optional:
-	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	// Optional:
+	// Required if chat_id and message_id are not specified. Identifier of the inline message
 	InlineMessageId *string `json:"inline_message_id,omitempty"`
-	//Required:
-	//New text of the message, 1-4096 characters after entities parsing
+	// Required:
+	// New text of the message, 1-4096 characters after entities parsing
 	Text string `json:"text"`
-	//Optional:
-	//Mode for parsing entities in the message text.
-	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	// Optional:
+	// Mode for parsing entities in the message text.
+	// See https://core.telegram.org/bots/api#formatting-options for more details.
 	ParseMode *string `json:"parse_mode,omitempty"`
-	//Optional:
-	//A JSON-serialized list of special entities that appear in message text, which can be specified instead of parse_mode
+	// Optional:
+	// A JSON-serialized list of special entities that appear in message text, which can be specified instead of parse_mode
 	Entities *[]objects.MessageEntity `json:"entities,omitempty"`
-	//Optional:
-	//Link preview generation options for the message
+	// Optional:
+	// Link preview generation options for the message
 	LinkPreviewOptions *objects.LinkPreviewOptions `json:"link_preview_options,omitempty"`
-	//Optional:
-	//A JSON-serialized object for an inline keyboard.
+	// Optional:
+	// A JSON-serialized object for an inline keyboard.
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
@@ -99,34 +100,34 @@ func (s EditMessageText) ContentType() string {
 // Note that business messages that were not sent by the bot and
 // do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
 type EditMessageCaption struct {
-	//Optional:
-	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	// Optional:
+	// Unique identifier of the business connection on behalf of which the message to be edited was sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
-	//Optional:
-	//Required if inline_message_id is not specified.
-	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	// Optional:
+	// Required if inline_message_id is not specified.
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId *string `json:"chat_id,omitempty"`
-	//Optional:
-	//Required if inline_message_id is not specified. Identifier of the message to edit
+	// Optional:
+	// Required if inline_message_id is not specified. Identifier of the message to edit
 	MessageId *int `json:"message_id,omitempty"`
-	//Optional:
-	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	// Optional:
+	// Required if chat_id and message_id are not specified. Identifier of the inline message
 	InlineMessageId *string `json:"inline_message_id,omitempty"`
-	//Optional:
-	//New caption of the message, 0-1024 characters after entities parsing
+	// Optional:
+	// New caption of the message, 0-1024 characters after entities parsing
 	Caption *string `json:"caption"`
-	//Optional:
-	//Mode for parsing entities in the message caption.
-	//See https://core.telegram.org/bots/api#formatting-options for more details.
+	// Optional:
+	// Mode for parsing entities in the message caption.
+	// See https://core.telegram.org/bots/api#formatting-options for more details.
 	ParseMode *string `json:"parse_mode,omitempty"`
-	//Optional:
-	//A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
+	// Optional:
+	// A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode
 	CaptionEntities *[]objects.MessageEntity `json:"caption_entities,omitempty"`
-	//Optional:
-	//Pass True, if the caption must be shown above the message media. Supported only for animation, photo and video messages.
+	// Optional:
+	// Pass True, if the caption must be shown above the message media. Supported only for animation, photo and video messages.
 	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
-	//Optional:
-	//A JSON-serialized object for an inline keyboard.
+	// Optional:
+	// A JSON-serialized object for an inline keyboard.
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
@@ -184,20 +185,20 @@ func (s EditMessageCaption) ContentType() string {
 // Note that business messages that were not sent by the bot and
 // do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
 type EditMessageMedia struct {
-	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	// Unique identifier of the business connection on behalf of which the message to be edited was sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
-	//Required if inline_message_id is not specified.
-	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	// Required if inline_message_id is not specified.
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId *string `json:"chat_id,omitempty"`
-	//Required if inline_message_id is not specified. Identifier of the message to edit
+	// Required if inline_message_id is not specified. Identifier of the message to edit
 	MessageId *int `json:"message_id,omitempty"`
-	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	// Required if chat_id and message_id are not specified. Identifier of the inline message
 	InlineMessageId *string `json:"inline_message_id,omitempty"`
-	//A JSON-serialized object for a new media content of the message
+	// A JSON-serialized object for a new media content of the message
 	Media objects.InputMedia `json:"media"`
-	//A JSON-serialized object for a new inline keyboard.
+	// A JSON-serialized object for a new inline keyboard.
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-} //TODO multipart
+} // TODO multipart
 
 func (e EditMessageMedia) Validate() error {
 	if err := e.Media.Validate(); err != nil {
@@ -244,33 +245,33 @@ func (s EditMessageMedia) ContentType() string {
 // A location can be edited until its live_period expires or editing is explicitly disabled by a call to [StopMessageLiveLocation].
 // On success, if the edited message is not an inline message, the edited [objects.Message] is returned, otherwise True is returned.
 type EditMessageLiveLocation struct {
-	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	// Unique identifier of the business connection on behalf of which the message to be edited was sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
-	//Required if inline_message_id is not specified.
-	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	// Required if inline_message_id is not specified.
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId *string `json:"chat_id,omitempty"`
-	//Required if inline_message_id is not specified. Identifier of the message to edit
+	// Required if inline_message_id is not specified. Identifier of the message to edit
 	MessageId *int `json:"message_id,omitempty"`
-	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	// Required if chat_id and message_id are not specified. Identifier of the inline message
 	InlineMessageId *string `json:"inline_message_id,omitempty"`
-	//Latitude of new location
+	// Latitude of new location
 	Latitude *float64 `json:"latitude"`
-	//Longitude of new location
+	// Longitude of new location
 	Longitude *float64 `json:"longitude"`
-	//New period in seconds during which the location can be updated, starting from the message send date.
-	//If 0x7FFFFFFF is specified, then the location can be updated forever.
-	//Otherwise, the new value must not exceed the current live_period by more than a day,
-	//and the live location expiration date must remain within the next 90 days.
-	//If not specified, then live_period remains unchanged
+	// New period in seconds during which the location can be updated, starting from the message send date.
+	// If 0x7FFFFFFF is specified, then the location can be updated forever.
+	// Otherwise, the new value must not exceed the current live_period by more than a day,
+	// and the live location expiration date must remain within the next 90 days.
+	// If not specified, then live_period remains unchanged
 	LivePeriod *int `json:"live_period,omitempty"`
-	//The radius of uncertainty for the location, measured in meters; 0-1500
+	// The radius of uncertainty for the location, measured in meters; 0-1500
 	HorizontalAccuracy *float64 `json:"horizontal_accuracy,omitempty"`
-	//Direction in which the user is moving, in degrees. Must be between 1 and 360 if specified.
+	// Direction in which the user is moving, in degrees. Must be between 1 and 360 if specified.
 	Heading *int `json:"heading,omitempty"`
-	//The maximum distance for proximity alerts about approaching another chat member, in meters.
-	//Must be between 1 and 100000 if specified.
+	// The maximum distance for proximity alerts about approaching another chat member, in meters.
+	// Must be between 1 and 100000 if specified.
 	ProximityAlertRadius *int `json:"proximity_alert_radius,omitempty"`
-	//A JSON-serialized object for a new inline keyboard.
+	// A JSON-serialized object for a new inline keyboard.
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
@@ -331,16 +332,16 @@ func (s EditMessageLiveLocation) ContentType() string {
 // Use this method to stop updating a live location message before live_period expires.
 // On success, if the message is not an inline message, the edited [objects.Message] is returned, otherwise True is returned.
 type StopMessageLiveLocation struct {
-	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	// Unique identifier of the business connection on behalf of which the message to be edited was sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
-	//Required if inline_message_id is not specified.
-	//Unique identifier for the target chat or username of the target channel (in the format @channelusername
+	// Required if inline_message_id is not specified.
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername
 	ChatId *string `json:"chat_id,omitempty"`
-	//Required if inline_message_id is not specified. Identifier of the message with live location to stop
+	// Required if inline_message_id is not specified. Identifier of the message with live location to stop
 	MessageId *int `json:"message_id,omitempty"`
-	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	// Required if chat_id and message_id are not specified. Identifier of the inline message
 	InlineMessageId *string `json:"inline_message_id,omitempty"`
-	//A JSON-serialized object for a new inline keyboard.
+	// A JSON-serialized object for a new inline keyboard.
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
@@ -371,16 +372,16 @@ func (e StopMessageLiveLocation) Validate() error {
 // otherwise True is returned. Note that business messages that were not sent by the bot and
 // do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
 type EditMessageReplyMarkup struct {
-	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	// Unique identifier of the business connection on behalf of which the message to be edited was sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
-	//Required if inline_message_id is not specified.
-	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	// Required if inline_message_id is not specified.
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId *string `json:"chat_id,omitempty"`
-	//Required if inline_message_id is not specified. Identifier of the message to edit
+	// Required if inline_message_id is not specified. Identifier of the message to edit
 	MessageId *int `json:"message_id,omitempty"`
-	//Required if chat_id and message_id are not specified. Identifier of the inline message
+	// Required if chat_id and message_id are not specified. Identifier of the inline message
 	InlineMessageId *string `json:"inline_message_id,omitempty"`
-	//A JSON-serialized object for an inline keyboard.
+	// A JSON-serialized object for an inline keyboard.
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
@@ -409,13 +410,13 @@ func (e EditMessageReplyMarkup) Validate() error {
 // Use this method to stop a poll which was sent by the bot.
 // On success, the stopped [objects.Poll] is returned.
 type StopPoll struct {
-	//Unique identifier of the business connection on behalf of which the message to be edited was sent
+	// Unique identifier of the business connection on behalf of which the message to be edited was sent
 	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
-	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
-	//Identifier of the original message with the poll
+	// Identifier of the original message with the poll
 	MessageId int `json:"message_id"`
-	//A JSON-serialized object for a new message inline keyboard.
+	// A JSON-serialized object for a new message inline keyboard.
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
@@ -470,9 +471,9 @@ func (s StopPoll) ContentType() string {
 //
 // Returns True on success.
 type DeleteMessage struct {
-	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
-	//Identifier of the message to delete
+	// Identifier of the message to delete
 	MessageId int `json:"message_id"`
 }
 
@@ -505,10 +506,10 @@ func (s DeleteMessage) ContentType() string {
 // Use this method to delete multiple messages simultaneously.
 // If some of the specified messages can't be found, they are skipped. Returns True on success.
 type DeleteMessages struct {
-	//Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
-	//A JSON-serialized list of 1-100 identifiers of messages to delete.
-	//See deleteMessage for limitations on which messages can be deleted
+	// A JSON-serialized list of 1-100 identifiers of messages to delete.
+	// See deleteMessage for limitations on which messages can be deleted
 	MessageIds []int `json:"message_ids"`
 }
 

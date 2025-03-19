@@ -9,26 +9,26 @@ import (
 
 // ApiResponse represents a response from Telegram Bot API
 type ApiResponse struct {
-	//true if request was successful, otherwise false
+	// true if request was successful, otherwise false
 	Ok bool `json:"ok"`
-	//error code of unsuccessful request
+	// error code of unsuccessful request
 	ErrorCode *int `json:"error_code,omitempty"`
-	//a human-readable description of the result
+	// a human-readable description of the result
 	Description *string `json:"description,omitempty"`
-	//Describes why a request was unsuccessful.
+	// Describes why a request was unsuccessful.
 	Parameters *ResponseParameters `json:"parameters,omitempty"`
-	//result of request
+	// result of request
 	Result json.RawMessage `json:"result,omitempty"`
 }
 
 // ResponseParameters describes why a request was unsuccessful.
 type ResponseParameters struct {
-	//Optional. The group has been migrated to a supergroup with the specified identifier.
-	//This number may have more than 32 significant bits and
-	//some programming languages may have difficulty/silent defects in interpreting it.
-	//But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this identifier.
+	// Optional. The group has been migrated to a supergroup with the specified identifier.
+	// This number may have more than 32 significant bits and
+	// some programming languages may have difficulty/silent defects in interpreting it.
+	// But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this identifier.
 	MigrateToChatId *int `json:"migrate_to_chat_id,omitempty"`
-	//Optional. In case of exceeding flood control, the number of seconds left to wait before the request can be repeated
+	// Optional. In case of exceeding flood control, the number of seconds left to wait before the request can be repeated
 	RetryAfter *int `json:"retry_after,omitempty"`
 }
 
@@ -66,8 +66,8 @@ func SendRequestWith(body Method, dest any, token string, opts ...RequestOption)
 		return err
 	}
 
-	//its important to call Reader() before using ContentType()
-	//since content-type boundary is generated inside Reader() and stored inside of a struct
+	// its important to call Reader() before using ContentType()
+	// since content-type boundary is generated inside Reader() and stored inside of a struct
 	r, err := body.Reader()
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func SendRequestWith(body Method, dest any, token string, opts ...RequestOption)
 
 	cfg := RequestConfig{
 		Client: http.DefaultClient,
-		//TODO: replace %s placeholders with <token> and <method>
+		// TODO: replace %s placeholders with <token> and <method>
 		ApiUrl: "https://api.telegram.org/bot%s/%s",
 	}
 	for _, opt := range opts {
@@ -107,8 +107,9 @@ func SendRequestWith(body Method, dest any, token string, opts ...RequestOption)
 	if !result.Ok {
 		return fmt.Errorf("bad request: %s", *result.Description)
 	}
+	// TODO: maybe use decoder
 	return json.Unmarshal(result.Result, dest)
-}
+} // TODO: maybe add gzip and streaming json while sending requests
 
 // RequestOption represents a function that modifies `RequestConfig`.
 // It is used to customize request settings when calling `SendRequestWith`.

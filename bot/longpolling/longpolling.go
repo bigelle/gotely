@@ -88,15 +88,15 @@ func New(token string, onUpdate bot.OnUpdateFunc, opts ...Option) *LongPollingBo
 	bot := LongPollingBot{
 		token:    token,
 		onUpdate: onUpdate,
-		//no middleware
+		// no middleware
 		client:  http.DefaultClient,
 		apiUrl:  "https://api.telegram.org/bot%s/%s",
 		limit:   100,
 		timeout: 30,
-		//all updates are allowed
+		// all updates are allowed
 		logger:    *slog.Default(),
 		chContext: make(chan *bot.Context),
-		//offset initially not specified
+		// offset initially not specified
 	}
 
 	for _, opt := range opts {
@@ -197,7 +197,7 @@ func (l *LongPollingBot) Start() {
 }
 
 func (l *LongPollingBot) Validate() error {
-	//FIXME
+	// FIXME
 	return nil
 }
 
@@ -275,7 +275,7 @@ func (g GetUpdates) Validate() error {
 			return fmt.Errorf("timeout must be positive")
 		}
 	}
-	//FIXME allowed updates validation
+	// FIXME allowed updates validation
 	return nil
 }
 
