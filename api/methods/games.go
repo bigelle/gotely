@@ -1,4 +1,3 @@
-// TODO: make optional and required fields more obvious
 package methods
 
 import (
@@ -13,14 +12,17 @@ import (
 // Use this method to send a game.
 // On success, the sent [objects.Message] is returned.
 type SendGame struct {
-	// Unique identifier of the business connection on behalf of which the message will be sent
-	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	// REQUIRED:
 	// Unique identifier for the target chat
 	ChatId int `json:"chat_id"`
-	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
-	MessageEffectId *string `json:"message_effect_id,omitempty"`
+	// REQUIRED:
 	// Short name of the game, serves as the unique identifier for the game. Set up your games via @BotFather.
 	GameShortName string `json:"game_short_name"`
+
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageEffectId *string `json:"message_effect_id,omitempty"`
 	// Sends the message silently. Users will receive a notification with no sound.
 	DisableNotification *bool `json:"disable_notification"`
 	// Protects the contents of the sent message from forwarding and saving
@@ -77,9 +79,12 @@ func (s SendGame) ContentType() string {
 // On success, if the message is not an inline message, the [objects.Message] is returned, otherwise True is returned.
 // Returns an error, if the new score is not greater than the user's current score in the chat and force is False.
 type SetGameScore struct {
+	// REQUIRED:
 	// User identifier
 	UserId int `json:"user_id"`
+	// REQUIRED:
 	// New score, must be non-negative
+
 	Score int `json:"score"`
 	// Pass True if the high score is allowed to decrease. This can be useful when fixing mistakes or banning cheaters
 	Force *bool `json:"force,omitempty"`
@@ -139,8 +144,10 @@ func (s SetGameScore) ContentType() string {
 // Will also return the top three users if the user and their neighbors are not among them.
 // Please note that this behavior is subject to change.
 type GetGameHighScores struct {
+	// REQUIRED:
 	// Target user id
 	UserId int `json:"user_id"`
+
 	// Required if inline_message_id is not specified. Unique identifier for the target chat
 	ChatId *int `json:"chat_id,omitempty"`
 	// Required if inline_message_id is not specified. Identifier of the sent message

@@ -1,4 +1,3 @@
-// TODO: make optional and required fields more obvious
 package methods
 
 import (
@@ -16,18 +15,21 @@ import (
 // Use this method to send static .WEBP, animated .TGS, or video .WEBM stickers.
 // On success, the sent [objects.Message] is returned.
 type SendSticker struct {
-	// Unique identifier of the business connection on behalf of which the message will be sent
-	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	// REQUIRED:
 	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
-	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
-	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	// REQUIRED:
 	// Sticker to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL as a String for Telegram to get a .WEBP sticker from the Internet,
 	// or upload a new .WEBP, .TGS, or .WEBM sticker using multipart/form-data.
 	// More information on https://core.telegram.org/bots/api#sending-files.
 	// Video and animated stickers can't be sent via an HTTP URL.
 	Sticker objects.InputFile `json:"sticker"`
+
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
 	// Emoji associated with the sticker; only for just uploaded stickers
 	Emoji *string `json:"emoji,omitempty"`
 	// Sends the message silently. Users will receive a notification with no sound.
@@ -50,15 +52,8 @@ func (s SendSticker) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
 		return objects.ErrInvalidParam("chat_id parameter can't be empty")
 	}
-	if p, ok := any(s.Sticker).(objects.InputFile); ok {
-		if err := p.Validate(); err != nil {
-			return fmt.Errorf("invalid photo parameter: %w", err)
-		}
-	}
-	if p, ok := any(s.Sticker).(string); ok {
-		if strings.TrimSpace(p) == "" {
-			return objects.ErrInvalidParam("photo parameter can't be empty")
-		}
+	if err := s.Sticker.Validate(); err != nil {
+		return fmt.Errorf("invalid photo parameter: %w", err)
 	}
 	return nil
 }
@@ -73,7 +68,7 @@ func (s SendSticker) Reader() (io.Reader, error) {
 		return nil, err
 	}
 	return bytes.NewReader(b), nil
-}
+} // TODO: multipart
 
 func (s SendSticker) ContentType() string {
 	return "application/json"
@@ -82,6 +77,7 @@ func (s SendSticker) ContentType() string {
 // Use this method to get a sticker set.
 // On success, a [objects.StickerSet] object is returned.
 type GetStickerSet struct {
+	// REQUIRED:
 	// Name of the sticker set
 	Name string `json:"name"`
 }
@@ -112,6 +108,7 @@ func (s GetStickerSet) ContentType() string {
 // Use this method to get information about custom emoji stickers by their identifiers.
 // Returns an Array of [objects.Sticker] objects.
 type GetCustomEmojiStickers struct {
+	// REQUIRED:
 	// A JSON-serialized list of custom emoji identifiers.
 	// At most 200 custom emoji identifiers can be specified.
 	CustomEmojiIds []string `json:"custom_emoji_ids"`
@@ -124,16 +121,35 @@ func (g GetCustomEmojiStickers) Validate() error {
 	return nil
 }
 
+func (s GetCustomEmojiStickers) Endpoint() string {
+	return "getCustomEmojiStickers"
+}
+
+func (s GetCustomEmojiStickers) Reader() (io.Reader, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b), nil
+}
+
+func (s GetCustomEmojiStickers) ContentType() string {
+	return "application/json"
+}
+
 // Use this method to upload a file with a sticker for later use in the createNewStickerSet,
 // addStickerToSet, or replaceStickerInSet methods (the file can be used multiple times).
 // Returns the uploaded [objects.File] on success.
 type UploadStickerFile struct {
+	// REQUIRED:
 	// User identifier of sticker file owner
 	UserId int `json:"user_id"`
+	// REQUIRED:
 	// A file with the sticker in .WEBP, .PNG, .TGS, or .WEBM format.
 	// See https://core.telegram.org/stickers for technical requirements.
 	// More information on https://core.telegram.org/bots/api#sending-files
 	Sticker objects.InputFile `json:"sticker"`
+	// REQUIRED:
 	// Format of the sticker, must be one of “static”, “animated”, “video”
 	StickerFormat string `json:"sticker_format"`
 }
@@ -176,17 +192,22 @@ func (s UploadStickerFile) ContentType() string {
 // The bot will be able to edit the sticker set thus created.
 // Returns True on success.
 type CreateNewStickerSet struct {
+	// REQUIRED:
 	// User identifier of created sticker set owner
 	UserId int `json:"user_id"`
+	//REQUIRED:
 	//Short name of sticker set, to be used in t.me/addstickers/ URLs (e.g., animals).
 	//Can contain only English letters, digits and underscores.
 	//Must begin with a letter, can't contain consecutive underscores and must end in "_by_<bot_username>".
 	//<bot_username> is case insensitive. 1-64 characters.
 	Name string `json:"name"`
+	// REQUIRED:
 	// Sticker set title, 1-64 characters
 	Title string `json:"title"`
+	// REQUIRED:
 	// A JSON-serialized list of 1-50 initial stickers to be added to the sticker set
 	Stickers []objects.InputSticker `json:"stickers"`
+
 	// Type of stickers in the set, pass “regular”, “mask”, or “custom_emoji”.
 	// By default, a regular sticker set is created.
 	StickerType *string `json:"sticker_type,omitempty"`
@@ -249,12 +270,16 @@ func (s CreateNewStickerSet) ContentType() string {
 }
 
 // Use this method to add a new sticker to a set created by the bot. Emoji sticker sets can have up to 200 stickers.
-// `Other sticker sets can have up to 120 stickers. Returns True on success.
+// Other sticker sets can have up to 120 stickers.
+// Returns True on success.
 type AddStickerToSet struct {
+	// REQUIRED:
 	// User identifier of sticker set owner
 	UserId int `json:"user_id"`
+	// REQUIRED:
 	// Sticker set name
 	Name string `json:"name"`
+	// REQUIRED:
 	// A JSON-serialized object with information about the added sticker.
 	// If exactly the same sticker had already been added to the set, then the set isn't changed.
 	Sticker objects.InputSticker `json:"sticker"`
@@ -292,8 +317,10 @@ func (s AddStickerToSet) ContentType() string {
 // Use this method to move a sticker in a set created by the bot to a specific position.
 // Returns True on success.
 type SetStickerPositionInSet struct {
+	// REQUIRED:
 	// File identifier of the sticker
 	Sticker string `json:"sticker"`
+	// REQUIRED:
 	// New sticker position in the set, zero-based
 	Position int `json:"position"`
 }
@@ -327,6 +354,7 @@ func (s SetStickerPositionInSet) ContentType() string {
 // Use this method to delete a sticker from a set created by the bot.
 // Returns True on success.
 type DeleteStickerFromSet struct {
+	// REQUIRED:
 	Sticker string `json:"sticker"`
 }
 
@@ -357,12 +385,16 @@ func (s DeleteStickerFromSet) ContentType() string {
 // The method is equivalent to calling deleteStickerFromSet, then addStickerToSet, then setStickerPositionInSet.
 // Returns True on success.
 type ReplaceStickerInSet struct {
+	// REQUIRED:
 	// User identifier of the sticker set owner
 	UserId int `json:"user_id"`
+	// REQUIRED:
 	// Sticker set name
 	Name string `json:"name"`
+	// REQUIRED:
 	// File identifier of the replaced sticker
 	OldSticker string `json:"old_sticker"`
+	// REQUIRED:
 	// A JSON-serialized object with information about the added sticker.
 	// If exactly the same sticker had already been added to the set, then the set remains unchanged.
 	Sticker objects.InputSticker `json:"sticker"`
@@ -404,8 +436,10 @@ func (s ReplaceStickerInSet) ContentType() string {
 // The sticker must belong to a sticker set created by the bot.
 // Returns True on success.
 type SetStickerEmojiList struct {
+	// REQUIRED:
 	// File identifier of the sticker
 	Sticker string `json:"sticker"`
+	// REQUIRED:
 	// A JSON-serialized list of 1-20 emoji associated with the sticker
 	EmojiList []string `json:"emoji_list"`
 }
@@ -439,8 +473,10 @@ func (s SetStickerEmojiList) ContentType() string {
 // Use this method to change search keywords assigned to a regular or custom emoji sticker.
 // The sticker must belong to a sticker set created by the bot. Returns True on success.
 type SetStickerKeywords struct {
+	// REQUIRED:
 	// File identifier of the sticker
 	Sticker string `json:"sticker"`
+
 	// A JSON-serialized list of 0-20 search keywords for the sticker with total length of up to 64 characters
 	Keywords *[]string `json:"keywords,omitempty"`
 }
@@ -477,8 +513,10 @@ func (s SetStickerKeywords) ContentType() string {
 // The sticker must belong to a sticker set that was created by the bot.
 // Returns True on success.
 type SetStickerMaskPosition struct {
+	// REQUIRED:
 	// File identifier of the sticker
 	Sticker string `json:"sticker"`
+
 	// A JSON-serialized object with the position where the mask should be placed on faces.
 	// Omit the parameter to remove the mask position.
 	MaskPosition *objects.MaskPosition `json:"mask_position,omitempty"`
@@ -514,8 +552,10 @@ func (s SetStickerMaskPosition) ContentType() string {
 
 // Use this method to set the title of a created sticker set. Returns True on success.
 type SetStickerSetTitle struct {
+	// REQUIRED:
 	// Sticker set name
 	Name string `json:"name"`
+	// REQUIRED:
 	// Sticker set title, 1-64 characters
 	Title string `json:"title"`
 }
@@ -550,23 +590,27 @@ func (s SetStickerSetTitle) ContentType() string {
 // The format of the thumbnail file must match the format of the stickers in the set.
 // Returns True on success.
 type SetStickerSetThumbnail struct {
+	// REQUIRED:
 	// Sticker set name
 	Name string `json:"name"`
+	// REQUIRED:
 	// User identifier of the sticker set owner
 	UserId int `json:"user_id"`
-	//A .WEBP or .PNG image with the thumbnail, must be up to 128 kilobytes in size and have a width and height of exactly 100px,
-	//or a .TGS animation with a thumbnail up to 32 kilobytes in size
-	//(see https://core.telegram.org/stickers#animation-requirements for animated sticker technical requirements),
-	//or a .WEBM video with the thumbnail up to 32 kilobytes in size;
-	//see https://core.telegram.org/stickers#video-requirements for video sticker technical requirements.
-	//Pass a file_id as a String to send a file that already exists on the Telegram servers,
-	//pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data.
-	//More information on Sending Files https://core.telegram.org/bots/api#sending-files.
-	//Animated and video sticker set thumbnails can't be uploaded via HTTP URL.
-	//If omitted, then the thumbnail is dropped and the first sticker is used as the thumbnail.
-	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
+	// REQUIRED:
 	// Format of the thumbnail, must be one of “static” for a .WEBP or .PNG image, “animated” for a .TGS animation, or “video” for a .WEBM video
 	Format string `json:"format"`
+
+	// A .WEBP or .PNG image with the thumbnail, must be up to 128 kilobytes in size and have a width and height of exactly 100px,
+	// or a .TGS animation with a thumbnail up to 32 kilobytes in size
+	// (see https://core.telegram.org/stickers#animation-requirements for animated sticker technical requirements),
+	// or a .WEBM video with the thumbnail up to 32 kilobytes in size;
+	// see https://core.telegram.org/stickers#video-requirements for video sticker technical requirements.
+	// Pass a file_id as a String to send a file that already exists on the Telegram servers,
+	// pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data.
+	// More information on Sending Files https://core.telegram.org/bots/api#sending-files.
+	// Animated and video sticker set thumbnails can't be uploaded via HTTP URL.
+	// If omitted, then the thumbnail is dropped and the first sticker is used as the thumbnail.
+	Thumbnail *objects.InputFile `json:"thumbnail,omitempty"`
 }
 
 func (s SetStickerSetThumbnail) Validate() error {
@@ -618,8 +662,10 @@ func (s SetStickerSetThumbnail) ContentType() string {
 // Use this method to set the thumbnail of a custom emoji sticker set.
 // Returns True on success.
 type SetCustomEmojiStickerSetThumbnail struct {
+	// REQUIRED:
 	// Sticker set name
 	Name string `json:"name"`
+
 	// Custom emoji identifier of a sticker from the sticker set;
 	// pass an empty string to drop the thumbnail and use the first sticker as the thumbnail.
 	CustomEmojiId *string `json:"custom_emoji_id,omitempty"`
@@ -656,6 +702,7 @@ func (s SetCustomEmojiStickerSetThumbnail) ContentType() string {
 // Use this method to delete a sticker set that was created by the bot.
 // Returns True on success.
 type DeleteStickerSet struct {
+	// REQUIRED:
 	// Sticker set name
 	Name string `json:"name"`
 }
@@ -684,7 +731,8 @@ func (s DeleteStickerSet) ContentType() string {
 }
 
 // Returns the list of gifts that can be sent by the bot to users and channel chats.
-// Requires no parameters. Returns a [objects.Gifts] object.
+// Requires no parameters.
+// Returns a [objects.Gifts] object.
 type GetAvailableGifts struct{}
 
 func (g GetAvailableGifts) Validate() error {
@@ -708,20 +756,24 @@ func (s GetAvailableGifts) ContentType() string {
 }
 
 // Sends a gift to the given user or channel chat.
-// The gift can't be converted to Telegram Stars by the receiver. Returns True on success.
+// The gift can't be converted to Telegram Stars by the receiver.
+// Returns True on success.
 type SendGift struct {
+	// REQUIRED:
+	// Identifier of the gift
+	GiftId string `json:"gift_id"`
+	// REQUIRED:
+	// Text that will be shown along with the gift; 0-128 characters
+	Text *string `json:"text"`
+
 	// Required if chat_id is not specified. Unique identifier of the target user who will receive the gift.
 	UserId *int `json:"user_id"`
 	// Required if user_id is not specified.
 	// Unique identifier for the chat or username of the channel (in the format @channelusername) that will receive the gift.
 	ChatId *string `json:"chat_id,omitempty,"`
-	// Identifier of the gift
-	GiftId string `json:"gift_id"`
 	// Pass True to pay for the gift upgrade from the bot's balance,
 	// thereby making the upgrade free for the receiver
 	PayForUpgrade *bool `json:"pay_for_upgrade,omitempty"`
-	// Text that will be shown along with the gift; 0-128 characters
-	Text *string `json:"text"`
 	// Mode for parsing entities in the text. See formatting options for more details.
 	// Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored.
 	TextParseMode *string `json:"text_parse_mode,omitempty,"`
@@ -772,8 +824,10 @@ func (s SendGift) ContentType() string {
 	return "application/json"
 }
 
-// Verifies a user on behalf of the organization which is represented by the bot. Returns True on success.
+// Verifies a user on behalf of the organization which is represented by the bot.
+// Returns True on success.
 type VerifyUser struct {
+	// REQUIRED:
 	// Unique identifier of the target user
 	UserId int `json:"user_id"`
 	// Custom description for the verification; 0-70 characters.
@@ -809,10 +863,13 @@ func (s VerifyUser) ContentType() string {
 	return "application/json"
 }
 
-// Verifies a chat on behalf of the organization which is represented by the bot. Returns True on success.
+// Verifies a chat on behalf of the organization which is represented by the bot.
+// Returns True on success.
 type VerifyChat struct {
+	// REQUIRED:
 	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
+
 	// Custom description for the verification; 0-70 characters.
 	// Must be empty if the organization isn't allowed to provide a custom verification description.
 	CustomDescription *string `json:"custom_description,omitempty"`
@@ -849,6 +906,7 @@ func (s VerifyChat) ContentType() string {
 // Removes verification from a user who is currently verified on behalf of the organization represented by the bot.
 // Returns True on success.
 type RemoveUserVerification struct {
+	// REQUIRED:
 	// Unique identifier of the target user
 	UserId int `json:"user_id"`
 }
@@ -879,6 +937,7 @@ func (s RemoveUserVerification) ContentType() string {
 // Removes verification from a chat that is currently verified on behalf of the organization represented by the bot.
 // Returns True on success.
 type RemoveChatVerification struct {
+	// REQUIRED:
 	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
 }

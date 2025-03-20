@@ -1,4 +1,3 @@
-// TODO: make optional and required fields more obvious
 package methods
 
 import (
@@ -13,24 +12,30 @@ import (
 // Use this method to send invoices.
 // On success, the sent [objects.Message] is returned.
 type SendInvoice struct {
+	// REQUIRED:
 	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
-	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
-	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	// REQUIRED:
 	// Product name, 1-32 characters
+	// REQUIRED:
 	Title string `json:"title"`
-	// Product description, 1-255 characters
-	Description string `json:"description"`
 	// Bot-defined invoice payload, 1-128 bytes.
 	// This will not be displayed to the user, use it for your internal processes.
 	Payload string `json:"payload"`
-	// Payment provider token, obtained via @BotFather. Pass an empty string for payments in Telegram Stars.
-	ProviderToken *string `json:"provider_token,omitempty"`
+	// REQUIRED:
+	// Product description, 1-255 characters
+	Description string `json:"description"`
 	// Three-letter ISO 4217 currency code, see more on currencies. Pass “XTR” for payments in Telegram Stars.
 	Currency string `json:"currency"`
+	// REQUIRED:
 	// Price breakdown, a JSON-serialized list of components (e.g. product price, tax, discount, delivery cost, delivery tax, bonus, etc.).
 	// Must contain exactly one item for payments in Telegram Stars.
 	Prices []objects.LabeledPrice `json:"prices"`
+
+	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
+	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	// Payment provider token, obtained via @BotFather. Pass an empty string for payments in Telegram Stars.
+	ProviderToken *string `json:"provider_token,omitempty"`
 	// The maximum accepted amount for tips in the smallest units of the currency (integer, not float/double).
 	// For example, for a maximum tip of US$ 1.45 pass max_tip_amount = 145. See the exp parameter in currencies.json,
 	// it shows the number of digits past the decimal point for each currency (2 for the majority of currencies).
@@ -119,21 +124,15 @@ func (s SendInvoice) Validate() error {
 		if len(*s.SuggestedTipAmounts) > 4 {
 			return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
 		}
-		if (*s.SuggestedTipAmounts)[0] < 0 {
-			return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
-		}
-		if s.MaxTipAmount != nil && (*s.SuggestedTipAmounts)[0] > *s.MaxTipAmount {
-			return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
-		}
-		for i := 1; i < len(*s.SuggestedTipAmounts); i++ {
+		for i := len(*s.SuggestedTipAmounts); i >= 0; i-- {
 			if (*s.SuggestedTipAmounts)[i] < 0 {
-				return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
+				return objects.ErrInvalidParam("suggested_tip_amounts must be positive")
 			}
 			if (*s.SuggestedTipAmounts)[i-1] > (*s.SuggestedTipAmounts)[i] {
-				return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be passed in a strictly increased order")
+				return objects.ErrInvalidParam("suggested_tip_amounts must be passed in a strictly increased order")
 			}
-			if s.MaxTipAmount != nil && (*s.SuggestedTipAmounts)[i] > *s.MaxTipAmount {
-				return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
+			if (*s.SuggestedTipAmounts)[i] > *s.MaxTipAmount {
+				return objects.ErrInvalidParam("suggested_tip_amounts must not exceed max_tip_amount")
 			}
 		}
 	}
@@ -159,22 +158,28 @@ func (s SendInvoice) ContentType() string {
 // Use this method to create a link for an invoice.
 // Returns the created invoice link as String on success.
 type CreateInvoiceLink struct {
-	// Unique identifier of the business connection on behalf of which the link will be created.
-	// For payments in Telegram Stars only.
-	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	// REQUIRED:
 	// Product name, 1-32 characters
 	Title string `json:"title"`
+	// REQUIRED:
 	// Product description, 1-255 characters
 	Description string `json:"description"`
+	// REQUIRED:
 	// Bot-defined invoice payload, 1-128 bytes. This will not be displayed to the user, use it for your internal processes.
 	Payload string `json:"payload"`
-	// Payment provider token, obtained via @BotFather. Pass an empty string for payments in Telegram Stars.
-	ProviderToken *string `json:"provider_token,omitempty"`
+	// REQUIRED:
 	// Three-letter ISO 4217 currency code, see more on currencies. Pass “XTR” for payments in Telegram Stars.
 	Currency string `json:"currency"`
+	// REQUIRED:
 	// Price breakdown, a JSON-serialized list of components (e.g. product price, tax, discount, delivery cost, delivery tax, bonus, etc.).
 	// Must contain exactly one item for payments in Telegram Stars.
 	Prices []objects.LabeledPrice `json:"prices"`
+
+	// Unique identifier of the business connection on behalf of which the link will be created.
+	// For payments in Telegram Stars only.
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	// Payment provider token, obtained via @BotFather. Pass an empty string for payments in Telegram Stars.
+	ProviderToken *string `json:"provider_token,omitempty"`
 	// The number of seconds the subscription will be active for before the next payment.
 	// The currency must be set to “XTR” (Telegram Stars) if the parameter is used.
 	// Currently, it must always be 2592000 (30 days) if specified. \
@@ -246,21 +251,15 @@ func (c CreateInvoiceLink) Validate() error {
 		if len(*c.SuggestedTipAmounts) > 4 {
 			return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
 		}
-		if (*c.SuggestedTipAmounts)[0] < 0 {
-			return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
-		}
-		if c.MaxTipAmount != nil && (*c.SuggestedTipAmounts)[0] > *c.MaxTipAmount {
-			return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
-		}
-		for i := 1; i < len(*c.SuggestedTipAmounts); i++ {
+		for i := len(*c.SuggestedTipAmounts); i >= 0; i-- {
 			if (*c.SuggestedTipAmounts)[i] < 0 {
-				return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be positive")
+				return objects.ErrInvalidParam("suggested_tip_amounts must be positive")
 			}
 			if (*c.SuggestedTipAmounts)[i-1] > (*c.SuggestedTipAmounts)[i] {
-				return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must be passed in a strictly increased order")
+				return objects.ErrInvalidParam("suggested_tip_amounts must be passed in a strictly increased order")
 			}
-			if c.MaxTipAmount != nil && (*c.SuggestedTipAmounts)[i] > *c.MaxTipAmount {
-				return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: prices must not exceed max_tip_amount.")
+			if (*c.SuggestedTipAmounts)[i] > *c.MaxTipAmount {
+				return objects.ErrInvalidParam("suggested_tip_amounts must not exceed max_tip_amount")
 			}
 		}
 	}
@@ -287,11 +286,14 @@ func (s CreateInvoiceLink) ContentType() string {
 // the Bot API will send an [objects.Update] with a shipping_query field to the bot. Use this method to reply to shipping queries.
 // On success, True is returned.
 type AnswerShippingQuery struct {
+	// REQUIRED:
 	// Unique identifier for the query to be answered
 	ShippingQueryId string `json:"shipping_query_id"`
-	//Pass True if delivery to the specified address is possible and False if there are any problems
-	//(for example, if delivery to the specified address is not possible)
+	// REQUIRED:
+	// Pass True if delivery to the specified address is possible and False if there are any problems
+	// (for example, if delivery to the specified address is not possible)
 	Ok bool `json:"ok"`
+
 	// Required if ok is True. A JSON-serialized array of available shipping options.
 	ShippingOptions *[]objects.ShippingOption `json:"shipping_options,omitempty"`
 	//Required if ok is False. Error message in human readable form that explains why it is impossible to complete the order
@@ -337,14 +339,18 @@ func (s AnswerShippingQuery) ContentType() string {
 
 // Once the user has confirmed their payment and shipping details,
 // the Bot API sends the final confirmation in the form of an [objects.Update] with the field pre_checkout_query.
-// Use this method to respond to such pre-checkout queries. On success, True is returned.
+// Use this method to respond to such pre-checkout queries.
+// On success, True is returned.
 // Note: The Bot API must receive an answer within 10 seconds after the pre-checkout query was sent.
 type AnswerPreCheckoutQuery struct {
+	// REQUIRED:
 	// Unique identifier for the query to be answered
 	PreCheckoutQueryId string `json:"pre_checkout_query_id"`
+	// REQUIRED:
 	// Specify True if everything is alright (goods are available, etc.) and the bot is ready to proceed with the order.
 	// Use False if there are any problems.
 	Ok bool `json:"ok"`
+
 	//Required if ok is False. Error message in human readable form that explains the reason for failure to proceed with the checkout
 	//(e.g. "Sorry, somebody just bought the last of our amazing black T-shirts while you were busy filling out your payment details.
 	//Please choose a different color or garment!").
@@ -414,12 +420,13 @@ func (s GetStarTransactions) ContentType() string {
 
 // Refunds a successful payment in Telegram Stars. Returns True on success.
 type RefundStarPayment struct {
+	// REQUIRED:
 	// Identifier of the user whose payment will be refunded
 	UserId int `json:"user_id"`
+	// REQUIRED:
 	// Telegram payment identifier
 	TelegramPaymentChargeId string `json:"telegram_payment_charge_id"`
-} // FIXME: all of the channel and supergroup ids SHOULD BE NEGATIVE,
-// should fix validation EVERYWHERE
+}
 
 func (r RefundStarPayment) Validate() error {
 	if r.UserId <= 0 {
@@ -447,12 +454,16 @@ func (s RefundStarPayment) ContentType() string {
 	return "application/json"
 }
 
-// Allows the bot to cancel or re-enable extension of a subscription paid in Telegram Stars. Returns True on success.
+// Allows the bot to cancel or re-enable extension of a subscription paid in Telegram Stars.
+// Returns True on success.
 type EditUserStarSubscription struct {
+	// REQUIRED:
 	// Identifier of the user whose subscription will be edited
 	UserId int `json:"user_id"`
+	// REQUIRED:
 	// Telegram payment identifier for the subscription
 	TelegramPaymentChargeId string `json:"telegram_payment_charge_id"`
+	// REQUIRED:
 	// Pass True to cancel extension of the user subscription;
 	// the subscription must be active up to the end of the current subscription period.
 	// Pass False to allow the user to re-enable a subscription that was previously canceled by the bot.

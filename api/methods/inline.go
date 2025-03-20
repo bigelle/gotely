@@ -1,4 +1,3 @@
-// TODO: make optional and required fields more obvious
 package methods
 
 import (
@@ -15,10 +14,13 @@ import (
 //
 // No more than 50 results per query are allowed.
 type AnswerInlineQuery struct {
+	// REQUIRED:
 	// Unique identifier for the answered query
 	InlineQueryId string `json:"inline_query_id"`
+	// REQUIRED:
 	// A JSON-serialized array of results for the inline query
 	Results []objects.InlineQueryResult `json:"results"`
+
 	// The maximum amount of time in seconds that the result of the inline query may be cached on the server.
 	// Defaults to 300.
 	CacheTime *int `json:"cache_time,omitempty"`
@@ -75,8 +77,10 @@ func (s AnswerInlineQuery) ContentType() string {
 // a corresponding message on behalf of the user to the chat from which the query originated.
 // On success, a [objects.SentWebAppMessage] object is returned.
 type AnswerWebAppQuery struct {
+	// REQUIRED:
 	// Unique identifier for the query to be answered
 	WebAppQueryId string `json:"web_app_query_id"`
+	// REQUIRED:
 	// A JSON-serialized object describing the message to be sent
 	Result objects.InlineQueryResult `json:"result"`
 }
@@ -110,10 +114,13 @@ func (s AnswerWebAppQuery) ContentType() string {
 // Stores a message that can be sent by a user of a Mini App.
 // Returns a [objects.PreparedInlineMessage] object.
 type SavePreparedInlineMessage struct {
+	// REQUIRED:
 	// Unique identifier of the target user that can use the prepared message
 	UserId int `json:"user_id"`
+	// REQUIRED:
 	// A JSON-serialized object describing the message to be sent
 	Result objects.InlineQueryResult `json:"result"`
+
 	// Pass True if the message can be sent to private chats with users
 	AllowUserChats *bool `json:"allow_user_chats,omitempty"`
 	// Pass True if the message can be sent to private chats with bots
