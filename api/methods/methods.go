@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"strings"
 
+	"github.com/bigelle/gotely/api"
 	"github.com/bigelle/gotely/api/objects"
 )
 
@@ -442,12 +443,7 @@ func (s *SendPhoto) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			b, err := json.Marshal(s.CaptionEntities)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("caption_entities", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -489,23 +485,13 @@ func (s *SendPhoto) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			b, err := json.Marshal(s.ReplyParameters)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_parameters", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			b, err := json.Marshal(s.ReplyMarkup)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_markup", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -636,12 +622,7 @@ func (s *SendAudio) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			b, err := json.Marshal(s.CaptionEntities)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("caption_entities", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -689,23 +670,13 @@ func (s *SendAudio) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			b, err := json.Marshal(s.ReplyParameters)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_parameters", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			b, err := json.Marshal(s.ReplyMarkup)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_markup", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -727,6 +698,7 @@ func (s *SendAudio) Reader() (io.Reader, error) {
 			return
 		}
 
+		// FIXME
 		if s.Thumbnail != nil {
 			switch (s.Thumbnail).(type) {
 			case objects.InputFileFromRemote:
@@ -869,12 +841,7 @@ func (s *SendDocument) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			b, err := json.Marshal(s.CaptionEntities)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("caption_entities", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -910,23 +877,13 @@ func (s *SendDocument) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			b, err := json.Marshal(s.ReplyParameters)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_parameters", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			b, err := json.Marshal(s.ReplyMarkup)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_markup", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -948,6 +905,7 @@ func (s *SendDocument) Reader() (io.Reader, error) {
 			return
 		}
 
+		// FIXME
 		if s.Thumbnail != nil {
 			switch (s.Thumbnail).(type) {
 			case objects.InputFileFromRemote:
@@ -1102,12 +1060,7 @@ func (s *SendVideo) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			b, err := json.Marshal(s.CaptionEntities)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("caption_entities", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1149,23 +1102,13 @@ func (s *SendVideo) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			b, err := json.Marshal(s.ReplyParameters)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_parameters", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			b, err := json.Marshal(s.ReplyMarkup)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_markup", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1187,6 +1130,7 @@ func (s *SendVideo) Reader() (io.Reader, error) {
 			return
 		}
 
+		// FIXME
 		if s.Thumbnail != nil {
 			switch (s.Thumbnail).(type) {
 			case objects.InputFileFromRemote:
@@ -1379,12 +1323,7 @@ func (s *SendAnimation) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			b, err := json.Marshal(s.CaptionEntities)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("caption_entities", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1420,23 +1359,13 @@ func (s *SendAnimation) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			b, err := json.Marshal(s.ReplyParameters)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_parameters", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			b, err := json.Marshal(s.ReplyMarkup)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_markup", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1458,6 +1387,7 @@ func (s *SendAnimation) Reader() (io.Reader, error) {
 			return
 		}
 
+		// FIXME
 		if s.Thumbnail != nil {
 			switch (s.Thumbnail).(type) {
 			case objects.InputFileFromRemote:
@@ -1601,12 +1531,7 @@ func (s *SendVoice) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			b, err := json.Marshal(s.CaptionEntities)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("caption_entities", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1636,23 +1561,13 @@ func (s *SendVoice) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			b, err := json.Marshal(s.ReplyParameters)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_parameters", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			b, err := json.Marshal(s.ReplyMarkup)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_markup", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1810,23 +1725,13 @@ func (s *SendVideoNote) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			b, err := json.Marshal(s.ReplyParameters)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_parameters", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			b, err := json.Marshal(s.ReplyMarkup)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_markup", string(b)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1848,6 +1753,7 @@ func (s *SendVideoNote) Reader() (io.Reader, error) {
 			return
 		}
 
+		// FIXME: do it in other way after InputFile changes
 		if s.Thumbnail != nil {
 			switch (s.Thumbnail).(type) {
 			case objects.InputFileFromRemote:
@@ -2050,12 +1956,7 @@ func (s *SendMediaGroup) Reader() (io.Reader, error) {
 				return
 			}
 		}
-		by, err := json.Marshal(s.Media)
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		if err := mw.WriteField("media", string(by)); err != nil {
+		if err := api.WriteJSONToForm(mw, "media", s.Media); err != nil {
 			pw.CloseWithError(err)
 			return
 		}
@@ -2084,28 +1985,16 @@ func (s *SendMediaGroup) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			by, err := json.Marshal(s.ReplyParameters)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			if err := mw.WriteField("reply_parameters", string(by)); err != nil {
+			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 
 		for _, media := range s.Media {
-			if media.IsLocalFile() {
-				part, err := mw.CreateFormFile(media.Detach(), media.Detach())
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				if _, err := io.Copy(part, media.GetReader()); err != nil {
-					pw.CloseWithError(err)
-					return
-				}
+			if err := media.WriteTo(mw); err != nil {
+				pw.CloseWithError(err)
+				return
 			}
 		}
 	}()

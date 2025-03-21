@@ -2,13 +2,17 @@ package objects
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/bigelle/gotely/api"
 )
 
 type ErrInvalidParam string
@@ -3408,12 +3412,10 @@ type ResponseParameters struct {
 //
 // - InputMediaVideo
 type InputMedia interface {
-	SetMedia(r io.Reader)
-	IsLocalFile() bool
-	Detach() string
-	GetReader() io.Reader
+	SetMedia(string, io.Reader)
+	WriteTo(mw *multipart.Writer) error
 	Validate() error
-} // TODO maybe it should have only 1 method that will accept multipart writer and will write all of the fields into it
+}
 
 // Represents a photo to be sent.
 //
@@ -3421,44 +3423,90 @@ type InputMedia interface {
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaPhoto struct {
+	// REQUIRED:
 	// Type of the result, must be photo
 	Type string `json:"type"`
+	// REQUIRED:
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
 	Media string `json:"media"`
-	// Optional. Caption of the photo to be sent, 0-1024 characters after entities parsing
+
+	// Caption of the photo to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
-	// Optional. Mode for parsing entities in the photo caption. See https://core.telegram.org/bots/api#formatting-options for more details.
+	// Mode for parsing entities in the photo caption. See https://core.telegram.org/bots/api#formatting-options for more details.
 	ParseMode *string `json:"parse_mode,omitempty"`
-	// Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	// List of special entities that appear in the caption, which can be specified instead of parse_mode
 	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
-	// Optional. Pass True, if the caption must be shown above the message media
+	// Pass True, if the caption must be shown above the message media
 	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
-	// Optional. Pass True if the photo needs to be covered with a spoiler animation
+	// Pass True if the photo needs to be covered with a spoiler animation
 	HasSpoiler *bool `json:"has_spoiler,omitempty"`
-	// Required. Pass true if photo is a local file
-	IsLocal bool `json:"-"`
-	// Optional. Required if photo is a local file
-	Reader io.Reader `json:"-"`
+
+	reader    io.Reader
+	mediaName string
 }
 
-func (i *InputMediaPhoto) SetMedia(r io.Reader) {
-	i.Reader = r
-	i.IsLocal = true
+// SetMedia sets Media to "attach://<media>" if r is not nil,
+// or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
+func (i *InputMediaPhoto) SetMedia(media string, r io.Reader) {
+	i.mediaName = media
+	i.reader = r
+	if r != nil {
+		i.Media = "attach://" + media
+	} else {
+		i.Media = media
+	}
 }
 
-func (i InputMediaPhoto) IsLocalFile() bool {
-	return i.IsLocal
-}
+func (i InputMediaPhoto) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", i.Type); err != nil {
+		return err
+	}
+	if err := mw.WriteField("media", i.Media); err != nil {
+		return err
+	}
+	if i.Caption != nil {
+		if err := mw.WriteField("caption", *i.Caption); err != nil {
+			return err
+		}
+	}
+	if i.ParseMode != nil {
+		if err := mw.WriteField("parse_mode", *i.ParseMode); err != nil {
+			return err
+		}
+	}
+	if i.CaptionEntities != nil {
+		b, err := json.Marshal(*i.CaptionEntities)
+		if err != nil {
+			return err
+		}
+		if err := mw.WriteField("caption_entities", string(b)); err != nil {
+			return err
+		}
+	}
+	if i.ShowCaptionAboveMedia != nil {
+		if err := mw.WriteField("show_caption_above_media", fmt.Sprint(*i.ShowCaptionAboveMedia)); err != nil {
+			return err
+		}
+	}
+	if i.HasSpoiler != nil {
+		if err := mw.WriteField("has_spoiler", fmt.Sprint(*i.HasSpoiler)); err != nil {
+			return err
+		}
+	}
 
-func (i InputMediaPhoto) Detach() string {
-	return i.Media[9:]
-}
-
-func (i InputMediaPhoto) GetReader() io.Reader {
-	return i.Reader
+	if i.reader != nil {
+		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.reader); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (i InputMediaPhoto) Validate() error {
@@ -3467,9 +3515,6 @@ func (i InputMediaPhoto) Validate() error {
 	}
 	if len(i.Media) == 0 {
 		return ErrInvalidParam("media parameter can't be empty")
-	}
-	if i.IsLocal && i.Reader == nil {
-		return ErrInvalidParam("reader can't be nil if file is local")
 	}
 	return nil
 }
@@ -3480,52 +3525,44 @@ func (i InputMediaPhoto) Validate() error {
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaVideo struct {
+	// REQUIRED:
 	// Type of the result, must be video
 	Type string `json:"type"`
+	// REQUIRED:
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
 	Media string `json:"media"`
-	// Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
+
+	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
 	// The thumbnail should be in JPEG format and less than 200 kB in size.
 	// A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data.
 	// Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	// the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail *InputFile `json:"thumbnail,omitempty"`
-	// Optional. Caption of the video to be sent, 0-1024 characters after entities parsing
+	Thumbnail InputFile `json:"thumbnail,omitempty"`
+	// Caption of the video to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
-	// Optional. Mode for parsing entities in the video caption. See https://core.telegram.org/bots/api#formatting-options for more details.
+	// Mode for parsing entities in the video caption. See https://core.telegram.org/bots/api#formatting-options for more details.
 	ParseMode *string `json:"parse_mode,omitempty"`
-	// Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	// List of special entities that appear in the caption, which can be specified instead of parse_mode
 	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
-	// Optional. Pass True, if the caption must be shown above the message media
+	// Pass True, if the caption must be shown above the message media
 	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
-	// Optional. Video width
+	// Video width
 	Width *int `json:"width,omitempty"`
-	// Optional. Video height
+	// Video height
 	Height *int `json:"height,omitempty"`
-	// Optional. Video duration in seconds
+	// Video duration in seconds
 	Duration *int `json:"duration,omitempty"`
-	// Optional. Pass True if the uploaded video is suitable for streaming
+	// Pass True if the uploaded video is suitable for streaming
 	SupportsStreaming *bool `json:"supports_streaming,omitempty"`
-	// Optional. Pass True if the video needs to be covered with a spoiler animation
+	// Pass True if the video needs to be covered with a spoiler animation
 	HasSpoiler *bool `json:"has_spoiler,omitempty"`
-	isNew      bool  `json:"-"`
-}
 
-func (i *InputMediaVideo) SetInputMedia(media string, isNew bool) {
-	if isNew {
-		// if url_regex.MatchString(media) {
-		// 	i.Media = media
-		// } else {
-		// 	i.Media = "attach://" + media
-		// }
-	} else {
-		i.Media = media
-		i.isNew = false
-	}
+	reader    io.Reader
+	mediaName string
 }
 
 func (i InputMediaVideo) Validate() error {
@@ -3535,13 +3572,100 @@ func (i InputMediaVideo) Validate() error {
 	if strings.TrimSpace(i.Media) == "" {
 		return ErrInvalidParam("media parameter can't be empty")
 	}
+	return nil
+}
 
-	if i.isNew {
-		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		// }
+// SetMedia sets Media to "attach://<media>" if r is not nil,
+// or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
+func (i *InputMediaVideo) SetMedia(media string, r io.Reader) {
+	i.mediaName = media
+	i.reader = r
+	if r != nil {
+		i.Media = "attach://" + media
+	} else {
+		i.Media = media
+	}
+}
+
+func (i InputMediaVideo) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", i.Type); err != nil {
+		return err
+	}
+	if err := mw.WriteField("media", i.Media); err != nil {
+		return err
+	}
+	if i.Thumbnail != nil {
+		r, err := i.Thumbnail.Reader()
+		if err != nil {
+			return err
+		}
+		part, err := mw.CreateFormFile("thumbnail", i.Thumbnail.Name())
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, r); err != nil {
+			return err
+		}
+	}
+	if i.Caption != nil {
+		if err := mw.WriteField("caption", *i.Caption); err != nil {
+			return err
+		}
+	}
+	if i.ParseMode != nil {
+		if err := mw.WriteField("parse_mode", *i.ParseMode); err != nil {
+			return err
+		}
+	}
+	if i.CaptionEntities != nil {
+		b, err := json.Marshal(*i.CaptionEntities)
+		if err != nil {
+			return err
+		}
+		if err := mw.WriteField("caption_entities", string(b)); err != nil {
+			return err
+		}
+	}
+	if i.ShowCaptionAboveMedia != nil {
+		if err := mw.WriteField("show_caption_above_media", fmt.Sprint(*i.ShowCaptionAboveMedia)); err != nil {
+			return err
+		}
+	}
+	if i.Width != nil {
+		if err := mw.WriteField("width", fmt.Sprint(*i.Width)); err != nil {
+			return err
+		}
+	}
+	if i.Height != nil {
+		if err := mw.WriteField("height", fmt.Sprint(*i.Height)); err != nil {
+			return err
+		}
+	}
+	if i.Duration != nil {
+		if err := mw.WriteField("duration", fmt.Sprint(*i.Duration)); err != nil {
+			return err
+		}
+	}
+	if i.SupportsStreaming != nil {
+		if err := mw.WriteField("supports_streaming", fmt.Sprint(*i.SupportsStreaming)); err != nil {
+			return err
+		}
+	}
+	if i.HasSpoiler != nil {
+		if err := mw.WriteField("has_spoiler", fmt.Sprint(*i.HasSpoiler)); err != nil {
+			return err
+		}
 	}
 
+	if i.reader != nil {
+		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.reader); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -3551,50 +3675,42 @@ func (i InputMediaVideo) Validate() error {
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaAnimation struct {
+	// REQUIRED:
 	// Type of the result, must be animation
 	Type string `json:"type"`
+	// REQUIRED:
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
 	Media string `json:"media"`
-	// Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
+
+	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
 	// The thumbnail should be in JPEG format and less than 200 kB in size.
 	// A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data.
 	// Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	// the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail *InputFile `json:"thumbnail,omitempty"`
-	// Optional. Caption of the animation to be sent, 0-1024 characters after entities parsing
+	Thumbnail InputFile `json:"thumbnail,omitempty"`
+	// Caption of the animation to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
-	// Optional. Mode for parsing entities in the animation caption. See https://core.telegram.org/bots/api#formatting-options for more details.
+	// Mode for parsing entities in the animation caption. See https://core.telegram.org/bots/api#formatting-options for more details.
 	ParseMode *string `json:"parse_mode,omitempty"`
-	// Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	// List of special entities that appear in the caption, which can be specified instead of parse_mode
 	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
-	// Optional. Pass True, if the caption must be shown above the message media
+	// Pass True, if the caption must be shown above the message media
 	ShowCaptionAboveMedia *bool `json:"show_caption_above_media,omitempty"`
-	// Optional. Animation width
+	// Animation width
 	Width *int `json:"width,omitempty"`
-	// Optional. Animation height
+	// Animation height
 	Height *int `json:"height,omitempty"`
-	// Optional. Animation duration in seconds
+	// Animation duration in seconds
 	Duration *int `json:"duration,omitempty"`
-	// Optional. Pass True if the animation needs to be covered with a spoiler animation
+	// Pass True if the animation needs to be covered with a spoiler animation
 	HasSpoiler *bool `json:"has_spoiler,omitempty"`
-	isNew      bool  `json:"-"`
-}
 
-func (i *InputMediaAnimation) SetInputMedia(media string, isNew bool) {
-	if isNew {
-		// if url_regex.MatchString(media) {
-		// 	i.Media = media
-		// } else {
-		// 	i.Media = "attach://" + media
-		// }
-	} else {
-		i.Media = media
-		i.isNew = false
-	}
+	reader    io.Reader
+	mediaName string
 }
 
 func (i InputMediaAnimation) Validate() error {
@@ -3604,11 +3720,90 @@ func (i InputMediaAnimation) Validate() error {
 	if strings.TrimSpace(i.Media) == "" {
 		return ErrInvalidParam("media parameter can't be empty")
 	}
+	return nil
+}
 
-	if i.isNew {
-		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		// }
+// SetMedia sets Media to "attach://<media>" if r is not nil,
+// or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
+func (i *InputMediaAnimation) SetMedia(media string, r io.Reader) {
+	i.mediaName = media
+	i.reader = r
+	if r != nil {
+		i.Media = "attach://" + media
+	} else {
+		i.Media = media
+	}
+}
+
+func (i InputMediaAnimation) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", i.Type); err != nil {
+		return err
+	}
+	if err := mw.WriteField("media", i.Media); err != nil {
+		return err
+	}
+	if i.Thumbnail != nil {
+		r, err := i.Thumbnail.Reader()
+		if err != nil {
+			return err
+		}
+		part, err := mw.CreateFormFile("thumbnail", i.Thumbnail.Name())
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, r); err != nil {
+			return err
+		}
+	}
+	if i.Caption != nil {
+		if err := mw.WriteField("caption", *i.Caption); err != nil {
+			return err
+		}
+	}
+	if i.ParseMode != nil {
+		if err := mw.WriteField("parse_mode", *i.ParseMode); err != nil {
+			return err
+		}
+	}
+	if i.CaptionEntities != nil {
+		if err := api.WriteJSONToForm(mw, "caption_entities", *i.CaptionEntities); err != nil {
+			return err
+		}
+	}
+	if i.ShowCaptionAboveMedia != nil {
+		if err := mw.WriteField("show_caption_above_media", fmt.Sprint(*i.ShowCaptionAboveMedia)); err != nil {
+			return err
+		}
+	}
+	if i.Width != nil {
+		if err := mw.WriteField("width", fmt.Sprint(*i.Width)); err != nil {
+			return err
+		}
+	}
+	if i.Height != nil {
+		if err := mw.WriteField("height", fmt.Sprint(*i.Height)); err != nil {
+			return err
+		}
+	}
+	if i.Duration != nil {
+		if err := mw.WriteField("duration", fmt.Sprint(*i.Duration)); err != nil {
+			return err
+		}
+	}
+	if i.HasSpoiler != nil {
+		if err := mw.WriteField("has_spoiler", fmt.Sprint(*i.HasSpoiler)); err != nil {
+			return err
+		}
+	}
+
+	if i.reader != nil {
+		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.reader); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -3619,46 +3814,38 @@ func (i InputMediaAnimation) Validate() error {
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaAudio struct {
+	// REQUIRED:
 	// Type of the result, must be audio
 	Type string `json:"type"`
+	// REQUIRED:
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
 	Media string `json:"media"`
-	// Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
+
+	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side.
 	// The thumbnail should be in JPEG format and less than 200 kB in size.
 	// A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data.
 	// Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	// the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail *InputFile `json:"thumbnail,omitempty"`
-	// Optional. Caption of the audio to be sent, 0-1024 characters after entities parsing
+	Thumbnail InputFile `json:"thumbnail,omitempty"`
+	// Caption of the audio to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
-	// Optional. Mode for parsing entities in the audio caption. See https://core.telegram.org/bots/api#formatting-options for more details.
+	// Mode for parsing entities in the audio caption. See https://core.telegram.org/bots/api#formatting-options for more details.
 	ParseMode *string `json:"parse_mode,omitempty"`
-	// Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+	// List of special entities that appear in the caption, which can be specified instead of parse_mode
 	CaptionEntities *[]MessageEntity `json:"caption_entities,omitempty"`
-	// Optional. Duration of the audio in seconds
+	// Duration of the audio in seconds
 	Duration *int `json:"duration,omitempty"`
-	// Optional. Performer of the audio
+	// Performer of the audio
 	Performer *string `json:"performer,omitempty"`
-	// Optional. Title of the audio
+	// Title of the audio
 	Title *string `json:"title,omitempty"`
-	isNew bool    `json:"-"`
-}
 
-func (i *InputMediaAudio) SetInputMedia(media string, isNew bool) {
-	if isNew {
-		// if url_regex.MatchString(media) {
-		// 	i.Media = media
-		// } else {
-		// 	i.Media = "attach://" + media
-		// }
-	} else {
-		i.Media = media
-		i.isNew = false
-	}
+	reader    io.Reader
+	mediaName string
 }
 
 func (i InputMediaAudio) Validate() error {
@@ -3668,11 +3855,84 @@ func (i InputMediaAudio) Validate() error {
 	if strings.TrimSpace(i.Media) == "" {
 		return ErrInvalidParam("media parameter can't be empty")
 	}
+	return nil
+}
 
-	if i.isNew {
-		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		// }
+// SetMedia sets Media to "attach://<media>" if r is not nil,
+// or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
+func (i *InputMediaAudio) SetMedia(media string, r io.Reader) {
+	i.mediaName = media
+	i.reader = r
+	if r != nil {
+		i.Media = "attach://" + media
+	} else {
+		i.Media = media
+	}
+}
+
+func (i InputMediaAudio) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", i.Type); err != nil {
+		return err
+	}
+	if err := mw.WriteField("media", i.Media); err != nil {
+		return err
+	}
+	if i.Thumbnail != nil {
+		r, err := i.Thumbnail.Reader()
+		if err != nil {
+			return err
+		}
+		part, err := mw.CreateFormFile("thumbnail", i.Thumbnail.Name())
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, r); err != nil {
+			return err
+		}
+	}
+	if i.Caption != nil {
+		if err := mw.WriteField("caption", *i.Caption); err != nil {
+			return err
+		}
+	}
+	if i.ParseMode != nil {
+		if err := mw.WriteField("parse_mode", *i.ParseMode); err != nil {
+			return err
+		}
+	}
+	if i.CaptionEntities != nil {
+		b, err := json.Marshal(*i.CaptionEntities)
+		if err != nil {
+			return err
+		}
+		if err := mw.WriteField("caption_entities", string(b)); err != nil {
+			return err
+		}
+	}
+	if i.Duration != nil {
+		if err := mw.WriteField("duration", fmt.Sprint(*i.Duration)); err != nil {
+			return err
+		}
+	}
+	if i.Performer != nil {
+		if err := mw.WriteField("performer", *i.Performer); err != nil {
+			return err
+		}
+	}
+	if i.Title != nil {
+		if err := mw.WriteField("title", *i.Title); err != nil {
+			return err
+		}
+	}
+
+	if i.reader != nil {
+		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.reader); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -3696,7 +3956,7 @@ type InputMediaDocument struct {
 	// Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	// the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail *InputFile `json:"thumbnail,omitempty"`
+	Thumbnail InputFile `json:"thumbnail,omitempty"`
 	// Optional. Caption of the document to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	// Optional. Mode for parsing entities in the document caption.
@@ -3707,20 +3967,9 @@ type InputMediaDocument struct {
 	// Optional. Disables automatic server-side content type detection for files uploaded using multipart/form-data.
 	// Always True, if the document is sent as part of an album.
 	DisableContentTypeDetection *bool `json:"disable_content_type_detection,omitempty"`
-	isNew                       bool  `json:"-"`
-}
 
-func (i *InputMediaDocument) SetInputMedia(media string, isNew bool) {
-	if isNew {
-		// if url_regex.MatchString(media) {
-		// 	i.Media = media
-		// } else {
-		// 	i.Media = "attach://" + media
-		// }
-	} else {
-		i.Media = media
-		i.isNew = false
-	}
+	reader    io.Reader
+	mediaName string
 }
 
 func (i InputMediaDocument) Validate() error {
@@ -3730,11 +3979,74 @@ func (i InputMediaDocument) Validate() error {
 	if strings.TrimSpace(i.Media) == "" {
 		return ErrInvalidParam("media parameter can't be empty")
 	}
+	return nil
+}
 
-	if i.isNew {
-		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		// }
+// SetMedia sets Media to "attach://<media>" if r is not nil,
+// or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
+func (i *InputMediaDocument) SetMedia(media string, r io.Reader) {
+	i.mediaName = media
+	i.reader = r
+	if r != nil {
+		i.Media = "attach://" + media
+	} else {
+		i.Media = media
+	}
+}
+
+func (i InputMediaDocument) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", i.Type); err != nil {
+		return err
+	}
+	if err := mw.WriteField("media", i.Media); err != nil {
+		return err
+	}
+	if i.Thumbnail != nil {
+		r, err := i.Thumbnail.Reader()
+		if err != nil {
+			return err
+		}
+		part, err := mw.CreateFormFile("thumbnail", i.Thumbnail.Name())
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, r); err != nil {
+			return err
+		}
+	}
+	if i.Caption != nil {
+		if err := mw.WriteField("caption", *i.Caption); err != nil {
+			return err
+		}
+	}
+	if i.ParseMode != nil {
+		if err := mw.WriteField("parse_mode", *i.ParseMode); err != nil {
+			return err
+		}
+	}
+	if i.CaptionEntities != nil {
+		b, err := json.Marshal(*i.CaptionEntities)
+		if err != nil {
+			return err
+		}
+		if err := mw.WriteField("caption_entities", string(b)); err != nil {
+			return err
+		}
+	}
+	if i.DisableContentTypeDetection != nil {
+		if err := mw.WriteField("disable_content_type_detection", fmt.Sprint(*i.DisableContentTypeDetection)); err != nil {
+			return err
+		}
+	}
+
+	if i.reader != nil {
+		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.reader); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -3746,9 +4058,11 @@ type InputFile interface {
 	Name() string               // Returns the file name.
 	Reader() (io.Reader, error) // Returns an io.Reader for the file content.
 	IsLocal() bool              // Indicates if the file is stored locally.
-} // TODO: maybe it should accept a multipart writer, and write itself
-// including all of the text fields
+} // TODO: replace it with only a function that will write the value into multipart writer
+// if its a remote file it should write a text field
+// otherwise create a form file
 
+// FIXME: replace it with InputFileFromReader
 // InputFileFromPath represents a file stored on the local filesystem.
 type InputFileFromPath struct {
 	FilePath string // Absolute or relative path to the file.
@@ -3780,6 +4094,7 @@ func (i InputFileFromPath) IsLocal() bool {
 	return true
 }
 
+// FIXME: remove it, use reader instead
 // InputFileFromBytes represents a file created from in-memory byte data.
 type InputFileFromBytes struct {
 	FileName string // Name of the file (used in upload).
@@ -3823,9 +4138,9 @@ func (i InputFileFromRemote) Validate() error {
 	return nil
 }
 
-// Returns an empty string (remote files don't have a local name).
+// Returns its value as string
 func (i InputFileFromRemote) Name() string {
-	return ""
+	return string(i)
 }
 
 // Always returns an error (no reader for remote files).

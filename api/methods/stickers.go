@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"regexp"
 	"slices"
 	"strings"
@@ -215,7 +216,8 @@ type CreateNewStickerSet struct {
 	// the accent color if used as emoji status, white on chat photos,
 	// or another appropriate color based on context; for custom emoji sticker sets only
 	NeedsRepainting *bool `json:"needs_repainting,omitempty"`
-} // TODO: multipart
+	contentType     string
+}
 
 func (c CreateNewStickerSet) Validate() error {
 	if c.UserId < 1 {
@@ -257,12 +259,48 @@ func (s CreateNewStickerSet) Endpoint() string {
 	return "createNewStickerSet"
 }
 
-func (s CreateNewStickerSet) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s *CreateNewStickerSet) Reader() (io.Reader, error) {
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
+
+	go func() {
+		defer pw.Close()
+		defer mw.Close()
+
+		if err := mw.WriteField("user_id", fmt.Sprint(s.UserId)); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := mw.WriteField("name", s.Name); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := mw.WriteField("title", s.Title); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		for _, sticker := range s.Stickers {
+			if err := sticker.WriteTo(mw); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+
+		if s.StickerType != nil {
+			if err := mw.WriteField("sticker_type", *s.StickerType); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.NeedsRepainting != nil {
+			if err := mw.WriteField("needs_repainting", fmt.Sprint(*s.NeedsRepainting)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+	}()
+	return pr, nil
 }
 
 func (s CreateNewStickerSet) ContentType() string {

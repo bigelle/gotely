@@ -1,6 +1,7 @@
 package gotely
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -108,8 +109,8 @@ func SendRequestWith(body Method, dest any, token string, opts ...RequestOption)
 		return fmt.Errorf("bad request: %s", *result.Description)
 	}
 	// TODO: maybe use decoder
-	return json.Unmarshal(result.Result, dest)
-} // TODO: maybe add gzip and streaming json while sending requests
+	return json.NewDecoder(bytes.NewReader(result.Result)).Decode(dest)
+}
 
 // RequestOption represents a function that modifies `RequestConfig`.
 // It is used to customize request settings when calling `SendRequestWith`.

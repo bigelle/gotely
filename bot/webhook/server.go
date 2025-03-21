@@ -190,6 +190,7 @@ func (whb *WebhookBot) Stop() {
 	if err := whb.Shutdown(ctx); err != nil {
 		log.Fatalf("server shutdown failed: %s", err.Error())
 	}
+	// TODO: delete webhook when shutting down, maybe should be a flag
 }
 
 // Use appends middleware to the current WebhookBot

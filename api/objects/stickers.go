@@ -1,7 +1,10 @@
 package objects
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"slices"
 )
 
@@ -99,7 +102,7 @@ type InputSticker struct {
 	// Optional. List of 0-20 search keywords for the sticker with total length of up to 64 characters.
 	// For “regular” and “custom_emoji” stickers only.
 	Keywords *[]string `json:"keywords,omitempty"`
-} // TODO: add method to write all of the parameters into multipart writer
+}
 
 func (i InputSticker) Validate() error {
 	if len(i.EmojiList) < 1 || len(i.EmojiList) > 20 {
@@ -124,6 +127,57 @@ func (i InputSticker) Validate() error {
 	if s, ok := any(i.Sticker).(string); ok {
 		if s == "" {
 			return ErrInvalidParam("sticker parameter can't be empty")
+		}
+	}
+	return nil
+}
+
+func (i InputSticker) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("format", i.Format); err != nil {
+		return err
+	}
+	eb, err := json.Marshal(i.EmojiList)
+	if err != nil {
+		return err
+	}
+	if err := mw.WriteField("emoji_list", string(eb)); err != nil {
+		return err
+	}
+	if i.MaskPosition != nil {
+		mb, err := json.Marshal(*i.MaskPosition)
+		if err != nil {
+			return err
+		}
+		if err := mw.WriteField("mask_position", string(mb)); err != nil {
+			return err
+		}
+	}
+
+	if i.Keywords != nil {
+		kb, err := json.Marshal(*i.Keywords)
+		if err != nil {
+			return err
+		}
+		if err := mw.WriteField("keywords", string(kb)); err != nil {
+			return err
+		}
+	}
+
+	if !i.Sticker.IsLocal() {
+		if err := mw.WriteField("sticker", i.Sticker.Name()); err != nil {
+			return err
+		}
+	} else {
+		r, err := i.Sticker.Reader()
+		if err != nil {
+			return err
+		}
+		part, err := mw.CreateFormFile("sticker", i.Sticker.Name())
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, r); err != nil {
+			return err
 		}
 	}
 	return nil
