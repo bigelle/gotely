@@ -1,13 +1,10 @@
 package objects
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
-	"os"
-	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -3096,11 +3093,11 @@ type BotShortDescription struct {
 
 // This object describes the bot's menu button in a private chat. It should be one of
 //
-// - MenuButtonCommands
+//   - [MenuButtonCommands]
 //
-// - MenuButtonWebApp
+//   - [MenuButtonWebApp]
 //
-// - MenuButtonDefault
+//   - [MenuButtonDefault]
 //
 // If a menu button other than MenuButtonDefault is set for a private chat, then it is applied in the chat.
 // Otherwise the default menu button is applied. By default, the menu button opens the list of bot commands.
@@ -3114,11 +3111,11 @@ type MenuButton interface {
 //
 // It serves as a base structure containing all possible fields of different menu button types:
 //
-// - MenuButtonCommands
+//   - [MenuButtonCommands]
 //
-// - MenuButtonWebApp
+//   - [MenuButtonWebApp]
 //
-// - MenuButtonDefault
+//   - [MenuButtonDefault]
 //
 // This type provides methods to convert itself into a more specific `MenuButton` implementation
 // for further processing.
@@ -3126,46 +3123,6 @@ type MenuButtonResponse struct {
 	Type   string      `json:"type"`
 	Text   *string     `json:"text,omitempty"`
 	WebApp *WebAppInfo `json:"web_app,omitempty"`
-	// NOTE: do i really need it when the only case when this conversion is making sense
-	// is when the type is web_app
-}
-
-func (m MenuButtonResponse) CommandsType() (*MenuButtonCommands, error) {
-	if m.Type != "commands" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "commands",
-			Got:      m.Type,
-		}
-	}
-	return &MenuButtonCommands{
-		Type: m.Type,
-	}, nil
-}
-
-func (m MenuButtonResponse) WebAppType() (*MenuButtonWebApp, error) {
-	if m.Type != "web_app" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "web_app",
-			Got:      m.Type,
-		}
-	}
-	return &MenuButtonWebApp{
-		Type:   m.Type,
-		Text:   *m.Text,
-		WebApp: *m.WebApp,
-	}, nil
-}
-
-func (m MenuButtonResponse) DefaultType() (*MenuButtonDefault, error) {
-	if m.Type != "default" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "default",
-			Got:      m.Type,
-		}
-	}
-	return &MenuButtonDefault{
-		Type: m.Type,
-	}, nil
 }
 
 // Represents a menu button, which opens the bot's list of commands.
@@ -3234,59 +3191,17 @@ func (m MenuButtonDefault) GetMenuButtonType() string {
 
 // This object describes the source of a chat boost. It can be one of
 //
-// - ChatBoostSourcePremium
+//   - [ChatBoostSourcePremium]
 //
-// - ChatBoostSourceGiftCode
+//   - [ChatBoostSourceGiftCode]
 //
-// - ChatBoostSourceGiveaway
+//   - [ChatBoostSourceGiveaway]
 type ChatBoostSource struct {
 	Source            string  `json:"source"`
 	User              *User   `json:"user,omitempty"`
 	GiveawayMessageId *string `json:"giveaway_message_id,omitempty"`
 	PrizeStarCount    *int    `json:"prize_star_count,omitempty"`
 	IsUnclaimed       *bool   `json:"is_unclaimed,omitempty"`
-}
-
-func (c ChatBoostSource) PremiumType() (*ChatBoostSourcePremium, error) {
-	if c.Source != "premium" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "premium",
-			Got:      c.Source,
-		}
-	}
-	return &ChatBoostSourcePremium{
-		Source: c.Source,
-		User:   *c.User,
-	}, nil
-}
-
-func (c ChatBoostSource) GiftCodeType() (*ChatBoostSourceGiftCode, error) {
-	if c.Source != "gift_code" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "gift_code",
-			Got:      c.Source,
-		}
-	}
-	return &ChatBoostSourceGiftCode{
-		Source: c.Source,
-		User:   *c.User,
-	}, nil
-}
-
-func (c ChatBoostSource) GiveawayType() (*ChatBoostSourceGiveaway, error) {
-	if c.Source != "giveaway" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "giveaway",
-			Got:      c.Source,
-		}
-	}
-	return &ChatBoostSourceGiveaway{
-		Source:            c.Source,
-		GiveawayMessageId: *c.GiveawayMessageId,
-		User:              c.User,
-		PrizeStarCount:    c.PrizeStarCount,
-		IsUnclaimed:       c.IsUnclaimed,
-	}, nil
 }
 
 // The boost was obtained by subscribing to Telegram Premium or by gifting a Telegram Premium subscription to another user.
@@ -3402,15 +3317,15 @@ type ResponseParameters struct {
 
 // This object represents the content of a media message to be sent. It should be one of
 //
-// - InputMediaAnimation
+//   - [InputMediaAnimation]
 //
-// - InputMediaDocument
+//   - [InputMediaDocument]
 //
-// - InputMediaAudio
+//   - [InputMediaAudio]
 //
-// - InputMediaPhoto
+//   - [InputMediaPhoto]
 //
-// - InputMediaVideo
+//   - [InputMediaVideo]
 type InputMedia interface {
 	SetMedia(string, io.Reader)
 	WriteTo(mw *multipart.Writer) error
@@ -3595,15 +3510,7 @@ func (i InputMediaVideo) WriteTo(mw *multipart.Writer) error {
 		return err
 	}
 	if i.Thumbnail != nil {
-		r, err := i.Thumbnail.Reader()
-		if err != nil {
-			return err
-		}
-		part, err := mw.CreateFormFile("thumbnail", i.Thumbnail.Name())
-		if err != nil {
-			return err
-		}
-		if _, err := io.Copy(part, r); err != nil {
+		if err := i.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
 			return err
 		}
 	}
@@ -3743,15 +3650,7 @@ func (i InputMediaAnimation) WriteTo(mw *multipart.Writer) error {
 		return err
 	}
 	if i.Thumbnail != nil {
-		r, err := i.Thumbnail.Reader()
-		if err != nil {
-			return err
-		}
-		part, err := mw.CreateFormFile("thumbnail", i.Thumbnail.Name())
-		if err != nil {
-			return err
-		}
-		if _, err := io.Copy(part, r); err != nil {
+		if err := i.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
 			return err
 		}
 	}
@@ -3878,15 +3777,7 @@ func (i InputMediaAudio) WriteTo(mw *multipart.Writer) error {
 		return err
 	}
 	if i.Thumbnail != nil {
-		r, err := i.Thumbnail.Reader()
-		if err != nil {
-			return err
-		}
-		part, err := mw.CreateFormFile("thumbnail", i.Thumbnail.Name())
-		if err != nil {
-			return err
-		}
-		if _, err := io.Copy(part, r); err != nil {
+		if err := i.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
 			return err
 		}
 	}
@@ -4002,15 +3893,7 @@ func (i InputMediaDocument) WriteTo(mw *multipart.Writer) error {
 		return err
 	}
 	if i.Thumbnail != nil {
-		r, err := i.Thumbnail.Reader()
-		if err != nil {
-			return err
-		}
-		part, err := mw.CreateFormFile("thumbnail", i.Thumbnail.Name())
-		if err != nil {
-			return err
-		}
-		if _, err := io.Copy(part, r); err != nil {
+		if err := i.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
 			return err
 		}
 	}
@@ -4055,76 +3938,35 @@ func (i InputMediaDocument) WriteTo(mw *multipart.Writer) error {
 // It supports different sources (local path, byte data, or remote identifier) and must be posted using multipart/form-data.
 type InputFile interface {
 	Validate() error
-	Name() string               // Returns the file name.
-	Reader() (io.Reader, error) // Returns an io.Reader for the file content.
-	IsLocal() bool              // Indicates if the file is stored locally.
-} // TODO: replace it with only a function that will write the value into multipart writer
-// if its a remote file it should write a text field
-// otherwise create a form file
-
-// FIXME: replace it with InputFileFromReader
-// InputFileFromPath represents a file stored on the local filesystem.
-type InputFileFromPath struct {
-	FilePath string // Absolute or relative path to the file.
+	WriteTo(*multipart.Writer, string) error
 }
 
-// Returns the base name of the file.
-func (i InputFileFromPath) Name() string {
-	return filepath.Base(i.FilePath)
+// InputFileFromReader represents a file stored on the local filesystem.
+type InputFileFromReader struct {
+	Reader   io.Reader
+	FileName string
 }
 
-// Opens the file for reading.
-func (i InputFileFromPath) Reader() (io.Reader, error) {
-	return os.Open(i.FilePath)
+func (i InputFileFromReader) WriteTo(mw *multipart.Writer, field string) error {
+	part, err := mw.CreateFormFile(field, i.FileName)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(part, i.Reader); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Validates the file path and checks file existence.
-func (i InputFileFromPath) Validate() error {
-	if i.FilePath == "" {
-		return ErrInvalidParam("file path can't be empty")
+func (i InputFileFromReader) Validate() error {
+	if i.Reader == nil {
+		return ErrInvalidParam("reader can't be nil")
 	}
-	if _, err := os.Stat(i.FilePath); os.IsNotExist(err) {
-		return fmt.Errorf("file does not exist at path: %s", i.FilePath)
-	}
-	return nil
-}
-
-// Always returns true.
-func (i InputFileFromPath) IsLocal() bool {
-	return true
-}
-
-// FIXME: remove it, use reader instead
-// InputFileFromBytes represents a file created from in-memory byte data.
-type InputFileFromBytes struct {
-	FileName string // Name of the file (used in upload).
-	Data     []byte // File content as a byte slice.
-}
-
-// Returns the file name.
-func (i InputFileFromBytes) Name() string {
-	return i.FileName
-}
-
-// Creates a reader for the byte slice.
-func (i InputFileFromBytes) Reader() (io.Reader, error) {
-	return bytes.NewReader(i.Data), nil
-}
-
-// Validates the file name and content length.
-func (i InputFileFromBytes) Validate() error {
 	if i.FileName == "" {
 		return ErrInvalidParam("file name can't be empty")
 	}
-	if len(i.Data) == 0 {
-		return ErrInvalidParam("data can't be empty")
-	}
 	return nil
-}
-
-// Always returns true.
-func (i InputFileFromBytes) IsLocal() bool {
-	return true
 }
 
 // InputFileFromRemote represents a file identified by a remote ID or URL.
@@ -4138,19 +3980,8 @@ func (i InputFileFromRemote) Validate() error {
 	return nil
 }
 
-// Returns its value as string
-func (i InputFileFromRemote) Name() string {
-	return string(i)
-}
-
-// Always returns an error (no reader for remote files).
-func (i InputFileFromRemote) Reader() (io.Reader, error) {
-	return nil, fmt.Errorf("remote file can't have reader")
-}
-
-// Always returns false.
-func (i InputFileFromRemote) IsLocal() bool {
-	return false
+func (i InputFileFromRemote) WriteTo(mw *multipart.Writer, field string) error {
+	return mw.WriteField(field, string(i))
 }
 
 // This object describes the paid media to be sent. Currently, it can be one of
@@ -4159,16 +3990,14 @@ func (i InputFileFromRemote) IsLocal() bool {
 //
 // - InputPaidMediaVideo
 type InputPaidMedia interface {
-	SetPaidMedia(r io.Reader)
-	IsLocalFile() bool
-	Detach() string
-	GetReader() io.Reader
+	SetPaidMedia(string, io.Reader)
+	WriteTo(mw *multipart.Writer) error
 	Validate() error
 }
 
 // The paid media to send is a photo.
 //
-// IMPORTANT: It is strongly recommended to use the SetInputPaidMedia method to ensure
+// IMPORTANT: It is strongly recommended to use the SetPaidMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputPaidMediaPhoto struct {
@@ -4179,7 +4008,9 @@ type InputPaidMediaPhoto struct {
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
 	Media string `json:"media"`
-	isNew bool   `json:"-"`
+
+	reader    io.Reader
+	mediaName string
 }
 
 func (i InputPaidMediaPhoto) Validate() error {
@@ -4189,31 +4020,45 @@ func (i InputPaidMediaPhoto) Validate() error {
 	if strings.TrimSpace(i.Media) == "" {
 		return ErrInvalidParam("media parameter can't be empty")
 	}
+	return nil
+}
 
-	if i.isNew {
-		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		// }
+func (i *InputPaidMediaPhoto) SetPaidMedia(media string, r io.Reader) {
+	i.mediaName = media
+	i.reader = r
+	if r == nil {
+		i.Media = media
+	} else {
+		i.Media = "attach://" + media
+	}
+}
+
+func (i InputPaidMediaPhoto) WriteTo(mw *multipart.Writer) error {
+	// FIXME: maybe i shouldn`t even store "type" field and just write hard-coded values?
+	// i mean, validation would be easier and there would be no way to fail a request because of type field
+	// and there's no possible way where user may use this field for something
+	// like he already knows the type of the media that he's going to send
+	if err := mw.WriteField("type", i.Type); err != nil {
+		return err
+	}
+	if err := mw.WriteField("media", i.Media); err != nil {
+		return err
+	}
+	if i.reader != nil {
+		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.reader); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func (i *InputPaidMediaPhoto) SetInputPaidMedia(media string, isNew bool) {
-	if isNew {
-		// if url_regex.MatchString(media) {
-		// 	i.Media = media
-		// } else {
-		// 	i.Media = "attach://" + media
-		// }
-	} else {
-		i.Media = media
-		i.isNew = false
-	}
-}
-
 // The paid media to send is a video.
 //
-// IMPORTANT: It is strongly recommended to use the SetInputPaidMedia method to ensure
+// IMPORTANT: It is strongly recommended to use the SetPaidMedia method to ensure
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputPaidMediaVideo struct {
@@ -4230,7 +4075,7 @@ type InputPaidMediaVideo struct {
 	// Thumbnails can't be reused and can be only uploaded as a new file,
 	// so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail *InputFile `json:"thumbnail,omitempty"`
+	Thumbnail InputFile `json:"thumbnail,omitempty"`
 	// Optional. Video width
 	Width *int `json:"width,omitempty"`
 	// Optional. Video height
@@ -4239,19 +4084,18 @@ type InputPaidMediaVideo struct {
 	Duration *int `json:"duration,omitempty"`
 	// Optional. Pass True if the uploaded video is suitable for streaming
 	SupportsStreaming *bool `json:"supports_streaming,omitempty"`
-	isNew             bool  `json:"-"`
+
+	reader    io.Reader
+	mediaName string
 }
 
-func (i *InputPaidMediaVideo) SetInputPaidMedia(media string, isNew bool) {
-	if isNew {
-		// if url_regex.MatchString(media) {
-		// 	i.Media = media
-		// } else {
-		// 	i.Media = "attach://" + media
-		// }
-	} else {
+func (i *InputPaidMediaVideo) SetPaidMedia(media string, r io.Reader) {
+	i.mediaName = media
+	i.reader = r
+	if r == nil {
 		i.Media = media
-		i.isNew = false
+	} else {
+		i.Media = "attach://" + media
 	}
 }
 
@@ -4262,11 +4106,41 @@ func (i InputPaidMediaVideo) Validate() error {
 	if strings.TrimSpace(i.Media) == "" {
 		return ErrInvalidParam("media parameter can't be empty")
 	}
+	return nil
+}
 
-	if i.isNew {
-		// if !url_regex.MatchString(i.Media) && !attachment_regex.MatchString(i.Media) {
-		// 	return ErrInvalidParam("invalid media parameter. please refer to https://core.telegram.org/bots/api#sending-files")
-		// }
+func (i InputPaidMediaVideo) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", i.Type); err != nil {
+		return err
+	}
+	if err := mw.WriteField("media", i.Media); err != nil {
+		return err
+	}
+
+	if i.Thumbnail != nil {
+		if err := i.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+			return err
+		}
+	}
+	if i.Width != nil {
+		if err := mw.WriteField("width", fmt.Sprint(i.Width)); err != nil {
+			return err
+		}
+	}
+	if i.Height != nil {
+		if err := mw.WriteField("height", fmt.Sprint(i.Height)); err != nil {
+			return err
+		}
+	}
+	if i.Duration != nil {
+		if err := mw.WriteField("duration", fmt.Sprint(i.Duration)); err != nil {
+			return err
+		}
+	}
+	if i.SupportsStreaming != nil {
+		if err := mw.WriteField("supports_streaming", fmt.Sprint(i.SupportsStreaming)); err != nil {
+			return err
+		}
 	}
 	return nil
 }

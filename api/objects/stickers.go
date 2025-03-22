@@ -3,7 +3,6 @@ package objects
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"mime/multipart"
 	"slices"
 )
@@ -163,22 +162,8 @@ func (i InputSticker) WriteTo(mw *multipart.Writer) error {
 		}
 	}
 
-	if !i.Sticker.IsLocal() {
-		if err := mw.WriteField("sticker", i.Sticker.Name()); err != nil {
-			return err
-		}
-	} else {
-		r, err := i.Sticker.Reader()
-		if err != nil {
-			return err
-		}
-		part, err := mw.CreateFormFile("sticker", i.Sticker.Name())
-		if err != nil {
-			return err
-		}
-		if _, err := io.Copy(part, r); err != nil {
-			return err
-		}
+	if err := i.Sticker.WriteTo(mw, "sticker"); err != nil {
+		return err
 	}
 	return nil
 }

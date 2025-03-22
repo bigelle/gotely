@@ -51,21 +51,9 @@ func (s *SetWebhook) Reader() (io.Reader, error) {
 			return
 		}
 		if s.Certificate != nil {
-			if c, ok := (s.Certificate).(objects.InputFileFromRemote); ok {
-				part, err := mw.CreateFormFile("certificate", c.Name())
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				r, err := c.Reader()
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				if _, err := io.Copy(part, r); err != nil {
-					pw.CloseWithError(err)
-					return
-				}
+			if err := s.Certificate.WriteTo(mw, "certificate"); err != nil {
+				pw.CloseWithError(err)
+				return
 			}
 		}
 		if s.IpAddress != nil {

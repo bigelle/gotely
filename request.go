@@ -108,7 +108,6 @@ func SendRequestWith(body Method, dest any, token string, opts ...RequestOption)
 	if !result.Ok {
 		return fmt.Errorf("bad request: %s", *result.Description)
 	}
-	// TODO: maybe use decoder
 	return json.NewDecoder(bytes.NewReader(result.Result)).Decode(dest)
 }
 

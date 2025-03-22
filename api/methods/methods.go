@@ -416,17 +416,7 @@ func (s *SendPhoto) Reader() (io.Reader, error) {
 				return
 			}
 		}
-		part, err := mw.CreateFormFile("photo", s.Photo.Name())
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		r, err := s.Photo.Reader()
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		if _, err := io.Copy(part, r); err != nil {
+		if err := s.Photo.WriteTo(mw, "photo"); err != nil {
 			pw.CloseWithError(err)
 			return
 		}
@@ -682,46 +672,14 @@ func (s *SendAudio) Reader() (io.Reader, error) {
 			}
 		}
 
-		part, err := mw.CreateFormFile("audio", s.Audio.Name())
-		if err != nil {
+		if err := s.Audio.WriteTo(mw, "audio"); err != nil {
 			pw.CloseWithError(err)
 			return
 		}
-		reader, err := s.Audio.Reader()
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		_, err = io.Copy(part, reader)
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-
-		// FIXME
 		if s.Thumbnail != nil {
-			switch (s.Thumbnail).(type) {
-			case objects.InputFileFromRemote:
-				if err := mw.WriteField("thumbnail", fmt.Sprint(s.Thumbnail)); err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-			default:
-				part, err := mw.CreateFormFile("thumbnail", s.Thumbnail.Name())
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				reader, err := s.Thumbnail.Reader()
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				_, err = io.Copy(part, reader)
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
+			if err := s.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+				pw.CloseWithError(err)
+				return
 			}
 		}
 	}()
@@ -889,46 +847,14 @@ func (s *SendDocument) Reader() (io.Reader, error) {
 			}
 		}
 
-		part, err := mw.CreateFormFile("document", s.Document.Name())
-		if err != nil {
+		if err := s.Document.WriteTo(mw, "document"); err != nil {
 			pw.CloseWithError(err)
 			return
 		}
-		reader, err := s.Document.Reader()
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		_, err = io.Copy(part, reader)
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-
-		// FIXME
 		if s.Thumbnail != nil {
-			switch (s.Thumbnail).(type) {
-			case objects.InputFileFromRemote:
-				if err := mw.WriteField("thumbnail", fmt.Sprint(s.Thumbnail)); err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-			default:
-				part, err := mw.CreateFormFile("thumbnail", s.Thumbnail.Name())
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				reader, err := s.Thumbnail.Reader()
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				_, err = io.Copy(part, reader)
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
+			if err := s.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+				pw.CloseWithError(err)
+				return
 			}
 		}
 	}()
@@ -1114,46 +1040,14 @@ func (s *SendVideo) Reader() (io.Reader, error) {
 			}
 		}
 
-		part, err := mw.CreateFormFile("video", s.Video.Name())
-		if err != nil {
+		if err := s.Video.WriteTo(mw, "video"); err != nil {
 			pw.CloseWithError(err)
 			return
 		}
-		reader, err := s.Video.Reader()
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		_, err = io.Copy(part, reader)
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-
-		// FIXME
 		if s.Thumbnail != nil {
-			switch (s.Thumbnail).(type) {
-			case objects.InputFileFromRemote:
-				if err := mw.WriteField("thumbnail", fmt.Sprint(s.Thumbnail)); err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-			default:
-				part, err := mw.CreateFormFile("thumbnail", s.Thumbnail.Name())
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				reader, err := s.Thumbnail.Reader()
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				_, err = io.Copy(part, reader)
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
+			if err := s.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+				pw.CloseWithError(err)
+				return
 			}
 		}
 	}()
@@ -1371,46 +1265,14 @@ func (s *SendAnimation) Reader() (io.Reader, error) {
 			}
 		}
 
-		part, err := mw.CreateFormFile("animation", s.Animation.Name())
-		if err != nil {
+		if err := s.Animation.WriteTo(mw, "animation"); err != nil {
 			pw.CloseWithError(err)
 			return
 		}
-		reader, err := s.Animation.Reader()
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		_, err = io.Copy(part, reader)
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-
-		// FIXME
 		if s.Thumbnail != nil {
-			switch (s.Thumbnail).(type) {
-			case objects.InputFileFromRemote:
-				if err := mw.WriteField("thumbnail", fmt.Sprint(s.Thumbnail)); err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-			default:
-				part, err := mw.CreateFormFile("thumbnail", s.Thumbnail.Name())
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				reader, err := s.Thumbnail.Reader()
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				_, err = io.Copy(part, reader)
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
+			if err := s.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+				pw.CloseWithError(err)
+				return
 			}
 		}
 	}()
@@ -1573,18 +1435,7 @@ func (s *SendVoice) Reader() (io.Reader, error) {
 			}
 		}
 
-		part, err := mw.CreateFormFile("voice", s.Voice.Name())
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		reader, err := s.Voice.Reader()
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		_, err = io.Copy(part, reader)
-		if err != nil {
+		if err := s.Voice.WriteTo(mw, "voice"); err != nil {
 			pw.CloseWithError(err)
 			return
 		}
@@ -1737,46 +1588,14 @@ func (s *SendVideoNote) Reader() (io.Reader, error) {
 			}
 		}
 
-		part, err := mw.CreateFormFile("video_note", s.VideoNote.Name())
-		if err != nil {
+		if err := s.VideoNote.WriteTo(mw, "video_note"); err != nil {
 			pw.CloseWithError(err)
 			return
 		}
-		reader, err := s.VideoNote.Reader()
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		_, err = io.Copy(part, reader)
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-
-		// FIXME: do it in other way after InputFile changes
 		if s.Thumbnail != nil {
-			switch (s.Thumbnail).(type) {
-			case objects.InputFileFromRemote:
-				if err := mw.WriteField("thumbnail", fmt.Sprint(s.Thumbnail)); err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-			default:
-				part, err := mw.CreateFormFile("thumbnail", s.Thumbnail.Name())
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				reader, err := s.Thumbnail.Reader()
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
-				_, err = io.Copy(part, reader)
-				if err != nil {
-					pw.CloseWithError(err)
-					return
-				}
+			if err := s.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+				pw.CloseWithError(err)
+				return
 			}
 		}
 	}()
@@ -1830,6 +1649,8 @@ type SendPaidMedia struct {
 	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	// instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+
+	contentType string
 }
 
 func (s SendPaidMedia) Validate() error {
@@ -1865,11 +1686,98 @@ func (s SendPaidMedia) Endpoint() string {
 // FIXME should be multipart
 // depends on paid media interface
 func (s SendPaidMedia) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
+
+	go func() {
+		defer pw.Close()
+		defer mw.Close()
+
+		if err := mw.WriteField("chat_id", fmt.Sprint(s.ChatId)); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := mw.WriteField("star_count", fmt.Sprint(s.StarCount)); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		for _, media := range s.Media {
+			if err := media.WriteTo(mw); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+
+		if s.BusinessConnectionId != nil {
+			if err := mw.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.Payload != nil {
+			if err := mw.WriteField("payload", *s.Payload); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.Caption != nil {
+			if err := mw.WriteField("caption", *s.Caption); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ParseMode != nil {
+			if err := mw.WriteField("parse_mode", *s.ParseMode); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.CaptionEntities != nil {
+			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ShowCaptionAboveMedia != nil {
+			if err := mw.WriteField("show_caption_above_media", fmt.Sprint(*s.ShowCaptionAboveMedia)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.DisableNotification != nil {
+			if err := mw.WriteField("disable_notification", fmt.Sprint(*s.DisableNotification)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ProtectContent != nil {
+			if err := mw.WriteField("protect_content", fmt.Sprint(*s.ProtectContent)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.AllowPaidBroadcast != nil {
+			if err := mw.WriteField("allow_paid_broadcast", fmt.Sprint(*s.AllowPaidBroadcast)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ReplyParameters != nil {
+			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ReplyMarkup != nil {
+			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+	}()
+
+	return pr, nil
 }
 
 func (s SendPaidMedia) ContentType() string {
@@ -3429,17 +3337,7 @@ func (s SetChatPhoto) Reader() (io.Reader, error) {
 			pw.CloseWithError(err)
 			return
 		}
-		part, err := mw.CreateFormFile("photo", s.Photo.Name())
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		reader, err := s.Photo.Reader()
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
-		if _, err = io.Copy(part, reader); err != nil {
+		if err := s.Photo.WriteTo(mw, "photo"); err != nil {
 			pw.CloseWithError(err)
 			return
 		}
@@ -4867,7 +4765,7 @@ func (s SetChatMenuButton) ContentType() string {
 }
 
 // Use this method to get the current value of the bot's menu button in a private chat, or the default menu button.
-// Returns [objects.MenuButton] on success.
+// Returns [objects.MenuButtonResponse] on success.
 type GetChatMenuButton struct {
 	// Unique identifier for the target private chat. If not specified, default bot's menu button will be returned
 	ChatId *int `json:"chat_id,omitempty"`
