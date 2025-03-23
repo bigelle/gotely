@@ -1,3 +1,4 @@
+// TODO: replace marshal json with encoder
 package methods
 
 import (

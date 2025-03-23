@@ -3,6 +3,7 @@ package objects
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -295,15 +296,13 @@ type AffiliateInfo struct {
 //
 // - TransactionPartnerOther
 type TransactionPartner struct {
-	// FIXME: FINALLY FOUND A BETTER SOLUTION
-	// should make an object that contains EVERY POSSIBLE FIELD
-	// and has a method that returns only that type THAT YOU NEED
-	// OR an error if you tried to use wrong method
-	TransactionPartnerInterface
-}
-
-type TransactionPartnerInterface interface {
-	GetTransactionPartnerType() string
+	Type             string
+	User             *TransactionPartnerUser
+	AffiliateProgram *TransactionPartnerAffiliateProgram
+	Fragment         *TransactionPartnerFragment
+	TelegramAds      *TransactionPartnerTelegramAds
+	TelegramApi      *TransactionPartnerTelegramApi
+	Other            *TransactionPartnerOther
 }
 
 func (t *TransactionPartner) UnmarshalJSON(data []byte) error {
@@ -314,46 +313,48 @@ func (t *TransactionPartner) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	// FIXME: probably better to use decoder
 	switch raw.Type {
 	case "user":
 		tmp := TransactionPartnerUser{}
 		if err := json.Unmarshal(data, &tmp); err != nil {
 			return err
 		}
-		t.TransactionPartnerInterface = tmp
+		t.User = &tmp
 	case "affiliate_program":
 		tmp := TransactionPartnerAffiliateProgram{}
 		if err := json.Unmarshal(data, &tmp); err != nil {
 			return err
 		}
-		t.TransactionPartnerInterface = tmp
+		t.AffiliateProgram = &tmp
 	case "fragment":
 		tmp := TransactionPartnerFragment{}
 		if err := json.Unmarshal(data, &tmp); err != nil {
 			return err
 		}
-		t.TransactionPartnerInterface = tmp
+		t.Fragment = &tmp
 	case "telegram_ads":
 		tmp := TransactionPartnerTelegramAds{}
 		if err := json.Unmarshal(data, &tmp); err != nil {
 			return err
 		}
-		t.TransactionPartnerInterface = tmp
+		t.TelegramAds = &tmp
 	case "telegram_api":
 		tmp := TransactionPartnerTelegramApi{}
 		if err := json.Unmarshal(data, &tmp); err != nil {
 			return err
 		}
-		t.TransactionPartnerInterface = tmp
+		t.TelegramApi = &tmp
 	case "other":
 		tmp := TransactionPartnerOther{}
 		if err := json.Unmarshal(data, &tmp); err != nil {
 			return err
 		}
-		t.TransactionPartnerInterface = tmp
+		t.Other = &tmp
 	default:
-		return errors.New("type must be fragment, user, telegram_ads or other")
+		return fmt.Errorf("unknown transaction partner type: %s", raw.Type)
 	}
+	t.Type = raw.Type
 	return nil
 }
 
@@ -377,10 +378,6 @@ type TransactionPartnerUser struct {
 	Gift *Gift `json:"gift,omitempty"`
 }
 
-func (t TransactionPartnerUser) GetTransactionPartnerType() string {
-	return "user"
-}
-
 // Describes the affiliate program that issued the affiliate commission received via this transaction.
 type TransactionPartnerAffiliateProgram struct {
 	// Type of the transaction partner, always “affiliate_program”
@@ -391,10 +388,6 @@ type TransactionPartnerAffiliateProgram struct {
 	CommissionPerMile int `json:"commission_per_mile"`
 }
 
-func (TransactionPartnerAffiliateProgram) GetTransactionPartnerType() string {
-	return "affiliate_program"
-}
-
 // Describes a withdrawal transaction with Fragment.
 type TransactionPartnerFragment struct {
 	// Type of the transaction partner, always “fragment”
@@ -403,18 +396,10 @@ type TransactionPartnerFragment struct {
 	WithdrawalState *RevenueWithdrawalState `json:"withdrawal_state,omitempty"`
 }
 
-func (t TransactionPartnerFragment) GetTransactionPartnerType() string {
-	return "fragment"
-}
-
 // Describes a withdrawal transaction to the Telegram Ads platform.
 type TransactionPartnerTelegramAds struct {
 	// Type of the transaction partner, always “telegram_ads”
 	Type string `json:"type"`
-}
-
-func (t TransactionPartnerTelegramAds) GetTransactionPartnerType() string {
-	return "telegram_ads"
 }
 
 // Describes a transaction with payment for https://core.telegram.org/bots/api#paid-broadcasts.
@@ -425,18 +410,10 @@ type TransactionPartnerTelegramApi struct {
 	RequestCount int `json:"request_count"`
 }
 
-func (t TransactionPartnerTelegramApi) GetTransactionPartnerType() string {
-	return "telegram_api"
-}
-
 // Describes a transaction with an unknown source or recipient.
 type TransactionPartnerOther struct {
 	// Type of the transaction partner, always “other”
 	Type string `json:"type"`
-}
-
-func (t TransactionPartnerOther) GetTransactionPartnerType() string {
-	return "other"
 }
 
 // Describes a Telegram Star transaction.

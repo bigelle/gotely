@@ -1,3 +1,4 @@
+// TODO: replace marshal json with encoder
 package methods
 
 import (
@@ -1683,8 +1684,6 @@ func (s SendPaidMedia) Endpoint() string {
 	return "sendPaidMedia"
 }
 
-// FIXME should be multipart
-// depends on paid media interface
 func (s SendPaidMedia) Reader() (io.Reader, error) {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
@@ -1781,7 +1780,10 @@ func (s SendPaidMedia) Reader() (io.Reader, error) {
 }
 
 func (s SendPaidMedia) ContentType() string {
-	return "application/json"
+	if s.contentType == "" {
+		return "multipart/form-data"
+	}
+	return s.contentType
 }
 
 // Use this method to send a group of photos, videos, documents or audios as an album.

@@ -1,3 +1,4 @@
+// TODO: replace marshal json with encoder
 package methods
 
 import (
@@ -10,6 +11,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/bigelle/gotely/api"
 	"github.com/bigelle/gotely/api/objects"
 )
 
@@ -47,6 +49,8 @@ type SendSticker struct {
 	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
 	// instructions to remove a reply keyboard or to force a reply from the user
 	ReplyMarkup *objects.ReplyMarkup `json:"reply_markup,omitempty"`
+
+	contentType string
 }
 
 func (s SendSticker) Validate() error {
@@ -64,15 +68,86 @@ func (s SendSticker) Endpoint() string {
 }
 
 func (s SendSticker) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
-} // TODO: multipart
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
+
+	go func() {
+		defer pw.Close()
+		defer mw.Close()
+
+		if err := mw.WriteField("chat_id", s.ChatId); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := s.Sticker.WriteTo(mw, "sticker"); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+
+		if s.BusinessConnectionId != nil {
+			if err := mw.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.MessageThreadId != nil {
+			if err := mw.WriteField("message_thread_id", fmt.Sprint(*s.MessageThreadId)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.Emoji != nil {
+			if err := mw.WriteField("emoji", *s.Emoji); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.DisableNotification != nil {
+			if err := mw.WriteField("disable_notification", fmt.Sprint(*s.DisableNotification)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ProtectContent != nil {
+			if err := mw.WriteField("protect_content", fmt.Sprint(*s.ProtectContent)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.AllowPaidBroadcast != nil {
+			if err := mw.WriteField("allow_paid_broadcast", fmt.Sprint(*s.AllowPaidBroadcast)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.MessageEffectId != nil {
+			if err := mw.WriteField("message_effect_id", *s.MessageEffectId); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ReplyMarkup != nil {
+			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ReplyParameters != nil {
+			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+	}()
+	return pr, nil
+}
 
 func (s SendSticker) ContentType() string {
-	return "application/json"
+	if s.contentType == "" {
+		return "multipart/form-data"
+	}
+	return s.contentType
 }
 
 // Use this method to get a sticker set.

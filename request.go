@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // ApiResponse represents a response from Telegram Bot API
@@ -76,14 +77,13 @@ func SendRequestWith(body Method, dest any, token string, opts ...RequestOption)
 
 	cfg := RequestConfig{
 		Client: http.DefaultClient,
-		// TODO: replace %s placeholders with <token> and <method>
-		ApiUrl: "https://api.telegram.org/bot%s/%s",
+		ApiUrl: "https://api.telegram.org/bot<token>/<method>",
 	}
 	for _, opt := range opts {
 		opt(&cfg)
 	}
 
-	url := fmt.Sprintf(cfg.ApiUrl, token, body.Endpoint())
+	url := formatUrl(cfg.ApiUrl, token, body.Endpoint())
 	req, err := http.NewRequest(http.MethodPost, url, r)
 	if err != nil {
 		return err
@@ -141,4 +141,10 @@ func WithUrl(url string) RequestOption {
 	return func(rc *RequestConfig) {
 		rc.ApiUrl = url
 	}
+}
+
+func formatUrl(template, token, method string) string {
+	url := strings.Replace(template, "<token>", token, 1)
+	url = strings.Replace(url, "<method>", method, 1)
+	return url
 }

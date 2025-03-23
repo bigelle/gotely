@@ -71,7 +71,7 @@ func New(url, token string, onUpdate bot.OnUpdateFunc, opts ...Option) *WebhookB
 		Server:          http.Server{Addr: ":80"},
 		Client:          http.DefaultClient,
 		WebhookEndpoint: "/webhook",
-		ApiUrl:          "https://api.telegram.org/bot%s/%s", // FIXME add support for <token> <method> placeholders
+		ApiUrl:          "https://api.telegram.org/bot<token>/<endpoint>",
 		Token:           token,
 		OnUpdate:        onUpdate,
 		Middleware:      []bot.MiddlewareFunc{recoveryMiddleware},

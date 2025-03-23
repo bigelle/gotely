@@ -1,3 +1,4 @@
+// TODO: replace marshal json with encoder
 package methods
 
 import (
@@ -183,6 +184,8 @@ type EditMessageMedia struct {
 	InlineMessageId *string `json:"inline_message_id,omitempty"`
 	// A JSON-serialized object for a new inline keyboard.
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+
+	contentType string
 } // TODO multipart
 
 func (e EditMessageMedia) Validate() error {

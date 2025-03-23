@@ -90,7 +90,7 @@ func New(token string, onUpdate bot.OnUpdateFunc, opts ...Option) *LongPollingBo
 		onUpdate: onUpdate,
 		// no middleware
 		client:  http.DefaultClient,
-		apiUrl:  "https://api.telegram.org/bot%s/%s",
+		apiUrl:  "https://api.telegram.org/bot<token>/<method>",
 		limit:   100,
 		timeout: 30,
 		// all updates are allowed
