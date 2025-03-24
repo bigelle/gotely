@@ -1,12 +1,10 @@
-// TODO: replace marshal json with encoder
 package methods
 
 import (
-	"bytes"
-	"encoding/json"
 	"io"
 	"strings"
 
+	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/api/objects"
 )
 
@@ -102,19 +100,19 @@ type SendInvoice struct {
 
 func (s SendInvoice) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(s.Title) < 1 || len(s.Title) > 32 {
-		return objects.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
+		return gotely.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
 	}
 	if len(s.Description) < 1 || len(s.Description) > 255 {
-		return objects.ErrInvalidParam("description parameter must be between 1 and 255 characters long")
+		return gotely.ErrInvalidParam("description parameter must be between 1 and 255 characters long")
 	}
 	if len([]byte(s.Payload)) < 1 || len([]byte(s.Payload)) > 128 {
-		return objects.ErrInvalidParam("payload parameter must be between 1 and 128 bytes long")
+		return gotely.ErrInvalidParam("payload parameter must be between 1 and 128 bytes long")
 	}
 	if len(s.Prices) < 1 {
-		return objects.ErrInvalidParam("prices parameter can't be empty")
+		return gotely.ErrInvalidParam("prices parameter can't be empty")
 	}
 	for _, price := range s.Prices {
 		if err := price.Validate(); err != nil {
@@ -123,17 +121,17 @@ func (s SendInvoice) Validate() error {
 	}
 	if s.SuggestedTipAmounts != nil {
 		if len(*s.SuggestedTipAmounts) > 4 {
-			return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
+			return gotely.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
 		}
 		for i := len(*s.SuggestedTipAmounts); i >= 0; i-- {
 			if (*s.SuggestedTipAmounts)[i] < 0 {
-				return objects.ErrInvalidParam("suggested_tip_amounts must be positive")
+				return gotely.ErrInvalidParam("suggested_tip_amounts must be positive")
 			}
 			if (*s.SuggestedTipAmounts)[i-1] > (*s.SuggestedTipAmounts)[i] {
-				return objects.ErrInvalidParam("suggested_tip_amounts must be passed in a strictly increased order")
+				return gotely.ErrInvalidParam("suggested_tip_amounts must be passed in a strictly increased order")
 			}
 			if (*s.SuggestedTipAmounts)[i] > *s.MaxTipAmount {
-				return objects.ErrInvalidParam("suggested_tip_amounts must not exceed max_tip_amount")
+				return gotely.ErrInvalidParam("suggested_tip_amounts must not exceed max_tip_amount")
 			}
 		}
 	}
@@ -144,12 +142,8 @@ func (s SendInvoice) Endpoint() string {
 	return "sendInvoice"
 }
 
-func (s SendInvoice) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SendInvoice) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SendInvoice) ContentType() string {
@@ -232,16 +226,16 @@ type CreateInvoiceLink struct {
 
 func (c CreateInvoiceLink) Validate() error {
 	if len(c.Title) < 1 || len(c.Title) > 32 {
-		return objects.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
+		return gotely.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
 	}
 	if len(c.Description) < 1 || len(c.Description) > 255 {
-		return objects.ErrInvalidParam("description parameter must be between 1 and 255 characters long")
+		return gotely.ErrInvalidParam("description parameter must be between 1 and 255 characters long")
 	}
 	if len([]byte(c.Payload)) < 1 || len([]byte(c.Payload)) > 128 {
-		return objects.ErrInvalidParam("payload parameter must be between 1 and 128 bytes long")
+		return gotely.ErrInvalidParam("payload parameter must be between 1 and 128 bytes long")
 	}
 	if len(c.Prices) < 1 {
-		return objects.ErrInvalidParam("prices parameter can't be empty")
+		return gotely.ErrInvalidParam("prices parameter can't be empty")
 	}
 	for _, price := range c.Prices {
 		if err := price.Validate(); err != nil {
@@ -250,17 +244,17 @@ func (c CreateInvoiceLink) Validate() error {
 	}
 	if c.SuggestedTipAmounts != nil {
 		if len(*c.SuggestedTipAmounts) > 4 {
-			return objects.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
+			return gotely.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
 		}
 		for i := len(*c.SuggestedTipAmounts); i >= 0; i-- {
 			if (*c.SuggestedTipAmounts)[i] < 0 {
-				return objects.ErrInvalidParam("suggested_tip_amounts must be positive")
+				return gotely.ErrInvalidParam("suggested_tip_amounts must be positive")
 			}
 			if (*c.SuggestedTipAmounts)[i-1] > (*c.SuggestedTipAmounts)[i] {
-				return objects.ErrInvalidParam("suggested_tip_amounts must be passed in a strictly increased order")
+				return gotely.ErrInvalidParam("suggested_tip_amounts must be passed in a strictly increased order")
 			}
 			if (*c.SuggestedTipAmounts)[i] > *c.MaxTipAmount {
-				return objects.ErrInvalidParam("suggested_tip_amounts must not exceed max_tip_amount")
+				return gotely.ErrInvalidParam("suggested_tip_amounts must not exceed max_tip_amount")
 			}
 		}
 	}
@@ -271,12 +265,8 @@ func (s CreateInvoiceLink) Endpoint() string {
 	return "createInvoiceLink"
 }
 
-func (s CreateInvoiceLink) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s CreateInvoiceLink) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s CreateInvoiceLink) ContentType() string {
@@ -304,13 +294,13 @@ type AnswerShippingQuery struct {
 
 func (a AnswerShippingQuery) Validate() error {
 	if strings.TrimSpace(a.ShippingQueryId) == "" {
-		return objects.ErrInvalidParam("shipping_query_id parameter can't be empty")
+		return gotely.ErrInvalidParam("shipping_query_id parameter can't be empty")
 	}
 	if a.Ok && a.ShippingOptions == nil {
-		return objects.ErrInvalidParam("shipping_options parameter can't be empty if ok == true")
+		return gotely.ErrInvalidParam("shipping_options parameter can't be empty if ok == true")
 	}
 	if !a.Ok && a.ErrorMessage == nil {
-		return objects.ErrInvalidParam("error_message parameter can't be empty if ok == false")
+		return gotely.ErrInvalidParam("error_message parameter can't be empty if ok == false")
 	}
 	if a.ShippingOptions != nil {
 		for _, opt := range *a.ShippingOptions {
@@ -326,12 +316,8 @@ func (s AnswerShippingQuery) Endpoint() string {
 	return "answerShippingQuery"
 }
 
-func (s AnswerShippingQuery) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s AnswerShippingQuery) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s AnswerShippingQuery) ContentType() string {
@@ -361,10 +347,10 @@ type AnswerPreCheckoutQuery struct {
 
 func (a AnswerPreCheckoutQuery) Validate() error {
 	if strings.TrimSpace(a.PreCheckoutQueryId) == "" {
-		return objects.ErrInvalidParam("pre_checkout_query_id parameter can't be empty")
+		return gotely.ErrInvalidParam("pre_checkout_query_id parameter can't be empty")
 	}
 	if !a.Ok && a.ErrorMessage == nil {
-		return objects.ErrInvalidParam("error_message parameter can't be empty if ok == false")
+		return gotely.ErrInvalidParam("error_message parameter can't be empty if ok == false")
 	}
 	return nil
 }
@@ -373,12 +359,8 @@ func (s AnswerPreCheckoutQuery) Endpoint() string {
 	return "answerPreCheckoutQuery"
 }
 
-func (s AnswerPreCheckoutQuery) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s AnswerPreCheckoutQuery) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s AnswerPreCheckoutQuery) ContentType() string {
@@ -397,7 +379,7 @@ type GetStarTransactions struct {
 func (g GetStarTransactions) Validate() error {
 	if g.Limit != nil {
 		if *g.Limit < 1 || *g.Limit > 100 {
-			return objects.ErrInvalidParam("limit parameter must be between 1 and 100")
+			return gotely.ErrInvalidParam("limit parameter must be between 1 and 100")
 		}
 	}
 	return nil
@@ -407,12 +389,8 @@ func (s GetStarTransactions) Endpoint() string {
 	return "getStarTransactions"
 }
 
-func (s GetStarTransactions) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetStarTransactions) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetStarTransactions) ContentType() string {
@@ -431,10 +409,10 @@ type RefundStarPayment struct {
 
 func (r RefundStarPayment) Validate() error {
 	if r.UserId <= 0 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty or negative")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty or negative")
 	}
 	if strings.TrimSpace(r.TelegramPaymentChargeId) == "" {
-		return objects.ErrInvalidParam("telegram_payment_charge_id parameter can't be empty")
+		return gotely.ErrInvalidParam("telegram_payment_charge_id parameter can't be empty")
 	}
 	return nil
 }
@@ -443,12 +421,8 @@ func (s RefundStarPayment) Endpoint() string {
 	return "refundStarPayment"
 }
 
-func (s RefundStarPayment) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s RefundStarPayment) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s RefundStarPayment) ContentType() string {
@@ -473,10 +447,10 @@ type EditUserStarSubscription struct {
 
 func (e EditUserStarSubscription) Validate() error {
 	if e.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.TelegramPaymentChargeId) == "" {
-		return objects.ErrInvalidParam("telegram_payment_charge_id parameter can't be empty")
+		return gotely.ErrInvalidParam("telegram_payment_charge_id parameter can't be empty")
 	}
 	return nil
 }
@@ -485,12 +459,8 @@ func (s EditUserStarSubscription) Endpoint() string {
 	return "editUserStarSubscription"
 }
 
-func (s EditUserStarSubscription) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s EditUserStarSubscription) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s EditUserStarSubscription) ContentType() string {

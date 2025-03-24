@@ -1,15 +1,12 @@
-// TODO: replace marshal json with encoder
 package methods
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"strings"
 
-	"github.com/bigelle/gotely/api"
+	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/api/objects"
 )
 
@@ -53,10 +50,10 @@ type SendMessage struct {
 func (s SendMessage) Validate() error {
 	l := len(s.Text)
 	if l < 1 || l > 4096 {
-		return objects.ErrInvalidParam("text parameter must be between 1 and 4096 characters")
+		return gotely.ErrInvalidParam("text parameter must be between 1 and 4096 characters")
 	}
 	if s.ChatId == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.LinkPreviewOptions != nil {
 		if err := s.LinkPreviewOptions.Validate(); err != nil {
@@ -75,12 +72,8 @@ func (s SendMessage) Endpoint() string {
 	return "sendMessage"
 }
 
-func (s SendMessage) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SendMessage) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SendMessage) ContentType() string {
@@ -110,13 +103,13 @@ type ForwardMessage struct {
 
 func (f ForwardMessage) Validate() error {
 	if strings.TrimSpace(f.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(f.FromChatId) == "" {
-		return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("from_chat_id parameter can't be empty")
 	}
 	if f.MessageId < 1 {
-		return objects.ErrInvalidParam("message_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_id parameter can't be empty")
 	}
 	return nil
 }
@@ -125,12 +118,8 @@ func (s ForwardMessage) Endpoint() string {
 	return "forwardMessage"
 }
 
-func (s ForwardMessage) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s ForwardMessage) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s ForwardMessage) ContentType() string {
@@ -164,13 +153,13 @@ type ForwardMessages struct {
 
 func (f ForwardMessages) Validate() error {
 	if strings.TrimSpace(f.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(f.FromChatId) == "" {
-		return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("from_chat_id parameter can't be empty")
 	}
 	if len(f.MessageIds) < 1 {
-		return objects.ErrInvalidParam("message_ids parameter can't be empty")
+		return gotely.ErrInvalidParam("message_ids parameter can't be empty")
 	}
 	return nil
 }
@@ -179,12 +168,8 @@ func (s ForwardMessages) Endpoint() string {
 	return "forwardMessages"
 }
 
-func (s ForwardMessages) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s ForwardMessages) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s ForwardMessages) ContentType() string {
@@ -235,13 +220,13 @@ type CopyMessage struct {
 
 func (c CopyMessage) Validate() error {
 	if strings.TrimSpace(c.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(c.FromChatId) == "" {
-		return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("from_chat_id parameter can't be empty")
 	}
 	if c.MessageId < 1 {
-		return objects.ErrInvalidParam("message_ids parameter can't be empty")
+		return gotely.ErrInvalidParam("message_ids parameter can't be empty")
 	}
 	if c.ReplyParameters != nil {
 		if err := c.ReplyParameters.Validate(); err != nil {
@@ -255,12 +240,8 @@ func (s CopyMessage) Endpoint() string {
 	return "copyMessage"
 }
 
-func (s CopyMessage) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s CopyMessage) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s CopyMessage) ContentType() string {
@@ -298,13 +279,13 @@ type CopyMessages struct {
 
 func (c CopyMessages) Validate() error {
 	if strings.TrimSpace(c.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(c.FromChatId) == "" {
-		return objects.ErrInvalidParam("from_chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("from_chat_id parameter can't be empty")
 	}
 	if len(c.MessageIds) < 1 {
-		return objects.ErrInvalidParam("message_ids parameter can't be empty")
+		return gotely.ErrInvalidParam("message_ids parameter can't be empty")
 	}
 	return nil
 }
@@ -313,12 +294,8 @@ func (s CopyMessages) Endpoint() string {
 	return "copyMessages"
 }
 
-func (s CopyMessages) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s CopyMessages) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s CopyMessages) ContentType() string {
@@ -375,7 +352,7 @@ type SendPhoto struct {
 
 func (s SendPhoto) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if err := s.Photo.Validate(); err != nil {
 		return err
@@ -392,7 +369,7 @@ func (s SendPhoto) Endpoint() string {
 	return "sendPhoto"
 }
 
-func (s *SendPhoto) Reader() (io.Reader, error) {
+func (s *SendPhoto) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -434,7 +411,7 @@ func (s *SendPhoto) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -476,20 +453,20 @@ func (s *SendPhoto) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 	}()
 
-	return pr, nil
+	return pr
 }
 
 func (s SendPhoto) ContentType() string {
@@ -559,7 +536,7 @@ type SendAudio struct {
 
 func (s SendAudio) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if err := s.Audio.Validate(); err != nil {
 		return err
@@ -576,7 +553,7 @@ func (s SendAudio) Endpoint() string {
 	return "sendAudio"
 }
 
-func (s *SendAudio) Reader() (io.Reader, error) {
+func (s *SendAudio) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -584,6 +561,7 @@ func (s *SendAudio) Reader() (io.Reader, error) {
 	go func() {
 		defer pw.Close()
 		defer mw.Close()
+
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -613,7 +591,7 @@ func (s *SendAudio) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -661,13 +639,13 @@ func (s *SendAudio) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -684,7 +662,7 @@ func (s *SendAudio) Reader() (io.Reader, error) {
 			}
 		}
 	}()
-	return pr, nil
+	return pr
 }
 
 func (s SendAudio) ContentType() string {
@@ -745,7 +723,7 @@ type SendDocument struct {
 
 func (s SendDocument) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 
 	if err := s.Document.Validate(); err != nil {
@@ -763,7 +741,7 @@ func (s SendDocument) Endpoint() string {
 	return "sendDocument"
 }
 
-func (s *SendDocument) Reader() (io.Reader, error) {
+func (s *SendDocument) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -771,6 +749,7 @@ func (s *SendDocument) Reader() (io.Reader, error) {
 	go func() {
 		defer pw.Close()
 		defer mw.Close()
+
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -800,7 +779,7 @@ func (s *SendDocument) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -836,13 +815,13 @@ func (s *SendDocument) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -859,7 +838,7 @@ func (s *SendDocument) Reader() (io.Reader, error) {
 			}
 		}
 	}()
-	return pr, nil
+	return pr
 }
 
 func (s SendDocument) ContentType() string {
@@ -932,7 +911,7 @@ func (s SendVideo) Endpoint() string {
 	return "sendVideo"
 }
 
-func (s *SendVideo) Reader() (io.Reader, error) {
+func (s *SendVideo) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -940,6 +919,7 @@ func (s *SendVideo) Reader() (io.Reader, error) {
 	go func() {
 		defer pw.Close()
 		defer mw.Close()
+
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -987,7 +967,7 @@ func (s *SendVideo) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1029,13 +1009,13 @@ func (s *SendVideo) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1052,12 +1032,12 @@ func (s *SendVideo) Reader() (io.Reader, error) {
 			}
 		}
 	}()
-	return pr, nil
+	return pr
 }
 
 func (s SendVideo) Validate() error {
 	if s.ChatId == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if err := s.Video.Validate(); err != nil {
 		return err
@@ -1069,7 +1049,7 @@ func (s SendVideo) Validate() error {
 	}
 	if s.Caption != nil {
 		if len(*s.Caption) > 1024 {
-			return objects.ErrInvalidParam("caption must not be longer than 1024 characters if specified")
+			return gotely.ErrInvalidParam("caption must not be longer than 1024 characters if specified")
 		}
 	}
 	if s.ReplyParameters != nil {
@@ -1150,7 +1130,7 @@ func (s SendAnimation) Endpoint() string {
 
 func (s SendAnimation) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if err := s.Animation.Validate(); err != nil {
 		return err
@@ -1163,7 +1143,7 @@ func (s SendAnimation) Validate() error {
 	return nil
 }
 
-func (s *SendAnimation) Reader() (io.Reader, error) {
+func (s *SendAnimation) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -1171,6 +1151,7 @@ func (s *SendAnimation) Reader() (io.Reader, error) {
 	go func() {
 		defer pw.Close()
 		defer mw.Close()
+
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -1218,7 +1199,7 @@ func (s *SendAnimation) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1254,13 +1235,13 @@ func (s *SendAnimation) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1277,7 +1258,7 @@ func (s *SendAnimation) Reader() (io.Reader, error) {
 			}
 		}
 	}()
-	return pr, nil
+	return pr
 }
 
 func (s SendAnimation) ContentType() string {
@@ -1334,7 +1315,7 @@ type SendVoice struct {
 
 func (s SendVoice) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if err := s.Voice.Validate(); err != nil {
 		return err
@@ -1351,7 +1332,7 @@ func (s SendVoice) Endpoint() string {
 	return "sendVoice"
 }
 
-func (s *SendVoice) Reader() (io.Reader, error) {
+func (s *SendVoice) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -1359,6 +1340,7 @@ func (s *SendVoice) Reader() (io.Reader, error) {
 	go func() {
 		defer pw.Close()
 		defer mw.Close()
+
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -1394,7 +1376,7 @@ func (s *SendVoice) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1424,13 +1406,13 @@ func (s *SendVoice) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1441,7 +1423,7 @@ func (s *SendVoice) Reader() (io.Reader, error) {
 			return
 		}
 	}()
-	return pr, nil
+	return pr
 }
 
 func (s SendVoice) ContentType() string {
@@ -1503,7 +1485,7 @@ func (s SendVideoNote) Endpoint() string {
 
 func (s SendVideoNote) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if err := s.VideoNote.Validate(); err != nil {
 		return err
@@ -1516,7 +1498,7 @@ func (s SendVideoNote) Validate() error {
 	return nil
 }
 
-func (s *SendVideoNote) Reader() (io.Reader, error) {
+func (s *SendVideoNote) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -1524,6 +1506,7 @@ func (s *SendVideoNote) Reader() (io.Reader, error) {
 	go func() {
 		defer pw.Close()
 		defer mw.Close()
+
 		if err := mw.WriteField("chat_id", fmt.Sprintf("%v", s.ChatId)); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -1577,13 +1560,13 @@ func (s *SendVideoNote) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1600,7 +1583,7 @@ func (s *SendVideoNote) Reader() (io.Reader, error) {
 			}
 		}
 	}()
-	return pr, nil
+	return pr
 }
 
 func (s SendVideoNote) ContentType() string {
@@ -1656,16 +1639,16 @@ type SendPaidMedia struct {
 
 func (s SendPaidMedia) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.StarCount < 1 || s.StarCount > 2500 {
-		return objects.ErrInvalidParam("star_count parameter must be between 1 and 2500")
+		return gotely.ErrInvalidParam("star_count parameter must be between 1 and 2500")
 	}
 	if len(s.Media) < 1 {
-		return objects.ErrInvalidParam("media parameter can't be empty")
+		return gotely.ErrInvalidParam("media parameter can't be empty")
 	}
 	if len(s.Media) > 10 {
-		return objects.ErrInvalidParam("can't accept more than 10 InputPaidMedia in media parameter")
+		return gotely.ErrInvalidParam("can't accept more than 10 InputPaidMedia in media parameter")
 	}
 	for _, m := range s.Media {
 		if err := m.Validate(); err != nil {
@@ -1684,7 +1667,7 @@ func (s SendPaidMedia) Endpoint() string {
 	return "sendPaidMedia"
 }
 
-func (s SendPaidMedia) Reader() (io.Reader, error) {
+func (s SendPaidMedia) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -1733,7 +1716,7 @@ func (s SendPaidMedia) Reader() (io.Reader, error) {
 			}
 		}
 		if s.CaptionEntities != nil {
-			if err := api.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1763,20 +1746,20 @@ func (s SendPaidMedia) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyMarkup != nil {
-			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 	}()
 
-	return pr, nil
+	return pr
 }
 
 func (s SendPaidMedia) ContentType() string {
@@ -1821,13 +1804,13 @@ func (s SendMediaGroup) Endpoint() string {
 
 func (s SendMediaGroup) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(s.Media) < 1 {
-		return objects.ErrInvalidParam("media parameter can't be empty")
+		return gotely.ErrInvalidParam("media parameter can't be empty")
 	}
 	if len(s.Media) > 10 {
-		return objects.ErrInvalidParam("can't accept more than 10 InputPaidMedia in media parameter")
+		return gotely.ErrInvalidParam("can't accept more than 10 InputPaidMedia in media parameter")
 	}
 	for _, m := range s.Media {
 		if err := m.Validate(); err != nil {
@@ -1842,7 +1825,7 @@ func (s SendMediaGroup) Validate() error {
 	return nil
 }
 
-func (s *SendMediaGroup) Reader() (io.Reader, error) {
+func (s *SendMediaGroup) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -1850,6 +1833,7 @@ func (s *SendMediaGroup) Reader() (io.Reader, error) {
 	go func() {
 		defer pw.Close()
 		defer mw.Close()
+
 		if s.BusinessConnectionId != nil {
 			if err := mw.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
 				pw.CloseWithError(err)
@@ -1866,7 +1850,7 @@ func (s *SendMediaGroup) Reader() (io.Reader, error) {
 				return
 			}
 		}
-		if err := api.WriteJSONToForm(mw, "media", s.Media); err != nil {
+		if err := gotely.WriteJSONToForm(mw, "media", s.Media); err != nil {
 			pw.CloseWithError(err)
 			return
 		}
@@ -1895,7 +1879,7 @@ func (s *SendMediaGroup) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyParameters != nil {
-			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
@@ -1908,7 +1892,7 @@ func (s *SendMediaGroup) Reader() (io.Reader, error) {
 			}
 		}
 	}()
-	return pr, nil
+	return pr
 }
 
 func (s SendMediaGroup) ContentType() string {
@@ -1968,13 +1952,13 @@ func (s SendLocation) Endpoint() string {
 
 func (s SendLocation) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.Latitude == nil {
-		return objects.ErrInvalidParam("latitude parameter can't be empty")
+		return gotely.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if s.Longitude == nil {
-		return objects.ErrInvalidParam("longitude parameter can't be empty")
+		return gotely.ErrInvalidParam("longitude parameter can't be empty")
 	}
 	if s.ReplyParameters != nil {
 		if err := s.ReplyParameters.Validate(); err != nil {
@@ -1984,12 +1968,8 @@ func (s SendLocation) Validate() error {
 	return nil
 }
 
-func (s SendLocation) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SendLocation) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SendLocation) ContentType() string {
@@ -2045,13 +2025,13 @@ type SendVenue struct {
 
 func (s SendVenue) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.Latitude == nil {
-		return objects.ErrInvalidParam("latitude parameter can't be empty")
+		return gotely.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if s.Longitude == nil {
-		return objects.ErrInvalidParam("longitude parameter can't be empty")
+		return gotely.ErrInvalidParam("longitude parameter can't be empty")
 	}
 	if s.ReplyParameters != nil {
 		if err := s.ReplyParameters.Validate(); err != nil {
@@ -2065,12 +2045,8 @@ func (s SendVenue) Endpoint() string {
 	return "sendVenue"
 }
 
-func (s SendVenue) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SendVenue) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SendVenue) ContentType() string {
@@ -2116,13 +2092,13 @@ type SendContact struct {
 
 func (s SendContact) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.PhoneNumber) == "" {
-		return objects.ErrInvalidParam("phone_number parameter can't be empty")
+		return gotely.ErrInvalidParam("phone_number parameter can't be empty")
 	}
 	if strings.TrimSpace(s.FirstName) == "" {
-		return objects.ErrInvalidParam("first_name parameter can't be empty")
+		return gotely.ErrInvalidParam("first_name parameter can't be empty")
 	}
 	if s.ReplyParameters != nil {
 		if err := s.ReplyParameters.Validate(); err != nil {
@@ -2136,12 +2112,8 @@ func (s SendContact) Endpoint() string {
 	return "sendContact"
 }
 
-func (s SendContact) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SendContact) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SendContact) ContentType() string {
@@ -2214,10 +2186,10 @@ type SendPoll struct {
 
 func (s SendPoll) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Question) == "" {
-		return objects.ErrInvalidParam("question parameter can't be empty")
+		return gotely.ErrInvalidParam("question parameter can't be empty")
 	}
 	for _, opt := range s.Options {
 		if err := opt.Validate(); err != nil {
@@ -2225,11 +2197,11 @@ func (s SendPoll) Validate() error {
 		}
 	}
 	if len(s.Options) < 2 || len(s.Options) > 10 {
-		return objects.ErrInvalidParam("options parameter must be between 2 and 10")
+		return gotely.ErrInvalidParam("options parameter must be between 2 and 10")
 	}
 	if s.Type != nil {
 		if *s.Type != "quiz" && *s.Type != "regular" {
-			return objects.ErrInvalidParam("type parameter must be 'regular' or 'quiz' if specified")
+			return gotely.ErrInvalidParam("type parameter must be 'regular' or 'quiz' if specified")
 		}
 	}
 	if s.ReplyParameters != nil {
@@ -2244,12 +2216,8 @@ func (s SendPoll) Endpoint() string {
 	return "sendPoll"
 }
 
-func (s SendPoll) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SendPoll) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SendPoll) ContentType() string {
@@ -2290,10 +2258,10 @@ type SendDice struct {
 
 func (s SendDice) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Emoji) == "" {
-		return objects.ErrInvalidParam("emoji parameter can't be empty")
+		return gotely.ErrInvalidParam("emoji parameter can't be empty")
 	}
 	if s.ReplyParameters != nil {
 		if err := s.ReplyParameters.Validate(); err != nil {
@@ -2307,12 +2275,8 @@ func (s SendDice) Endpoint() string {
 	return "sendDice"
 }
 
-func (s SendDice) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SendDice) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SendDice) ContentType() string {
@@ -2347,10 +2311,10 @@ type SendChatAction struct {
 
 func (s SendChatAction) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Action) == "" {
-		return objects.ErrInvalidParam("action parameter can't be empty")
+		return gotely.ErrInvalidParam("action parameter can't be empty")
 	}
 	allowed := map[string]struct{}{
 		"typing":            {},
@@ -2366,7 +2330,7 @@ func (s SendChatAction) Validate() error {
 		"upload_video_note": {},
 	}
 	if _, ok := allowed[s.Action]; !ok {
-		return objects.ErrInvalidParam("invalid action parameter: see https://core.telegram.org/bots/api#sendchataction for a list of available actions")
+		return gotely.ErrInvalidParam("invalid action parameter: see https://core.telegram.org/bots/api#sendchataction for a list of available actions")
 	}
 	return nil
 }
@@ -2375,12 +2339,8 @@ func (s SendChatAction) Endpoint() string {
 	return "sendChatAction"
 }
 
-func (s SendChatAction) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SendChatAction) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SendChatAction) ContentType() string {
@@ -2411,10 +2371,10 @@ type SetMessageReaction struct {
 
 func (s SetMessageReaction) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.MessageId < 1 {
-		return objects.ErrInvalidParam("message_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_id parameter can't be empty")
 	}
 	for _, r := range *s.Reaction {
 		if err := r.Validate(); err != nil {
@@ -2428,12 +2388,8 @@ func (s SetMessageReaction) Endpoint() string {
 	return "setMessageReaction"
 }
 
-func (s SetMessageReaction) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetMessageReaction) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetMessageReaction) ContentType() string {
@@ -2455,11 +2411,11 @@ type GetUserProfilePhotos struct {
 
 func (g GetUserProfilePhotos) Validate() error {
 	if g.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if g.Limit != nil {
 		if *g.Limit < 1 || *g.Limit > 100 {
-			return objects.ErrInvalidParam("limit parameter must be between 1 and 100")
+			return gotely.ErrInvalidParam("limit parameter must be between 1 and 100")
 		}
 	}
 	return nil
@@ -2469,12 +2425,8 @@ func (s GetUserProfilePhotos) Endpoint() string {
 	return "getUserProfilePhotos"
 }
 
-func (s GetUserProfilePhotos) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetUserProfilePhotos) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetUserProfilePhotos) ContentType() string {
@@ -2497,7 +2449,7 @@ type SetUserEmojiStatus struct {
 
 func (s SetUserEmojiStatus) Validate() error {
 	if s.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2506,12 +2458,8 @@ func (s SetUserEmojiStatus) Endpoint() string {
 	return "setUserEmojiStatus"
 }
 
-func (s SetUserEmojiStatus) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetUserEmojiStatus) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetUserEmojiStatus) ContentType() string {
@@ -2521,7 +2469,7 @@ func (s SetUserEmojiStatus) ContentType() string {
 // Use this method to get basic information about a file and prepare it for downloading.
 // For the moment, bots can download files of up to 20MB in size.
 // On success, a [objects.File] object is returned.
-// The file can then be downloaded via the link https://api.telegram.org/file/bot<token>/<file_path>,
+// The file can then be downloaded via the link https://gotely.telegram.org/file/bot<token>/<file_path>,
 // where <file_path> is taken from the response. It is guaranteed that the link will be valid for at least 1 hour.
 // When the link expires, a new one can be requested by calling getFile again.
 //
@@ -2535,7 +2483,7 @@ type GetFile struct {
 
 func (g GetFile) Validate() error {
 	if strings.TrimSpace(g.FileId) == "" {
-		return objects.ErrInvalidParam("file_id parameter can't be empty")
+		return gotely.ErrInvalidParam("file_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2544,12 +2492,8 @@ func (s GetFile) Endpoint() string {
 	return "getFile"
 }
 
-func (s GetFile) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetFile) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetFile) ContentType() string {
@@ -2580,10 +2524,10 @@ type BanChatMember struct {
 
 func (b BanChatMember) Validate() error {
 	if strings.TrimSpace(b.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if b.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2592,12 +2536,8 @@ func (s BanChatMember) Endpoint() string {
 	return "banChatMember"
 }
 
-func (s BanChatMember) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s BanChatMember) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s BanChatMember) ContentType() string {
@@ -2624,10 +2564,10 @@ type UnbanChatMember struct {
 
 func (b UnbanChatMember) Validate() error {
 	if strings.TrimSpace(b.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if b.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2636,12 +2576,8 @@ func (s UnbanChatMember) Endpoint() string {
 	return "unbanChatMember"
 }
 
-func (s UnbanChatMember) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s UnbanChatMember) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s UnbanChatMember) ContentType() string {
@@ -2675,10 +2611,10 @@ type RestrictChatMember struct {
 
 func (r RestrictChatMember) Validate() error {
 	if strings.TrimSpace(r.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if r.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2687,12 +2623,8 @@ func (s RestrictChatMember) Endpoint() string {
 	return "restrictChatMember"
 }
 
-func (s RestrictChatMember) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s RestrictChatMember) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s RestrictChatMember) ContentType() string {
@@ -2749,10 +2681,10 @@ type PromoteChatMember struct {
 
 func (p PromoteChatMember) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if p.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2761,12 +2693,8 @@ func (s PromoteChatMember) Endpoint() string {
 	return "promoteChatMember"
 }
 
-func (s PromoteChatMember) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s PromoteChatMember) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s PromoteChatMember) ContentType() string {
@@ -2789,20 +2717,20 @@ type SetChatAdministratorCustomTitle struct {
 
 func (s SetChatAdministratorCustomTitle) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if len(s.CustomTitle) > 16 {
-		return objects.ErrInvalidParam("custom_title parameter must be not longer than 16 characters")
+		return gotely.ErrInvalidParam("custom_title parameter must be not longer than 16 characters")
 	}
 	for _, r := range s.CustomTitle {
 		if (r >= 0x1F600 && r <= 0x1F64F) || // Emoticons
 			(r >= 0x1F300 && r <= 0x1F5FF) || // Miscellaneous Symbols and Pictographs
 			(r >= 0x1F680 && r <= 0x1F6FF) || // Transport and Map Symbols
 			(r >= 0x1F700 && r <= 0x1F77F) { // Alchemical Symbols
-			return objects.ErrInvalidParam("invalid custom_title parameter: emojis are not allowed")
+			return gotely.ErrInvalidParam("invalid custom_title parameter: emojis are not allowed")
 		}
 	}
 	return nil
@@ -2812,12 +2740,8 @@ func (s SetChatAdministratorCustomTitle) Endpoint() string {
 	return "setChatAdministratorCustomTitle"
 }
 
-func (s SetChatAdministratorCustomTitle) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetChatAdministratorCustomTitle) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetChatAdministratorCustomTitle) ContentType() string {
@@ -2839,10 +2763,10 @@ type BanChatSenderChat struct {
 
 func (b BanChatSenderChat) Validate() error {
 	if strings.TrimSpace(b.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if b.SenderChatId < 1 {
-		return objects.ErrInvalidParam("sender_chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("sender_chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2851,12 +2775,8 @@ func (s BanChatSenderChat) Endpoint() string {
 	return "banChatSenderChat"
 }
 
-func (s BanChatSenderChat) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s BanChatSenderChat) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s BanChatSenderChat) ContentType() string {
@@ -2877,10 +2797,10 @@ type UnbanChatSenderChat struct {
 
 func (b UnbanChatSenderChat) Validate() error {
 	if strings.TrimSpace(b.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if b.SenderChatId < 1 {
-		return objects.ErrInvalidParam("sender_chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("sender_chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2889,12 +2809,8 @@ func (s UnbanChatSenderChat) Endpoint() string {
 	return "unbanChatSenderChat"
 }
 
-func (s UnbanChatSenderChat) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s UnbanChatSenderChat) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s UnbanChatSenderChat) ContentType() string {
@@ -2922,7 +2838,7 @@ type SetChatPermissions struct {
 
 func (s SetChatPermissions) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2931,12 +2847,8 @@ func (s SetChatPermissions) Endpoint() string {
 	return "setChatPermissions"
 }
 
-func (s SetChatPermissions) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetChatPermissions) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetChatPermissions) ContentType() string {
@@ -2958,7 +2870,7 @@ type ExportChatInviteLink struct {
 
 func (e ExportChatInviteLink) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2967,12 +2879,8 @@ func (s ExportChatInviteLink) Endpoint() string {
 	return "exportChatInviteLink"
 }
 
-func (s ExportChatInviteLink) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s ExportChatInviteLink) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s ExportChatInviteLink) ContentType() string {
@@ -3000,16 +2908,16 @@ type CreateInviteLink struct {
 
 func (c CreateInviteLink) Validate() error {
 	if strings.TrimSpace(c.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if c.Name != nil {
 		if len(*c.Name) > 32 {
-			return objects.ErrInvalidParam("name parameter must not be longer than 32 characters")
+			return gotely.ErrInvalidParam("name parameter must not be longer than 32 characters")
 		}
 	}
 	if c.MemberLimit != nil {
 		if *c.MemberLimit < 1 || *c.MemberLimit > 99999 {
-			return objects.ErrInvalidParam("member limit parameter must be between 1 and 99999")
+			return gotely.ErrInvalidParam("member limit parameter must be between 1 and 99999")
 		}
 	}
 	return nil
@@ -3019,12 +2927,8 @@ func (s CreateInviteLink) Endpoint() string {
 	return "createInviteLink"
 }
 
-func (s CreateInviteLink) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s CreateInviteLink) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s CreateInviteLink) ContentType() string {
@@ -3054,16 +2958,16 @@ type EditChatInviteLink struct {
 
 func (c EditChatInviteLink) Validate() error {
 	if strings.TrimSpace(c.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if c.Name != nil {
 		if len(*c.Name) > 32 {
-			return objects.ErrInvalidParam("name parameter must not be longer than 32 characters")
+			return gotely.ErrInvalidParam("name parameter must not be longer than 32 characters")
 		}
 	}
 	if c.MemberLimit != nil {
 		if *c.MemberLimit < 1 || *c.MemberLimit > 99999 {
-			return objects.ErrInvalidParam("member limit parameter must be between 1 and 99999")
+			return gotely.ErrInvalidParam("member limit parameter must be between 1 and 99999")
 		}
 	}
 	return nil
@@ -3073,12 +2977,8 @@ func (s EditChatInviteLink) Endpoint() string {
 	return "editChatInviteLink"
 }
 
-func (s EditChatInviteLink) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s EditChatInviteLink) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s EditChatInviteLink) ContentType() string {
@@ -3106,17 +3006,17 @@ type CreateChatSubscriptionInviteLink struct {
 
 func (c CreateChatSubscriptionInviteLink) Validate() error {
 	if strings.TrimSpace(c.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if c.SubscriptionPeriod != 2592000 {
-		return objects.ErrInvalidParam("subscription_period currently must always be 2592000 seconds (30 days)")
+		return gotely.ErrInvalidParam("subscription_period currently must always be 2592000 seconds (30 days)")
 	}
 	if c.SubscriptionPrice < 1 || c.SubscriptionPrice > 2500 {
-		return objects.ErrInvalidParam("subscription_price must be between 1 and 2500")
+		return gotely.ErrInvalidParam("subscription_price must be between 1 and 2500")
 	}
 	if c.Name != nil {
 		if len(*c.Name) > 32 {
-			return objects.ErrInvalidParam("name parameter must not be longer than 32 characters")
+			return gotely.ErrInvalidParam("name parameter must not be longer than 32 characters")
 		}
 	}
 	return nil
@@ -3126,12 +3026,8 @@ func (s CreateChatSubscriptionInviteLink) Endpoint() string {
 	return "createChatSubscriptionInviteLink"
 }
 
-func (s CreateChatSubscriptionInviteLink) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s CreateChatSubscriptionInviteLink) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s CreateChatSubscriptionInviteLink) ContentType() string {
@@ -3155,14 +3051,14 @@ type EditChatSubscriptionInviteLink struct {
 
 func (c EditChatSubscriptionInviteLink) Validate() error {
 	if strings.TrimSpace(c.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(c.InviteLink) == "" {
-		return objects.ErrInvalidParam("invite_link parameter can't be empty")
+		return gotely.ErrInvalidParam("invite_link parameter can't be empty")
 	}
 	if c.Name != nil {
 		if len(*c.Name) > 32 {
-			return objects.ErrInvalidParam("name parameter must not be longer than 32 characters if specified")
+			return gotely.ErrInvalidParam("name parameter must not be longer than 32 characters if specified")
 		}
 	}
 	return nil
@@ -3172,12 +3068,8 @@ func (s EditChatSubscriptionInviteLink) Endpoint() string {
 	return "editChatSubscriptionInviteLink"
 }
 
-func (s EditChatSubscriptionInviteLink) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s EditChatSubscriptionInviteLink) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s EditChatSubscriptionInviteLink) ContentType() string {
@@ -3199,10 +3091,10 @@ type RevokeInviteLink struct {
 
 func (c RevokeInviteLink) Validate() error {
 	if strings.TrimSpace(c.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(c.InviteLink) == "" {
-		return objects.ErrInvalidParam("invite_link parameter can't be empty")
+		return gotely.ErrInvalidParam("invite_link parameter can't be empty")
 	}
 	return nil
 }
@@ -3211,12 +3103,8 @@ func (s RevokeInviteLink) Endpoint() string {
 	return "revokeInviteLink"
 }
 
-func (s RevokeInviteLink) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s RevokeInviteLink) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s RevokeInviteLink) ContentType() string {
@@ -3237,10 +3125,10 @@ type ApproveChatJoinRequest struct {
 
 func (s ApproveChatJoinRequest) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3249,12 +3137,8 @@ func (s ApproveChatJoinRequest) Endpoint() string {
 	return "approveChatJoinRequest"
 }
 
-func (s ApproveChatJoinRequest) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s ApproveChatJoinRequest) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s ApproveChatJoinRequest) ContentType() string {
@@ -3275,10 +3159,10 @@ type DeclineChatJoinRequest struct {
 
 func (s DeclineChatJoinRequest) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3287,12 +3171,8 @@ func (s DeclineChatJoinRequest) Endpoint() string {
 	return "declineChatJoinRequest"
 }
 
-func (s DeclineChatJoinRequest) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s DeclineChatJoinRequest) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s DeclineChatJoinRequest) ContentType() string {
@@ -3315,7 +3195,7 @@ type SetChatPhoto struct {
 
 func (s SetChatPhoto) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if err := s.Photo.Validate(); err != nil {
 		return err
@@ -3323,11 +3203,7 @@ func (s SetChatPhoto) Validate() error {
 	return nil
 }
 
-func (s SetChatPhoto) Reader() (io.Reader, error) {
-	if _, ok := s.Photo.(objects.InputFileFromRemote); ok {
-		return nil, fmt.Errorf("can't use remote file when setting chat photo; only local files are supported")
-	}
-
+func (s SetChatPhoto) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -3335,6 +3211,12 @@ func (s SetChatPhoto) Reader() (io.Reader, error) {
 	go func() {
 		defer pw.Close()
 		defer mw.Close()
+
+		if _, ok := s.Photo.(objects.InputFileFromRemote); ok {
+			pw.CloseWithError(fmt.Errorf("can't use remote file in setChatPhoto method"))
+			return
+		}
+
 		if err := mw.WriteField("chat_id", s.ChatId); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -3344,7 +3226,7 @@ func (s SetChatPhoto) Reader() (io.Reader, error) {
 			return
 		}
 	}()
-	return pr, nil
+	return pr
 }
 
 func (s SetChatPhoto) Endpoint() string {
@@ -3366,7 +3248,7 @@ type DeleteChatPhoto struct {
 
 func (d DeleteChatPhoto) Validate() error {
 	if strings.TrimSpace(d.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3375,12 +3257,8 @@ func (s DeleteChatPhoto) Endpoint() string {
 	return "deleteChatPhoto"
 }
 
-func (s DeleteChatPhoto) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s DeleteChatPhoto) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s DeleteChatPhoto) ContentType() string {
@@ -3401,10 +3279,10 @@ type SetChatTitle struct {
 
 func (s SetChatTitle) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(s.Title) < 1 || len(s.Title) > 128 {
-		return objects.ErrInvalidParam("title parameter must be between 1 and 128 characters long")
+		return gotely.ErrInvalidParam("title parameter must be between 1 and 128 characters long")
 	}
 	return nil
 }
@@ -3413,12 +3291,8 @@ func (s SetChatTitle) Endpoint() string {
 	return "setChatTitle"
 }
 
-func (s SetChatTitle) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetChatTitle) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetChatTitle) ContentType() string {
@@ -3439,10 +3313,10 @@ type SetChatDescription struct {
 
 func (s SetChatDescription) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(s.Description) > 255 {
-		return objects.ErrInvalidParam("description parameter must not be longer than 255 characters")
+		return gotely.ErrInvalidParam("description parameter must not be longer than 255 characters")
 	}
 	return nil
 }
@@ -3451,12 +3325,8 @@ func (s SetChatDescription) Endpoint() string {
 	return "setChatDescription"
 }
 
-func (s SetChatDescription) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetChatDescription) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetChatDescription) ContentType() string {
@@ -3484,10 +3354,10 @@ type PinChatMessage struct {
 
 func (p PinChatMessage) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if p.MessageId < 1 {
-		return objects.ErrInvalidParam("message_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3496,12 +3366,8 @@ func (s PinChatMessage) Endpoint() string {
 	return "pinChatMessage"
 }
 
-func (s PinChatMessage) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s PinChatMessage) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s PinChatMessage) ContentType() string {
@@ -3526,11 +3392,11 @@ type UnpinChatMessage struct {
 
 func (p UnpinChatMessage) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if p.MessageId != nil {
 		if *p.MessageId < 1 {
-			return objects.ErrInvalidParam("message_id parameter can't be empty")
+			return gotely.ErrInvalidParam("message_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -3540,12 +3406,8 @@ func (s UnpinChatMessage) Endpoint() string {
 	return "unpinChatMessage"
 }
 
-func (s UnpinChatMessage) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s UnpinChatMessage) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s UnpinChatMessage) ContentType() string {
@@ -3566,12 +3428,8 @@ func (s UnpinAllChatMessages) Endpoint() string {
 	return "unpinAllChatMessages"
 }
 
-func (s UnpinAllChatMessages) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s UnpinAllChatMessages) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s UnpinAllChatMessages) ContentType() string {
@@ -3580,7 +3438,7 @@ func (s UnpinAllChatMessages) ContentType() string {
 
 func (p UnpinAllChatMessages) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3595,7 +3453,7 @@ type LeaveChat struct {
 
 func (p LeaveChat) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3604,12 +3462,8 @@ func (s LeaveChat) Endpoint() string {
 	return "leaveChat"
 }
 
-func (s LeaveChat) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s LeaveChat) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s LeaveChat) ContentType() string {
@@ -3626,7 +3480,7 @@ type GetChat struct {
 
 func (p GetChat) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3635,12 +3489,8 @@ func (s GetChat) Endpoint() string {
 	return "getChat"
 }
 
-func (s GetChat) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetChat) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetChat) ContentType() string {
@@ -3657,7 +3507,7 @@ type GetChatAdministrators struct {
 
 func (p GetChatAdministrators) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3666,12 +3516,8 @@ func (s GetChatAdministrators) Endpoint() string {
 	return "getChatAdministrators"
 }
 
-func (s GetChatAdministrators) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetChatAdministrators) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetChatAdministrators) ContentType() string {
@@ -3688,7 +3534,7 @@ type GetChatMemberCount struct {
 
 func (p GetChatMemberCount) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3697,12 +3543,8 @@ func (s GetChatMemberCount) Endpoint() string {
 	return "getChatMemberCount"
 }
 
-func (s GetChatMemberCount) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetChatMemberCount) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetChatMemberCount) ContentType() string {
@@ -3723,10 +3565,10 @@ type GetChatMember struct {
 
 func (p GetChatMember) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if p.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3735,12 +3577,8 @@ func (s GetChatMember) Endpoint() string {
 	return "getChatMember"
 }
 
-func (s GetChatMember) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetChatMember) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetChatMember) ContentType() string {
@@ -3762,10 +3600,10 @@ type SetChatStickerSet struct {
 
 func (p SetChatStickerSet) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(p.StickerSetName) == "" {
-		return objects.ErrInvalidParam("sticker_set_name parameter can't be empty")
+		return gotely.ErrInvalidParam("sticker_set_name parameter can't be empty")
 	}
 	return nil
 }
@@ -3774,12 +3612,8 @@ func (s SetChatStickerSet) Endpoint() string {
 	return "setChatStickerSet"
 }
 
-func (s SetChatStickerSet) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetChatStickerSet) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetChatStickerSet) ContentType() string {
@@ -3798,7 +3632,7 @@ type DeleteChatStickerSet struct {
 
 func (p DeleteChatStickerSet) Validate() error {
 	if strings.TrimSpace(p.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3807,12 +3641,8 @@ func (s DeleteChatStickerSet) Endpoint() string {
 	return "deleteChatStickerSet"
 }
 
-func (s DeleteChatStickerSet) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s DeleteChatStickerSet) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s DeleteChatStickerSet) ContentType() string {
@@ -3831,12 +3661,8 @@ func (s GetForumTopicIconStickers) Endpoint() string {
 	return "getForumTopicIconStickers"
 }
 
-func (s GetForumTopicIconStickers) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetForumTopicIconStickers) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetForumTopicIconStickers) ContentType() string {
@@ -3863,10 +3689,10 @@ type CreateForumTopic struct {
 
 func (c CreateForumTopic) Validate() error {
 	if strings.TrimSpace(c.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(c.Name) < 1 || len(c.Name) > 128 {
-		return objects.ErrInvalidParam("name parameter must be between 1 and 128 characters long")
+		return gotely.ErrInvalidParam("name parameter must be between 1 and 128 characters long")
 	}
 	if c.IconColor != nil {
 		validIconColors := map[int]struct{}{
@@ -3878,7 +3704,7 @@ func (c CreateForumTopic) Validate() error {
 			16478047: {},
 		}
 		if _, ok := validIconColors[*c.IconColor]; !ok {
-			return objects.ErrInvalidParam("icon_color must be one of 7322096 (0x6FB9F0), 16766590 (0xFFD67E), 13338331 (0xCB86DB), 9367192 (0x8EEE98), 16749490 (0xFF93B2), or 16478047 (0xFB6F5F)")
+			return gotely.ErrInvalidParam("icon_color must be one of 7322096 (0x6FB9F0), 16766590 (0xFFD67E), 13338331 (0xCB86DB), 9367192 (0x8EEE98), 16749490 (0xFF93B2), or 16478047 (0xFB6F5F)")
 		}
 	}
 	return nil
@@ -3888,12 +3714,8 @@ func (s CreateForumTopic) Endpoint() string {
 	return "createForumTopic"
 }
 
-func (s CreateForumTopic) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s CreateForumTopic) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s CreateForumTopic) ContentType() string {
@@ -3922,14 +3744,14 @@ type EditForumTopic struct {
 
 func (e EditForumTopic) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.MessageThreadId) == "" {
-		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_thread_id parameter can't be empty")
 	}
 	if e.Name != nil {
 		if len(*e.Name) > 128 {
-			return objects.ErrInvalidParam("name parameter must not be longer than 128 characters")
+			return gotely.ErrInvalidParam("name parameter must not be longer than 128 characters")
 		}
 	}
 	return nil
@@ -3939,12 +3761,8 @@ func (s EditForumTopic) Endpoint() string {
 	return "editForumTopic"
 }
 
-func (s EditForumTopic) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s EditForumTopic) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s EditForumTopic) ContentType() string {
@@ -3965,10 +3783,10 @@ type CloseForumTopic struct {
 
 func (e CloseForumTopic) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.MessageThreadId) == "" {
-		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_thread_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3977,12 +3795,8 @@ func (s CloseForumTopic) Endpoint() string {
 	return "closeForumTopic"
 }
 
-func (s CloseForumTopic) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s CloseForumTopic) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s CloseForumTopic) ContentType() string {
@@ -4004,10 +3818,10 @@ type ReopenForumTopic struct {
 
 func (e ReopenForumTopic) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.MessageThreadId) == "" {
-		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_thread_id parameter can't be empty")
 	}
 	return nil
 }
@@ -4016,12 +3830,8 @@ func (s ReopenForumTopic) Endpoint() string {
 	return "reopenForumTopic"
 }
 
-func (s ReopenForumTopic) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s ReopenForumTopic) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s ReopenForumTopic) ContentType() string {
@@ -4042,10 +3852,10 @@ type DeleteForumTopic struct {
 
 func (e DeleteForumTopic) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.MessageThreadId) == "" {
-		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_thread_id parameter can't be empty")
 	}
 	return nil
 }
@@ -4054,12 +3864,8 @@ func (s DeleteForumTopic) Endpoint() string {
 	return "deleteForumTopic"
 }
 
-func (s DeleteForumTopic) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s DeleteForumTopic) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s DeleteForumTopic) ContentType() string {
@@ -4081,10 +3887,10 @@ type UnpinAllForumTopicMessages struct {
 
 func (e UnpinAllForumTopicMessages) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.MessageThreadId) == "" {
-		return objects.ErrInvalidParam("message_thread_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_thread_id parameter can't be empty")
 	}
 	return nil
 }
@@ -4093,12 +3899,8 @@ func (s UnpinAllForumTopicMessages) Endpoint() string {
 	return "unpinAllForumTopicMessages"
 }
 
-func (s UnpinAllForumTopicMessages) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s UnpinAllForumTopicMessages) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s UnpinAllForumTopicMessages) ContentType() string {
@@ -4119,10 +3921,10 @@ type EditGeneralForumTopic struct {
 
 func (e EditGeneralForumTopic) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.Name) == "" {
-		return objects.ErrInvalidParam("name parameter can't be empty")
+		return gotely.ErrInvalidParam("name parameter can't be empty")
 	}
 	return nil
 }
@@ -4131,12 +3933,8 @@ func (s EditGeneralForumTopic) Endpoint() string {
 	return "editGeneralForumTopic"
 }
 
-func (s EditGeneralForumTopic) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s EditGeneralForumTopic) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s EditGeneralForumTopic) ContentType() string {
@@ -4155,7 +3953,7 @@ type CloseGeneralForumTopic struct {
 
 func (e CloseGeneralForumTopic) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -4164,12 +3962,8 @@ func (s CloseGeneralForumTopic) Endpoint() string {
 	return "closeGeneralForumTopic"
 }
 
-func (s CloseGeneralForumTopic) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s CloseGeneralForumTopic) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s CloseGeneralForumTopic) ContentType() string {
@@ -4188,7 +3982,7 @@ type ReopenGeneralForumTopic struct {
 
 func (e ReopenGeneralForumTopic) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -4197,12 +3991,8 @@ func (s ReopenGeneralForumTopic) Endpoint() string {
 	return "reopenGeneralForumTopic"
 }
 
-func (s ReopenGeneralForumTopic) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s ReopenGeneralForumTopic) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s ReopenGeneralForumTopic) ContentType() string {
@@ -4221,7 +4011,7 @@ type HideGeneralForumTopic struct {
 
 func (e HideGeneralForumTopic) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -4230,12 +4020,8 @@ func (s HideGeneralForumTopic) Endpoint() string {
 	return "hideGeneralForumTopic"
 }
 
-func (s HideGeneralForumTopic) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s HideGeneralForumTopic) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s HideGeneralForumTopic) ContentType() string {
@@ -4253,7 +4039,7 @@ type UnhideGeneralForumTopic struct {
 
 func (e UnhideGeneralForumTopic) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -4262,12 +4048,8 @@ func (s UnhideGeneralForumTopic) Endpoint() string {
 	return "unhideGeneralForumTopic"
 }
 
-func (s UnhideGeneralForumTopic) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s UnhideGeneralForumTopic) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s UnhideGeneralForumTopic) ContentType() string {
@@ -4286,7 +4068,7 @@ type UnpinAllGeneralForumTopicMessages struct {
 
 func (e UnpinAllGeneralForumTopicMessages) Validate() error {
 	if strings.TrimSpace(e.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	return nil
 }
@@ -4295,12 +4077,8 @@ func (s UnpinAllGeneralForumTopicMessages) Endpoint() string {
 	return "unpinAllGeneralForumTopicMessages"
 }
 
-func (s UnpinAllGeneralForumTopicMessages) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s UnpinAllGeneralForumTopicMessages) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s UnpinAllGeneralForumTopicMessages) ContentType() string {
@@ -4336,11 +4114,11 @@ type AnswerCallbackQuery struct {
 
 func (a AnswerCallbackQuery) Validate() error {
 	if strings.TrimSpace(a.CallbackQueryId) == "" {
-		return objects.ErrInvalidParam("callback_query_id parameter can't be empty")
+		return gotely.ErrInvalidParam("callback_query_id parameter can't be empty")
 	}
 	if a.Text != nil {
 		if len(*a.Text) > 200 {
-			return objects.ErrInvalidParam("text parameter must not be longer than 200 characters if specified")
+			return gotely.ErrInvalidParam("text parameter must not be longer than 200 characters if specified")
 		}
 	}
 	return nil
@@ -4350,12 +4128,8 @@ func (s AnswerCallbackQuery) Endpoint() string {
 	return "answerCallbackQuery"
 }
 
-func (s AnswerCallbackQuery) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s AnswerCallbackQuery) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s AnswerCallbackQuery) ContentType() string {
@@ -4376,10 +4150,10 @@ type GetUserChatBoosts struct {
 
 func (g GetUserChatBoosts) Validate() error {
 	if strings.TrimSpace(g.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if g.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -4388,12 +4162,8 @@ func (s GetUserChatBoosts) Endpoint() string {
 	return "getUserChatBoosts"
 }
 
-func (s GetUserChatBoosts) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetUserChatBoosts) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetUserChatBoosts) ContentType() string {
@@ -4410,7 +4180,7 @@ type GetBusinessConnection struct {
 
 func (g GetBusinessConnection) Validate() error {
 	if strings.TrimSpace(g.BusinessConnectionId) == "" {
-		return objects.ErrInvalidParam("business_connection_id parameter can't be empty")
+		return gotely.ErrInvalidParam("business_connection_id parameter can't be empty")
 	}
 	return nil
 }
@@ -4419,12 +4189,8 @@ func (s GetBusinessConnection) Endpoint() string {
 	return "getBusinessConnection"
 }
 
-func (s GetBusinessConnection) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetBusinessConnection) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetBusinessConnection) ContentType() string {
@@ -4463,12 +4229,8 @@ func (s SetMyCommands) Endpoint() string {
 	return "setMyCommands"
 }
 
-func (s SetMyCommands) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetMyCommands) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetMyCommands) ContentType() string {
@@ -4498,12 +4260,8 @@ func (s DeleteMyCommands) Endpoint() string {
 	return "deleteMyCommands"
 }
 
-func (s DeleteMyCommands) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s DeleteMyCommands) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s DeleteMyCommands) ContentType() string {
@@ -4532,12 +4290,8 @@ func (s GetMyCommands) Endpoint() string {
 	return "getMyCommands"
 }
 
-func (s GetMyCommands) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetMyCommands) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetMyCommands) ContentType() string {
@@ -4556,7 +4310,7 @@ type SetMyName struct {
 func (s SetMyName) Validate() error {
 	if s.Name != nil {
 		if len(*s.Name) > 64 {
-			return objects.ErrInvalidParam("name parameter must not be longer than 64 characters")
+			return gotely.ErrInvalidParam("name parameter must not be longer than 64 characters")
 		}
 	}
 	return nil
@@ -4566,12 +4320,8 @@ func (s SetMyName) Endpoint() string {
 	return "setMyName"
 }
 
-func (s SetMyName) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetMyName) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetMyName) ContentType() string {
@@ -4593,12 +4343,8 @@ func (s GetMyName) Endpoint() string {
 	return "getMyName"
 }
 
-func (s GetMyName) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetMyName) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetMyName) ContentType() string {
@@ -4617,7 +4363,7 @@ type SetMyDescription struct {
 func (s SetMyDescription) Validate() error {
 	if s.Description != nil {
 		if len(*s.Description) > 64 {
-			return objects.ErrInvalidParam("name parameter must not be longer than 64 characters")
+			return gotely.ErrInvalidParam("name parameter must not be longer than 64 characters")
 		}
 	}
 	return nil
@@ -4627,12 +4373,8 @@ func (s SetMyDescription) Endpoint() string {
 	return "setMyDescription"
 }
 
-func (s SetMyDescription) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetMyDescription) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetMyDescription) ContentType() string {
@@ -4654,12 +4396,8 @@ func (s GetMyDescription) Endpoint() string {
 	return "getMyDescription"
 }
 
-func (s GetMyDescription) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetMyDescription) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetMyDescription) ContentType() string {
@@ -4678,7 +4416,7 @@ type SetMyShortDescription struct {
 func (s SetMyShortDescription) Validate() error {
 	if s.ShortDescription != nil {
 		if len(*s.ShortDescription) > 64 {
-			return objects.ErrInvalidParam("name parameter must not be longer than 64 characters")
+			return gotely.ErrInvalidParam("name parameter must not be longer than 64 characters")
 		}
 	}
 	return nil
@@ -4688,12 +4426,8 @@ func (s SetMyShortDescription) Endpoint() string {
 	return "setMyShortDescription"
 }
 
-func (s SetMyShortDescription) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetMyShortDescription) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetMyShortDescription) ContentType() string {
@@ -4715,12 +4449,8 @@ func (s GetMyShortDescription) Endpoint() string {
 	return "getMyShortDescription"
 }
 
-func (s GetMyShortDescription) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetMyShortDescription) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetMyShortDescription) ContentType() string {
@@ -4739,7 +4469,7 @@ type SetChatMenuButton struct {
 func (s SetChatMenuButton) Validate() error {
 	if s.ChatId != nil {
 		if strings.TrimSpace(*s.ChatId) == "" {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty if specified")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty if specified")
 		}
 	}
 	if s.MenuButton != nil {
@@ -4754,12 +4484,8 @@ func (s SetChatMenuButton) Endpoint() string {
 	return "setChatMenuButton"
 }
 
-func (s SetChatMenuButton) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetChatMenuButton) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetChatMenuButton) ContentType() string {
@@ -4776,7 +4502,7 @@ type GetChatMenuButton struct {
 func (s GetChatMenuButton) Validate() error {
 	if s.ChatId != nil {
 		if *s.ChatId < 1 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty if specified")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty if specified")
 		}
 	}
 	return nil
@@ -4786,12 +4512,8 @@ func (s GetChatMenuButton) Endpoint() string {
 	return "getChatMenuButton"
 }
 
-func (s GetChatMenuButton) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetChatMenuButton) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetChatMenuButton) ContentType() string {
@@ -4817,12 +4539,8 @@ func (s SetMyDefaultAdministratorRights) Endpoint() string {
 	return "setMyDefaultAdministratorRights"
 }
 
-func (s SetMyDefaultAdministratorRights) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetMyDefaultAdministratorRights) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetMyDefaultAdministratorRights) ContentType() string {
@@ -4845,12 +4563,8 @@ func (s GetMyDefaultAdministratorRights) Endpoint() string {
 	return "getMyDefaultAdministratorRights"
 }
 
-func (s GetMyDefaultAdministratorRights) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetMyDefaultAdministratorRights) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetMyDefaultAdministratorRights) ContentType() string {

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/bigelle/gotely"
 )
 
 // This object represents an incoming inline query. When the user sends an empty query,
@@ -50,7 +52,7 @@ var allowed_startparameter = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
 func (i InlineQueryResultsButton) Validate() error {
 	if strings.TrimSpace(i.Text) == "" {
-		return ErrInvalidParam("text parameter can't be empty")
+		return gotely.ErrInvalidParam("text parameter can't be empty")
 	}
 	if i.WebApp != nil {
 		if err := i.WebApp.Validate(); err != nil {
@@ -59,10 +61,10 @@ func (i InlineQueryResultsButton) Validate() error {
 	}
 	if i.StartParameter != nil {
 		if !allowed_startparameter.MatchString(*i.StartParameter) {
-			return ErrInvalidParam("start_parameter parameter must contain only A-Z, a-z, 0-9, \"_\" and \"-\"")
+			return gotely.ErrInvalidParam("start_parameter parameter must contain only A-Z, a-z, 0-9, \"_\" and \"-\"")
 		}
 		if len(*i.StartParameter) < 1 || len(*i.StartParameter) > 64 {
-			return ErrInvalidParam("start_parameter parameter must be between 1 and 64 characters")
+			return gotely.ErrInvalidParam("start_parameter parameter must be between 1 and 64 characters")
 		}
 	}
 	return nil
@@ -148,13 +150,13 @@ func (i InlineQueryResultArticle) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultArticle) Validate() error {
 	if i.Type != "article" {
-		return ErrInvalidParam("type must be \"article\"")
+		return gotely.ErrInvalidParam("type must be \"article\"")
 	}
 	if len([]byte(i.Id)) > 64 {
-		return ErrInvalidParam("id parameter must not be longer than 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must not be longer than 64 bytes")
 	}
 	if strings.TrimSpace(i.Title) == "" {
-		return ErrInvalidParam("title parameter can't be empty")
+		return gotely.ErrInvalidParam("title parameter can't be empty")
 	}
 	if err := i.InputMessageContent.Validate(); err != nil {
 		return err
@@ -208,16 +210,16 @@ func (i InlineQueryResultPhoto) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultPhoto) Validate() error {
 	if i.Type != "photo" {
-		return ErrInvalidParam("type must be \"photo\"")
+		return gotely.ErrInvalidParam("type must be \"photo\"")
 	}
 	if len([]byte(i.Id)) > 64 {
-		return ErrInvalidParam("id parameter can't be empty")
+		return gotely.ErrInvalidParam("id parameter can't be empty")
 	}
 	if strings.TrimSpace(i.PhotoUrl) == "" {
-		return ErrInvalidParam("photo_url parameter can't be empty")
+		return gotely.ErrInvalidParam("photo_url parameter can't be empty")
 	}
 	if strings.TrimSpace(i.ThumbnailUrl) == "" {
-		return ErrInvalidParam("thumbnail_url parameter can't be empty")
+		return gotely.ErrInvalidParam("thumbnail_url parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be enabled if caption_entities are provided")
@@ -277,16 +279,16 @@ func (i InlineQueryResultGif) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultGif) Validate() error {
 	if i.Type != "gif" {
-		return ErrInvalidParam("type must be \"gif\"")
+		return gotely.ErrInvalidParam("type must be \"gif\"")
 	}
 	if len([]byte(i.Id)) > 64 {
-		return ErrInvalidParam("id parameter must not be longer than 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must not be longer than 64 bytes")
 	}
 	if strings.TrimSpace(i.GifUrl) == "" {
-		return ErrInvalidParam("gif_url parameter can't be empty")
+		return gotely.ErrInvalidParam("gif_url parameter can't be empty")
 	}
 	if strings.TrimSpace(i.ThumbnailUrl) == "" {
-		return ErrInvalidParam("thumbnail_url parameter can't be empty")
+		return gotely.ErrInvalidParam("thumbnail_url parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
@@ -347,17 +349,17 @@ func (i InlineQueryResultMpeg4Gif) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultMpeg4Gif) Validate() error {
 	if i.Type != "mpeg4_gif" {
-		return ErrInvalidParam("type must be \"mpeg4_gif\"")
+		return gotely.ErrInvalidParam("type must be \"mpeg4_gif\"")
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.Mpeg4Url) == "" {
-		return ErrInvalidParam("mpeg4_url parameter can't be empty")
+		return gotely.ErrInvalidParam("mpeg4_url parameter can't be empty")
 	}
 	if strings.TrimSpace(i.ThumbnailUrl) == "" {
-		return ErrInvalidParam("thumbnail_url parameter can't be empty")
+		return gotely.ErrInvalidParam("thumbnail_url parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
@@ -424,23 +426,23 @@ func (i InlineQueryResultVideo) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultVideo) Validate() error {
 	if i.Type != "video" {
-		return ErrInvalidParam("type must be \"video\"")
+		return gotely.ErrInvalidParam("type must be \"video\"")
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.VideoUrl) == "" {
-		return ErrInvalidParam("video_url parameter can't be empty")
+		return gotely.ErrInvalidParam("video_url parameter can't be empty")
 	}
 	if strings.TrimSpace(i.MimeType) == "" {
-		return ErrInvalidParam("mime_type parameter can't be empty")
+		return gotely.ErrInvalidParam("mime_type parameter can't be empty")
 	}
 	if strings.TrimSpace(i.ThumbnailUrl) == "" {
-		return ErrInvalidParam("thumbnail_url parameter can't be empty")
+		return gotely.ErrInvalidParam("thumbnail_url parameter can't be empty")
 	}
 	if strings.TrimSpace(i.Title) == "" {
-		return ErrInvalidParam("title parameter can't be empty")
+		return gotely.ErrInvalidParam("title parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -493,17 +495,17 @@ func (i InlineQueryResultAudio) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultAudio) Validate() error {
 	if i.Type != "audio" {
-		return ErrInvalidParam("type must be \"audio\"")
+		return gotely.ErrInvalidParam("type must be \"audio\"")
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.Title) == "" {
-		return ErrInvalidParam("title parameter can't be empty")
+		return gotely.ErrInvalidParam("title parameter can't be empty")
 	}
 	if strings.TrimSpace(i.AudioUrl) == "" {
-		return ErrInvalidParam("audio_url parameter can't be empty")
+		return gotely.ErrInvalidParam("audio_url parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
@@ -554,17 +556,17 @@ func (i InlineQueryResultVoice) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultVoice) Validate() error {
 	if i.Type != "voice" {
-		return ErrInvalidParam("type must be \"voice\"")
+		return gotely.ErrInvalidParam("type must be \"voice\"")
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.VoiceUrl) == "" {
-		return ErrInvalidParam("voice_url parameter can't be empty")
+		return gotely.ErrInvalidParam("voice_url parameter can't be empty")
 	}
 	if strings.TrimSpace(i.Title) == "" {
-		return ErrInvalidParam("title parameter can't be empty")
+		return gotely.ErrInvalidParam("title parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -623,20 +625,20 @@ func (i InlineQueryResultDocument) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultDocument) Validate() error {
 	if i.Type != "document" {
-		return ErrInvalidParam("type must be \"document\"")
+		return gotely.ErrInvalidParam("type must be \"document\"")
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.Title) == "" {
-		return ErrInvalidParam("title parameter can't be empty")
+		return gotely.ErrInvalidParam("title parameter can't be empty")
 	}
 	if strings.TrimSpace(i.MimeType) == "" {
-		return ErrInvalidParam("mime_type parameter can't be empty")
+		return gotely.ErrInvalidParam("mime_type parameter can't be empty")
 	}
 	if strings.TrimSpace(i.DocumentUrl) == "" {
-		return ErrInvalidParam("document_url parameter can't be empty")
+		return gotely.ErrInvalidParam("document_url parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
@@ -695,20 +697,20 @@ func (i InlineQueryResultLocation) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultLocation) Validate() error {
 	if i.Type != "location" {
-		return ErrInvalidParam("type must be \"location\"")
+		return gotely.ErrInvalidParam("type must be \"location\"")
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if i.Latitude == nil {
-		return ErrInvalidParam("latitude parameter can't be empty")
+		return gotely.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if i.Longitude == nil {
-		return ErrInvalidParam("longitude parameter can't be empty")
+		return gotely.ErrInvalidParam("longitude parameter can't be empty")
 	}
 	if strings.TrimSpace(i.Title) == "" {
-		return ErrInvalidParam("title parameter can't be empty")
+		return gotely.ErrInvalidParam("title parameter can't be empty")
 	}
 	if i.InputMessageContent != nil {
 		if err := i.InputMessageContent.Validate(); err != nil {
@@ -766,22 +768,22 @@ func (i InlineQueryResultVenue) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultVenue) Validate() error {
 	if i.Type != "venue" {
-		return ErrInvalidParam("type must be \"venue\"")
+		return gotely.ErrInvalidParam("type must be \"venue\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.Title) == "" {
-		return ErrInvalidParam("title parameter can't be empty")
+		return gotely.ErrInvalidParam("title parameter can't be empty")
 	}
 	if strings.TrimSpace(i.Address) == "" {
-		return ErrInvalidParam("address parameter can't be empty")
+		return gotely.ErrInvalidParam("address parameter can't be empty")
 	}
 	if i.Latitude == nil {
-		return ErrInvalidParam("latitude parameter can't be empty")
+		return gotely.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if i.Longitude == nil {
-		return ErrInvalidParam("longitude parameter can't be empty")
+		return gotely.ErrInvalidParam("longitude parameter can't be empty")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -829,19 +831,19 @@ func (i InlineQueryResultContact) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultContact) Validate() error {
 	if i.Type != "contact" {
-		return ErrInvalidParam("type must be \"contact\"")
+		return gotely.ErrInvalidParam("type must be \"contact\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.Id) == "" {
-		return ErrInvalidParam("id parameter can't be empty")
+		return gotely.ErrInvalidParam("id parameter can't be empty")
 	}
 	if strings.TrimSpace(i.PhoneNumber) == "" {
-		return ErrInvalidParam("phone_number parameter can't be empty")
+		return gotely.ErrInvalidParam("phone_number parameter can't be empty")
 	}
 	if strings.TrimSpace(i.FirstName) == "" {
-		return ErrInvalidParam("first_name parameter can't be empty")
+		return gotely.ErrInvalidParam("first_name parameter can't be empty")
 	}
 	if i.InputMessageContent != nil {
 		if err := i.InputMessageContent.Validate(); err != nil {
@@ -874,13 +876,13 @@ func (i InlineQueryResultGame) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultGame) Validate() error {
 	if i.Type != "game" {
-		return ErrInvalidParam("type must be \"game\"")
+		return gotely.ErrInvalidParam("type must be \"game\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.GameShortName) == "" {
-		return ErrInvalidParam("game_short_name parameter can't be empty")
+		return gotely.ErrInvalidParam("game_short_name parameter can't be empty")
 	}
 	if i.ReplyMarkup != nil {
 		if err := (*i.ReplyMarkup).Validate(); err != nil {
@@ -925,13 +927,13 @@ func (i InlineQueryResultCachedPhoto) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultCachedPhoto) Validate() error {
 	if i.Type != "photo" {
-		return ErrInvalidParam("type must be \"photo\"")
+		return gotely.ErrInvalidParam("type must be \"photo\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.PhotoFileId) == "" {
-		return ErrInvalidParam("photo_file_id parameter can't be empty")
+		return gotely.ErrInvalidParam("photo_file_id parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
@@ -982,13 +984,13 @@ func (i InlineQueryResultCachedGif) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultCachedGif) Validate() error {
 	if i.Type != "gif" {
-		return ErrInvalidParam("type must be \"gif\"")
+		return gotely.ErrInvalidParam("type must be \"gif\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.GifFileId) == "" {
-		return ErrInvalidParam("gif_file_id parameter can't be empty")
+		return gotely.ErrInvalidParam("gif_file_id parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be enabled if caption_entities are provided")
@@ -1039,13 +1041,13 @@ func (i InlineQueryResultCachedMpeg4Gif) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultCachedMpeg4Gif) Validate() error {
 	if i.Type != "mpeg4_gif" {
-		return ErrInvalidParam("type must be \"mpeg4_gif\"")
+		return gotely.ErrInvalidParam("type must be \"mpeg4_gif\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if i.Mpeg4FileId == "" {
-		return ErrInvalidParam("mpeg_4_file_id parameter can't be empty")
+		return gotely.ErrInvalidParam("mpeg_4_file_id parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
@@ -1085,13 +1087,13 @@ func (i InlineQueryResultCachedSticker) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultCachedSticker) Validate() error {
 	if i.Type != "sticker" {
-		return ErrInvalidParam("type must be \"sticker\"")
+		return gotely.ErrInvalidParam("type must be \"sticker\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if i.StickerFileId == "" {
-		return ErrInvalidParam("sticker_file_id parameter can't be empty")
+		return gotely.ErrInvalidParam("sticker_file_id parameter can't be empty")
 	}
 	if i.ReplyMarkup != nil {
 		if err := i.ReplyMarkup.Validate(); err != nil {
@@ -1139,13 +1141,13 @@ func (i InlineQueryResultCachedDocument) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultCachedDocument) Validate() error {
 	if i.Type != "document" {
-		return ErrInvalidParam("type must be \"document\"")
+		return gotely.ErrInvalidParam("type must be \"document\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if i.DocumentFileId == "" {
-		return ErrInvalidParam("document_file_id parameter can't be empty")
+		return gotely.ErrInvalidParam("document_file_id parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
@@ -1198,13 +1200,13 @@ func (i InlineQueryResultCachedVideo) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultCachedVideo) Validate() error {
 	if i.Type != "video" {
-		return ErrInvalidParam("type must be \"video\"")
+		return gotely.ErrInvalidParam("type must be \"video\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.VideoFileId) == "" {
-		return ErrInvalidParam("video_file_id parameter can't be empty")
+		return gotely.ErrInvalidParam("video_file_id parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
@@ -1253,13 +1255,13 @@ func (i InlineQueryResultCachedVoice) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultCachedVoice) Validate() error {
 	if i.Type != "voice" {
-		return ErrInvalidParam("type must be \"voice\"")
+		return gotely.ErrInvalidParam("type must be \"voice\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter can't be empty")
+		return gotely.ErrInvalidParam("id parameter can't be empty")
 	}
 	if strings.TrimSpace(i.VoiceFileId) == "" {
-		return ErrInvalidParam("voice_file_id parameter can't be empty")
+		return gotely.ErrInvalidParam("voice_file_id parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse mode can't be enabled if Entities are provided")
@@ -1306,13 +1308,13 @@ func (i InlineQueryResultCachedAudio) GetInlineQueryResultType() string {
 
 func (i InlineQueryResultCachedAudio) Validate() error {
 	if i.Type != "audio" {
-		return ErrInvalidParam("type must be \"audio\"")
+		return gotely.ErrInvalidParam("type must be \"audio\"")
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
-		return ErrInvalidParam("id parameter must be between 1 and 64 bytes")
+		return gotely.ErrInvalidParam("id parameter must be between 1 and 64 bytes")
 	}
 	if strings.TrimSpace(i.AudioFileId) == "" {
-		return ErrInvalidParam("audio_file_id parameter can't be empty")
+		return gotely.ErrInvalidParam("audio_file_id parameter can't be empty")
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
 		return fmt.Errorf("parse_mode can't be used if caption_entities are provided")
@@ -1366,7 +1368,7 @@ func (i InputTextMessageContent) GetInputMessageContentType() string {
 
 func (i InputTextMessageContent) Validate() error {
 	if l := len(i.MessageText); l < 1 || l > 4096 {
-		return ErrInvalidParam("message_text parameter must be between 1 and 4096 characters")
+		return gotely.ErrInvalidParam("message_text parameter must be between 1 and 4096 characters")
 	}
 	if i.ParseMode != nil && i.Entities != nil {
 		return fmt.Errorf("parse_mode can't be used if entities are provided")
@@ -1402,29 +1404,29 @@ func (i InputLocationMessageContent) GetInputMessageContentType() string {
 
 func (i InputLocationMessageContent) Validate() error {
 	if i.Latitude == nil {
-		return ErrInvalidParam("latitude parameter can't be empty")
+		return gotely.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if i.Longitude == nil {
-		return ErrInvalidParam("longitude parameter can't be empty")
+		return gotely.ErrInvalidParam("longitude parameter can't be empty")
 	}
 	if i.LivePeriod != nil {
 		if (*i.LivePeriod < 60 || *i.LivePeriod > 86400) && *i.LivePeriod != 0x7FFFFFFF {
-			return ErrInvalidParam("live_period parameter must be between 60 and 86400 or equal to 0x7FFFFFFF")
+			return gotely.ErrInvalidParam("live_period parameter must be between 60 and 86400 or equal to 0x7FFFFFFF")
 		}
 	}
 	if i.HorizontalAccuracy != nil {
 		if *i.HorizontalAccuracy < 0 || *i.HorizontalAccuracy > 1500 {
-			return ErrInvalidParam("horizontal_accuracy parameter must be between 0 and 1500 meters")
+			return gotely.ErrInvalidParam("horizontal_accuracy parameter must be between 0 and 1500 meters")
 		}
 	}
 	if i.Heading != nil {
 		if *i.Heading < 1 || *i.Heading > 360 {
-			return ErrInvalidParam("heading parameter must be between 0 and 1500")
+			return gotely.ErrInvalidParam("heading parameter must be between 0 and 1500")
 		}
 	}
 	if i.ProximityAlertRadius != nil {
 		if *i.ProximityAlertRadius < 1 || *i.ProximityAlertRadius > 100000 {
-			return ErrInvalidParam("proximity_alert_radius must be between 1 and 100000 meters")
+			return gotely.ErrInvalidParam("proximity_alert_radius must be between 1 and 100000 meters")
 		}
 	}
 	return nil
@@ -1458,10 +1460,10 @@ func (i InputVenueMessageContent) GetInputMessageContentType() string {
 
 func (i InputVenueMessageContent) Validate() error {
 	if i.Latitude == nil {
-		return ErrInvalidParam("latitude parameter can't be empty")
+		return gotely.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if i.Longitude == nil {
-		return ErrInvalidParam("longitude parameter can't be empty")
+		return gotely.ErrInvalidParam("longitude parameter can't be empty")
 	}
 	if strings.TrimSpace(i.Title) == "" {
 		return fmt.Errorf("title parameter can't be empty")
@@ -1565,38 +1567,38 @@ func (i InputInvoiceMessageContent) GetInputMessageContentType() string {
 
 func (i InputInvoiceMessageContent) Validate() error {
 	if l := len(i.Title); l < 1 || l > 32 {
-		return ErrInvalidParam("title parameter must be between 1 and 32 characters")
+		return gotely.ErrInvalidParam("title parameter must be between 1 and 32 characters")
 	}
 	if l := len(i.Description); l < 1 || l > 255 {
-		return ErrInvalidParam("description parameter must be between 1 and 255 characters")
+		return gotely.ErrInvalidParam("description parameter must be between 1 and 255 characters")
 	}
 	if l := len([]byte(i.Payload)); l < 1 || l > 128 {
-		return ErrInvalidParam("payload parameter must be between 1 and 128 bytes")
+		return gotely.ErrInvalidParam("payload parameter must be between 1 and 128 bytes")
 	}
 	if len(i.Currency) > 3 {
-		return ErrInvalidParam("currency parameter accepts only valid three-letter ISO 4217 currency codes")
+		return gotely.ErrInvalidParam("currency parameter accepts only valid three-letter ISO 4217 currency codes")
 	}
 	if i.Currency == "XTR" {
 		if len(i.Prices) > 1 {
-			return ErrInvalidParam("prices parameter must contain exactly one item for payments in Telegram Stars.")
+			return gotely.ErrInvalidParam("prices parameter must contain exactly one item for payments in Telegram Stars.")
 		}
 		if i.MaxTipAmount != nil {
-			return ErrInvalidParam("max_tip_amount parameter is not supported for payments in Telegram stars")
+			return gotely.ErrInvalidParam("max_tip_amount parameter is not supported for payments in Telegram stars")
 		}
 	}
 	if i.SuggestedTipAmounts != nil {
 		if len(*i.SuggestedTipAmounts) > 4 {
-			return ErrInvalidParam("suggested_tip_amounts parameter can't be longer than 4 elements")
+			return gotely.ErrInvalidParam("suggested_tip_amounts parameter can't be longer than 4 elements")
 		}
 		for j := 0; j < len(*i.SuggestedTipAmounts); j++ {
 			if (*i.SuggestedTipAmounts)[j] <= 0 {
-				return ErrInvalidParam("suggested_tip_amounts parameter accepts only positive integers")
+				return gotely.ErrInvalidParam("suggested_tip_amounts parameter accepts only positive integers")
 			}
 			if (*i.SuggestedTipAmounts)[j] > *i.MaxTipAmount {
-				return ErrInvalidParam("suggested_tip_amounts parameter accepts only integers that do not exceed the max_tip_amount")
+				return gotely.ErrInvalidParam("suggested_tip_amounts parameter accepts only integers that do not exceed the max_tip_amount")
 			}
 			if j > 0 && (*i.SuggestedTipAmounts)[j] <= (*i.SuggestedTipAmounts)[j-1] {
-				return ErrInvalidParam("suggested_tip_amounts parameter should be passed in a strictly increased order")
+				return gotely.ErrInvalidParam("suggested_tip_amounts parameter should be passed in a strictly increased order")
 			}
 		}
 	}

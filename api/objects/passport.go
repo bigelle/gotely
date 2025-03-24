@@ -3,6 +3,8 @@ package objects
 import (
 	"slices"
 	"strings"
+
+	"github.com/bigelle/gotely"
 )
 
 // Describes Telegram Passport data shared with the bot by the user.
@@ -127,21 +129,21 @@ func (p PassportElementErrorDataField) GetPassportElementErrorSource() string {
 
 func (p PassportElementErrorDataField) Validate() error {
 	if p.Source != "data" {
-		return ErrInvalidParam("source must be \"data\"")
+		return gotely.ErrInvalidParam("source must be \"data\"")
 	}
 	if !slices.Contains([]string{"personal_details", "passport", "driver_license", "identity_card", "internal_passport", "address"}, p.Type) {
-		return ErrInvalidParam(
+		return gotely.ErrInvalidParam(
 			"type parameter accepts only one of one of \"personal_details\", \"passport”, \"driver_license”, \"identity_card”, \"internal_passport”, \"address\"",
 		)
 	}
 	if strings.TrimSpace(p.DataHash) == "" {
-		return ErrInvalidParam("data_hash parameter can't be empty")
+		return gotely.ErrInvalidParam("data_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return ErrInvalidParam("message parameter can't be empty")
+		return gotely.ErrInvalidParam("message parameter can't be empty")
 	}
 	if strings.TrimSpace(p.FieldName) == "" {
-		return ErrInvalidParam("field_name parameter can't be empty")
+		return gotely.ErrInvalidParam("field_name parameter can't be empty")
 	}
 	return nil
 }
@@ -164,16 +166,16 @@ func (p PassportElementErrorFrontSide) GetPassportElementErrorSource() string {
 
 func (p PassportElementErrorFrontSide) Validate() error {
 	if p.Source != "front_side" {
-		return ErrInvalidParam("source must be \"front_side\"")
+		return gotely.ErrInvalidParam("source must be \"front_side\"")
 	}
 	if !slices.Contains([]string{"passport", "driver_license", "identity_card", "internal_passport"}, p.Type) {
-		return ErrInvalidParam("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\"")
+		return gotely.ErrInvalidParam("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\"")
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return ErrInvalidParam("file_hash parameter can't be empty")
+		return gotely.ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return ErrInvalidParam("message parameter can't be empty")
+		return gotely.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -196,16 +198,16 @@ func (p PassportElementErrorReverseSide) GetPassportElementErrorSource() string 
 
 func (p PassportElementErrorReverseSide) Validate() error {
 	if p.Source != "reverse_side" {
-		return ErrInvalidParam("source must be \"reverse_side\"")
+		return gotely.ErrInvalidParam("source must be \"reverse_side\"")
 	}
 	if !slices.Contains([]string{"driver_license", "identity_card"}, p.Type) {
-		return ErrInvalidParam("type parameter accepts only one of \"driver_license\", \"identity_card\"")
+		return gotely.ErrInvalidParam("type parameter accepts only one of \"driver_license\", \"identity_card\"")
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return ErrInvalidParam("file_hash parameter can't be empty")
+		return gotely.ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return ErrInvalidParam("message parameter can't be empty")
+		return gotely.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -229,16 +231,16 @@ func (p PassportElementErrorSelfie) GetPassportElementErrorSource() string {
 
 func (p PassportElementErrorSelfie) Validate() error {
 	if p.Source != "selfie" {
-		return ErrInvalidParam("source must be \"selfie\"")
+		return gotely.ErrInvalidParam("source must be \"selfie\"")
 	}
 	if !slices.Contains([]string{"passport", "driver_license", "identity_card", "internal_passport"}, p.Type) {
-		return ErrInvalidParam("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\"")
+		return gotely.ErrInvalidParam("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\"")
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return ErrInvalidParam("file_hash parameter can't be empty")
+		return gotely.ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return ErrInvalidParam("message parameter can't be empty")
+		return gotely.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -262,18 +264,18 @@ func (p PassportElementErrorFile) GetPassportElementErrorSource() string {
 
 func (p PassportElementErrorFile) Validate() error {
 	if p.Source != "file" {
-		return ErrInvalidParam("source must be \"file\"")
+		return gotely.ErrInvalidParam("source must be \"file\"")
 	}
 	if !slices.Contains([]string{"utility_bill", "bank_statement", "rental_agreement", "passport_registration", "temporary_registration"}, p.Type) {
-		return ErrInvalidParam(
+		return gotely.ErrInvalidParam(
 			"type parameter accepts only one of \"utility_bill\", \"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
 		)
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return ErrInvalidParam("file_hash parameter can't be empty")
+		return gotely.ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return ErrInvalidParam("message parameter can't be empty")
+		return gotely.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -297,18 +299,18 @@ func (p PassportElementErrorFiles) GetPassportElementErrorSource() string {
 
 func (p PassportElementErrorFiles) Validate() error {
 	if p.Source != "files" {
-		return ErrInvalidParam("source must be \"files\"")
+		return gotely.ErrInvalidParam("source must be \"files\"")
 	}
 	if !slices.Contains([]string{"utility_bill", "bank_statement", "rental_agreement", "passport_registration", "temporary_registration"}, p.Type) {
-		return ErrInvalidParam(
+		return gotely.ErrInvalidParam(
 			"type parameter accepts only one of \"utility_bill\", \"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
 		)
 	}
 	if len(p.FileHashes) == 0 {
-		return ErrInvalidParam("file_hash parameter can't be empty")
+		return gotely.ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return ErrInvalidParam("message parameter can't be empty")
+		return gotely.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -333,7 +335,7 @@ func (p PassportElementErrorTranslationFile) GetPassportElementErrorSource() str
 
 func (p PassportElementErrorTranslationFile) Validate() error {
 	if p.Source != "translation_file" {
-		return ErrInvalidParam("source must be \"translation_file\"")
+		return gotely.ErrInvalidParam("source must be \"translation_file\"")
 	}
 	// awful
 	if !slices.Contains(
@@ -343,16 +345,16 @@ func (p PassportElementErrorTranslationFile) Validate() error {
 		},
 		p.Type,
 	) {
-		return ErrInvalidParam(
+		return gotely.ErrInvalidParam(
 			"type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\", \"utility_bill\", " +
 				"\"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
 		)
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return ErrInvalidParam("file_hash parameter can't be empty")
+		return gotely.ErrInvalidParam("file_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return ErrInvalidParam("message parameter can't be empty")
+		return gotely.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -378,7 +380,7 @@ func (p PassportElementErrorTranslationFiles) GetPassportElementErrorSource() st
 
 func (p PassportElementErrorTranslationFiles) Validate() error {
 	if p.Source != "translation_files" {
-		return ErrInvalidParam("source must be \"translation_files\"")
+		return gotely.ErrInvalidParam("source must be \"translation_files\"")
 	}
 	// awful
 	if !slices.Contains(
@@ -388,16 +390,16 @@ func (p PassportElementErrorTranslationFiles) Validate() error {
 		},
 		p.Type,
 	) {
-		return ErrInvalidParam(
+		return gotely.ErrInvalidParam(
 			"type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\", \"utility_bill\", " +
 				"\"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
 		)
 	}
 	if len(p.FileHashes) == 0 {
-		return ErrInvalidParam("file_hashes parameter can't be empty")
+		return gotely.ErrInvalidParam("file_hashes parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return ErrInvalidParam("message parameter can't be empty")
+		return gotely.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }
@@ -421,16 +423,16 @@ func (p PassportElementErrorUnspecified) GetPassportElementErrorSource() string 
 
 func (p PassportElementErrorUnspecified) Validate() error {
 	if p.Source != "unspecified" {
-		return ErrInvalidParam("source must be \"unspecified\"")
+		return gotely.ErrInvalidParam("source must be \"unspecified\"")
 	}
 	if strings.TrimSpace(p.Type) == "" {
-		return ErrInvalidParam("type parameter can't be empty")
+		return gotely.ErrInvalidParam("type parameter can't be empty")
 	}
 	if strings.TrimSpace(p.ElementHash) == "" {
-		return ErrInvalidParam("element_hash parameter can't be empty")
+		return gotely.ErrInvalidParam("element_hash parameter can't be empty")
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return ErrInvalidParam("message parameter can't be empty")
+		return gotely.ErrInvalidParam("message parameter can't be empty")
 	}
 	return nil
 }

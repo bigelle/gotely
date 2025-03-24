@@ -1,11 +1,9 @@
-// TODO: replace marshal json with encoder
 package methods
 
 import (
-	"bytes"
-	"encoding/json"
 	"io"
 
+	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/api/objects"
 )
 
@@ -28,10 +26,10 @@ type SetPassportDataErrors struct {
 
 func (s SetPassportDataErrors) Validate() error {
 	if s.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if len(s.Errors) < 1 {
-		return objects.ErrInvalidParam("objects.parameter can't be empty")
+		return gotely.ErrInvalidParam("objects.parameter can't be empty")
 	}
 	return nil
 }
@@ -40,12 +38,8 @@ func (s SetPassportDataErrors) Endpoint() string {
 	return "setPassportDataErrors"
 }
 
-func (s SetPassportDataErrors) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetPassportDataErrors) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetPassportDataErrors) ContentType() string {

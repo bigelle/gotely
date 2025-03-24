@@ -1,12 +1,10 @@
-// TODO: replace marshal json with encoder
 package methods
 
 import (
-	"bytes"
-	"encoding/json"
 	"io"
 	"strings"
 
+	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/api/objects"
 )
 
@@ -41,23 +39,23 @@ type EditMessageText struct {
 
 func (e EditMessageText) Validate() error {
 	if len(e.Text) < 1 || len(e.Text) > 4096 {
-		return objects.ErrInvalidParam("text parameter must be between 1 and 4096 characters")
+		return gotely.ErrInvalidParam("text parameter must be between 1 and 4096 characters")
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return objects.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return gotely.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if e.Entities != nil && e.ParseMode != nil {
-		return objects.ErrInvalidParam("entities can't be used if parse_mode is provided")
+		return gotely.ErrInvalidParam("entities can't be used if parse_mode is provided")
 	}
 	if e.ReplyMarkup != nil {
 		if err := e.ReplyMarkup.Validate(); err != nil {
@@ -76,12 +74,8 @@ func (s EditMessageText) Endpoint() string {
 	return "editMessageText"
 }
 
-func (s EditMessageText) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s EditMessageText) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s EditMessageText) ContentType() string {
@@ -118,24 +112,24 @@ type EditMessageCaption struct {
 func (e EditMessageCaption) Validate() error {
 	if e.Caption != nil {
 		if len(*e.Caption) < 1 || len(*e.Caption) > 4096 {
-			return objects.ErrInvalidParam("caption parameter must be between 1 and 4096 characters")
+			return gotely.ErrInvalidParam("caption parameter must be between 1 and 4096 characters")
 		}
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return objects.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return gotely.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if e.CaptionEntities != nil && e.ParseMode != nil {
-		return objects.ErrInvalidParam("entities can't be used if parse_mode is provided")
+		return gotely.ErrInvalidParam("entities can't be used if parse_mode is provided")
 	}
 	if e.ReplyMarkup != nil {
 		if err := e.ReplyMarkup.Validate(); err != nil {
@@ -149,12 +143,8 @@ func (s EditMessageCaption) Endpoint() string {
 	return "editMessageCaption"
 }
 
-func (s EditMessageCaption) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s EditMessageCaption) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s EditMessageCaption) ContentType() string {
@@ -194,15 +184,15 @@ func (e EditMessageMedia) Validate() error {
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return objects.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return gotely.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if e.ReplyMarkup != nil {
@@ -217,12 +207,8 @@ func (s EditMessageMedia) Endpoint() string {
 	return "editMessageMedia"
 }
 
-func (s EditMessageMedia) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s EditMessageMedia) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s EditMessageMedia) ContentType() string {
@@ -268,32 +254,32 @@ type EditMessageLiveLocation struct {
 
 func (e EditMessageLiveLocation) Validate() error {
 	if e.Latitude == nil {
-		return objects.ErrInvalidParam("latitude parameter can't be empty")
+		return gotely.ErrInvalidParam("latitude parameter can't be empty")
 	}
 	if e.Longitude == nil {
-		return objects.ErrInvalidParam("longitude parameter can't be empty")
+		return gotely.ErrInvalidParam("longitude parameter can't be empty")
 	}
 	if e.HorizontalAccuracy != nil {
 		if *e.HorizontalAccuracy < 0 || *e.HorizontalAccuracy > 1500 {
-			return objects.ErrInvalidParam("horizontal_accuracy parameter must be between 0 and 1500 meters")
+			return gotely.ErrInvalidParam("horizontal_accuracy parameter must be between 0 and 1500 meters")
 		}
 	}
 	if e.Heading != nil {
 		if *e.Heading < 1 || *e.Heading > 360 {
-			return objects.ErrInvalidParam("heading parameter must be between 1 and 360 degrees")
+			return gotely.ErrInvalidParam("heading parameter must be between 1 and 360 degrees")
 		}
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return objects.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return gotely.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if e.ReplyMarkup != nil {
@@ -308,12 +294,8 @@ func (s EditMessageLiveLocation) Endpoint() string {
 	return "editMessageLiveLocation"
 }
 
-func (s EditMessageLiveLocation) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s EditMessageLiveLocation) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s EditMessageLiveLocation) ContentType() string {
@@ -339,15 +321,15 @@ type StopMessageLiveLocation struct {
 func (e StopMessageLiveLocation) Validate() error {
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return objects.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return gotely.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if e.ReplyMarkup != nil {
@@ -379,15 +361,15 @@ type EditMessageReplyMarkup struct {
 func (e EditMessageReplyMarkup) Validate() error {
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return objects.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			return gotely.ErrInvalidParam("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if e.ReplyMarkup != nil {
@@ -416,10 +398,10 @@ type StopPoll struct {
 
 func (s StopPoll) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if s.MessageId < 1 {
-		return objects.ErrInvalidParam("message_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_id parameter can't be empty")
 	}
 	if s.ReplyMarkup != nil {
 		if err := s.ReplyMarkup.Validate(); err != nil {
@@ -433,12 +415,8 @@ func (s StopPoll) Endpoint() string {
 	return "stopPoll"
 }
 
-func (s StopPoll) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s StopPoll) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s StopPoll) ContentType() string {
@@ -475,10 +453,10 @@ type DeleteMessage struct {
 
 func (d DeleteMessage) Validate() error {
 	if strings.TrimSpace(d.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if d.MessageId < 1 {
-		return objects.ErrInvalidParam("message_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_id parameter can't be empty")
 	}
 	return nil
 }
@@ -487,12 +465,8 @@ func (s DeleteMessage) Endpoint() string {
 	return "deleteMessage"
 }
 
-func (s DeleteMessage) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s DeleteMessage) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s DeleteMessage) ContentType() string {
@@ -514,10 +488,10 @@ type DeleteMessages struct {
 
 func (d DeleteMessages) Validate() error {
 	if strings.TrimSpace(d.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if len(d.MessageIds) < 1 || len(d.MessageIds) > 100 {
-		return objects.ErrInvalidParam("message_ids parameter must be between 1 and 100")
+		return gotely.ErrInvalidParam("message_ids parameter must be between 1 and 100")
 	}
 	return nil
 }
@@ -526,12 +500,8 @@ func (s DeleteMessages) Endpoint() string {
 	return "deleteMessages"
 }
 
-func (s DeleteMessages) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s DeleteMessages) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s DeleteMessages) ContentType() string {

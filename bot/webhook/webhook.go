@@ -37,7 +37,7 @@ func (s SetWebhook) Validate() error {
 	return nil
 }
 
-func (s *SetWebhook) Reader() (io.Reader, error) {
+func (s *SetWebhook) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -93,7 +93,7 @@ func (s *SetWebhook) Reader() (io.Reader, error) {
 		}
 	}()
 
-	return pr, nil
+	return pr
 }
 
 func (s SetWebhook) ContentType() string {

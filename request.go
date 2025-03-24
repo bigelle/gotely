@@ -45,7 +45,7 @@ type Method interface {
 	Validate() error
 
 	// Reader returns an `io.Reader` representing the request body.
-	Reader() (io.Reader, error)
+	Reader() io.Reader
 
 	// ContentType returns the appropriate content type:
 	// - "application/json" for standard requests
@@ -70,11 +70,7 @@ func SendRequestWith(body Method, dest any, token string, opts ...RequestOption)
 
 	// its important to call Reader() before using ContentType()
 	// since content-type boundary is generated inside Reader() and stored inside of a struct
-	r, err := body.Reader()
-	if err != nil {
-		return err
-	}
-
+	r := body.Reader()
 	cfg := RequestConfig{
 		Client: http.DefaultClient,
 		ApiUrl: "https://api.telegram.org/bot<token>/<method>",

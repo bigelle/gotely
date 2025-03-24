@@ -1,6 +1,8 @@
 package objects
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,23 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/bigelle/gotely/api"
+	"github.com/bigelle/gotely"
 )
-
-type ErrInvalidParam string
-
-func (e ErrInvalidParam) Error() string {
-	return string(e)
-}
-
-type ErrInvalidSubtypeConversion struct {
-	Expected string
-	Got      string
-}
-
-func (e ErrInvalidSubtypeConversion) Error() string {
-	return fmt.Sprintf("failed subtype conversion; expected: %s, got: %s", e.Expected, e.Got)
-}
 
 // This object represents an incoming update.
 // At most one of the optional parameters can be present in any given update.
@@ -534,121 +521,37 @@ type InaccessibleMessage struct {
 //
 // - InaccessibleMessage
 type MaybeInaccessibleMessage struct {
-	MessageId                     int                            `json:"message_id"`
-	MessageThreadId               *int                           `json:"message_thread_id,omitempty"`
-	From                          *User                          `json:"from,omitempty"`
-	SenderChat                    *Chat                          `json:"sender_chat,omitempty"`
-	SenderBoostCount              *int                           `json:"sender_boost_count,omitempty"`
-	SenderBusinessBot             *User                          `json:"sender_business_bot,omitempty"`
-	Date                          int                            `json:"date"`
-	BusinessConnectionId          *string                        `json:"business_connection_id,omitempty"`
-	Chat                          Chat                           `json:"chat"`
-	ForwardOrigin                 *MessageOrigin                 `json:"forward_origin,omitempty"`
-	IsTopicMessage                *bool                          `json:"is_topic_message,omitempty"`
-	IsAutomaticForward            *bool                          `json:"is_automatic_forward,omitempty"`
-	ReplyToMessage                *Message                       `json:"reply_to_message,omitempty"`
-	ExternalReply                 *ExternalReplyInfo             `json:"external_reply,omitempty"`
-	Quote                         *TextQuote                     `json:"quote,omitempty"`
-	ReplyToStory                  *Story                         `json:"reply_to_story,omitempty"`
-	ViaBot                        *User                          `json:"via_bot,omitempty"`
-	EditDate                      *int                           `json:"edit_date,omitempty"`
-	HasProtectedContent           *bool                          `json:"has_protected_content,omitempty"`
-	IsFromOffline                 *bool                          `json:"is_from_offline,omitempty"`
-	MediaGroupId                  *string                        `json:"media_group_id,omitempty"`
-	AuthorSignature               *string                        `json:"author_signature,omitempty"`
-	Text                          *string                        `json:"text,omitempty"`
-	Entities                      *[]MessageEntity               `json:"entities,omitempty"`
-	LinkPreviewOptions            *LinkPreviewOptions            `json:"link_preview_options,omitempty"`
-	EffectId                      *string                        `json:"effect_id,omitempty"`
-	Animation                     *Animation                     `json:"animation,omitempty"`
-	Audio                         *Audio                         `json:"audio,omitempty"`
-	Document                      *Document                      `json:"document,omitempty"`
-	PaidMedia                     *PaidMediaInfo                 `json:"paid_media,omitempty"`
-	Photo                         *[]PhotoSize                   `json:"photo,omitempty"`
-	Sticker                       *Sticker                       `json:"sticker,omitempty"`
-	Story                         *Story                         `json:"story,omitempty"`
-	Video                         *Video                         `json:"video,omitempty"`
-	VideoNote                     *VideoNote                     `json:"video_note,omitempty"`
-	Voice                         *Voice                         `json:"voice,omitempty"`
-	Caption                       *string                        `json:"caption,omitempty"`
-	CaptionEntities               *[]MessageEntity               `json:"caption_entities,omitempty"`
-	ShowCaptionAboveMedia         *bool                          `json:"show_caption_above_media,omitempty"`
-	HasMediaSpoiler               *bool                          `json:"has_media_spoiler,omitempty"`
-	Contact                       *Contact                       `json:"contact,omitempty"`
-	Dice                          *Dice                          `json:"dice,omitempty"`
-	Game                          *Game                          `json:"game,omitempty"`
-	Poll                          *Poll                          `json:"poll,omitempty"`
-	Venue                         *Venue                         `json:"venue,omitempty"`
-	Location                      *Location                      `json:"location,omitempty"`
-	NewChatMembers                *[]User                        `json:"new_chat_members,omitempty"`
-	LeftChatMember                *User                          `json:"left_chat_member,omitempty"`
-	NewChatTitle                  *string                        `json:"new_chat_title,omitempty"`
-	NewChatPhoto                  *[]PhotoSize                   `json:"new_chat_photo,omitempty"`
-	DeleteChatPhoto               *bool                          `json:"delete_chat_photo,omitempty"`
-	GroupChatCreated              *bool                          `json:"group_chat_created,omitempty"`
-	SuperGroupCreated             *bool                          `json:"super_group_created,omitempty"`
-	ChannelChatCreated            *bool                          `json:"channel_chat_created"`
-	MessageAutoDeleteTimerChanged *MessageAutoDeleteTimerChanged `json:"message_auto_delete_timer_changed,omitempty"`
-	MigrateToChatId               *int64                         `json:"migrate_to_chat_id,omitempty"`
-	MigrateFromChatId             *int64                         `json:"migrate_from_chat_id,omitempty"`
-	PinnedMessage                 *MaybeInaccessibleMessage      `json:"pinned_message,omitempty"`
-	Invoice                       *Invoice                       `json:"invoice,omitempty"`
-	SuccessfulPayment             *SuccessfulPayment             `json:"successful_payment,omitempty"`
-	RefundedPayment               *RefundedPayment               `json:"refunded_payment,omitempty"`
-	UsersShared                   *UsersShared                   `json:"users_shared,omitempty"`
-	ChatShared                    *ChatShared                    `json:"chat_shared,omitempty"`
-	ConnectedWebsite              *string                        `json:"connected_website,omitempty"`
-	WriteAccessAllowed            *WriteAccessAllowed            `json:"write_access_allowed,omitempty"`
-	PassportData                  *PassportData                  `json:"passport_data,omitempty"`
-	ProximityAlertTriggered       *ProximityAlertTriggered       `json:"proximity_alert_triggered,omitempty"`
-	ForwardFrom                   *User                          `json:"forward_from,omitempty"`
-	BoostAdded                    *ChatBoostAdded                `json:"boost_added,omitempty"`
-	ChatBackgroundSet             *ChatBackground                `json:"chat_background_set,omitempty"`
-	ForumTopicCreated             *ForumTopicCreated             `json:"forum_topic_created,omitempty"`
-	ForumTopicEdited              *ForumTopicEdited              `json:"forum_topic_edited,omitempty"`
-	ForumTopicClosed              *ForumTopicClosed              `json:"forum_topic_closed,omitempty"`
-	ForumTopicReopened            *ForumTopicReopened            `json:"forum_topic_reopened,omitempty"`
-	GeneralForumTopicHidden       *GeneralForumTopicHidden       `json:"general_forum_topic_hidden,omitempty"`
-	GeneralForumTopicUnhidden     *GeneralForumTopicUnhidden     `json:"general_forum_topic_unhidden,omitempty"`
-	GiveawayCreated               *GiveawayCreated               `json:"giveaway_created,omitempty"`
-	Giveaway                      *Giveaway                      `json:"giveaway,omitempty"`
-	GiveawayWinners               *GiveawayWinners               `json:"giveaway_winners,omitempty"`
-	GiveawayCompleted             *GiveawayCompleted             `json:"giveaway_completed,omitempty"`
-	VideoChatScheduled            *VideoChatScheduled            `json:"video_chat_scheduled,omitempty"`
-	VideoChatStarted              *VideoChatStarted              `json:"video_chat_started,omitempty"`
-	VideoChatEnded                *VideoChatEnded                `json:"video_chat_ended,omitempty"`
-	VideoChatParticipantsInvited  *VideoChatParticipantsInvited  `json:"video_chat_participants_invited,omitempty"`
-	WebAppData                    *WebAppData                    `json:"web_app_data,omitempty"`
-	ReplyMarkup                   *InlineKeyboardMarkup          `json:"reply_markup,omitempty"`
+	Date         int
+	Accessible   *Message
+	Inaccessible *InaccessibleMessage
 }
 
-func (m MaybeInaccessibleMessage) IsAccessible() bool {
-	return m.Date != 0
-}
-
-func (m MaybeInaccessibleMessage) MessageType() (*Message, error) {
-	if !m.IsAccessible() {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "message",
-			Got:      "inaccessible_message",
-		}
+func (m *MaybeInaccessibleMessage) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	var date int
+	if err := gotely.DecodeExactField(r, "date", &date); err != nil {
+		return err
 	}
-	msg := Message(m)
-	return &msg, nil
-}
+	// Resetting reader to re-read JSON
+	r.Seek(0, io.SeekStart)
 
-func (m MaybeInaccessibleMessage) InaccessibleMessageType() (*InaccessibleMessage, error) {
-	if m.IsAccessible() {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "inaccessible_message",
-			Got:      "message",
+	if date == 0 {
+		var result InaccessibleMessage
+		if err := gotely.DecodeJSON(r, &result); err != nil {
+			return err
 		}
+		m.Inaccessible = &result
+	} else if date > 0 {
+		var result Message
+		if err := gotely.DecodeJSON(r, &result); err != nil {
+			return err
+		}
+		m.Accessible = &result
+	} else {
+		return fmt.Errorf("can't decode JSON because of unexpected negative date field")
 	}
-	return &InaccessibleMessage{
-		Chat:      m.Chat,
-		MessageId: m.MessageId,
-		Date:      m.Date,
-	}, nil
+	m.Date = date
+	return nil
 }
 
 type MessageEntity struct {
@@ -769,14 +672,14 @@ type ReplyParameters struct {
 func (r ReplyParameters) Validate() error {
 	if r.ChatId != nil {
 		if strings.TrimSpace(*r.ChatId) == "" {
-			return ErrInvalidParam("chat_id parameter can't be empty")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if r.MessageId < 1 {
-		return ErrInvalidParam("message_id parameter can't be empty")
+		return gotely.ErrInvalidParam("message_id parameter can't be empty")
 	}
 	if r.QuoteParseMode != nil && r.QuoteEntities != nil {
-		return ErrInvalidParam("quote)parse_mode can't be used if quote_entities are provided")
+		return gotely.ErrInvalidParam("quote)parse_mode can't be used if quote_entities are provided")
 	}
 	return nil
 }
@@ -791,73 +694,55 @@ func (r ReplyParameters) Validate() error {
 //
 // -MessageOriginChannel
 type MessageOrigin struct {
-	Type            string  `json:"type"`
-	Date            *int    `json:"date,omitempty"`
-	SenderUser      *User   `json:"sender_user,omitempty"`
-	SenderUserName  *string `json:"sender_user_name,omitempty"`
-	SenderChat      *Chat   `json:"sender_chat,omitempty"`
-	AuthorSignature *string `json:"author_signature,omitempty"`
-	Chat            *Chat   `json:"chat,omitempty"`
-	MessageId       *int    `json:"message_id,omitempty"`
+	Type       string
+	User       *MessageOriginUser
+	HiddenUser *MessageOriginHiddenUser
+	Chat       *MessageOriginChat
+	Channel    *MessageOriginChannel
 }
 
-func (m MessageOrigin) UserType() (*MessageOriginUser, error) {
-	if m.Type != "user" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "user",
-			Got:      m.Type,
-		}
+func (m *MessageOrigin) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	var typ string
+	if err := gotely.DecodeExactField(r, "type", &typ); err != nil {
+		return err
 	}
-	return &MessageOriginUser{
-		Type:       m.Type,
-		Date:       *m.Date,
-		SenderUser: *m.SenderUser,
-	}, nil
-}
+	// resetting reader to re-read JSON
+	r.Seek(0, io.SeekStart)
 
-func (m MessageOrigin) HiddenUserType() (*MessageOriginHiddenUser, error) {
-	if m.Type != "hidden_user" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "user",
-			Got:      m.Type,
+	switch typ {
+	case "user":
+		var result MessageOriginUser
+		if err := gotely.DecodeJSON(r, &result); err != nil {
+			return err
 		}
-	}
-	return &MessageOriginHiddenUser{
-		Type:           m.Type,
-		Date:           *m.Date,
-		SenderUsername: *m.SenderUserName,
-	}, nil
-}
+		m.User = &result
 
-func (m MessageOrigin) ChatType() (*MessageOriginChat, error) {
-	if m.Type != "chat" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "chat",
-			Got:      m.Type,
+	case "hidden_user":
+		var result MessageOriginHiddenUser
+		if err := gotely.DecodeJSON(r, &result); err != nil {
+			return err
 		}
-	}
-	return &MessageOriginChat{
-		Type:            m.Type,
-		Date:            *m.Date,
-		SenderChat:      *m.SenderChat,
-		AuthorSignature: m.AuthorSignature,
-	}, nil
-}
+		m.HiddenUser = &result
 
-func (m MessageOrigin) ChannelType() (*MessageOriginChannel, error) {
-	if m.Type != "channel" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "channel",
-			Got:      m.Type,
+	case "chat":
+		var result MessageOriginChat
+		if err := gotely.DecodeJSON(r, &result); err != nil {
+			return err
 		}
+		m.Chat = &result
+
+	case "channel":
+		var result MessageOriginChannel
+		if err := gotely.DecodeJSON(r, &result); err != nil {
+			return err
+		}
+		m.Channel = &result
+
+	default:
+		return fmt.Errorf("unknown message origin type: %s", typ)
 	}
-	return &MessageOriginChannel{
-		Type:            m.Type,
-		Date:            *m.Date,
-		Chat:            *m.Chat,
-		MessageId:       *m.MessageId,
-		AuthorSignature: m.AuthorSignature,
-	}, nil
+	return nil
 }
 
 // The message was originally sent by a known user.
@@ -1068,53 +953,46 @@ type PaidMediaInfo struct {
 //
 // - PaidMediaVideo
 type PaidMedia struct {
-	Type     string       `json:"type"`
-	Width    *int         `json:"width,omitempty"`
-	Height   *int         `json:"height,omitempty"`
-	Duration *int         `json:"duration,omitempty"`
-	Photo    *[]PhotoSize `json:"photo,omitempty"`
-	Video    *Video       `json:"video,omitempty"`
+	Type    string `json:"type"`
+	Preview *PaidMediaPreview
+	Photo   *PaidMediaPhoto
+	Video   *PaidMediaVideo
 }
 
-func (p PaidMedia) PreviewType() (*PaidMediaPreview, error) {
-	if p.Type != "preview" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "preview",
-			Got:      p.Type,
-		}
+func (p *PaidMedia) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	var typ string
+	if err := gotely.DecodeExactField(r, "type", &typ); err != nil {
+		return err
 	}
-	return &PaidMediaPreview{
-		Type:     p.Type,
-		Width:    p.Width,
-		Height:   p.Height,
-		Duration: p.Duration,
-	}, nil
-}
+	r.Seek(0, io.SeekStart)
 
-func (p PaidMedia) PhotoType() (*PaidMediaPhoto, error) {
-	if p.Type != "photo" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "photo",
-			Got:      p.Type,
+	switch typ {
+	case "preview":
+		var result PaidMediaPreview
+		if err := gotely.DecodeJSON(r, &result); err != nil {
+			return err
 		}
-	}
-	return &PaidMediaPhoto{
-		Type:  p.Type,
-		Photo: *p.Photo,
-	}, nil
-}
+		p.Preview = &result
 
-func (p PaidMedia) VideoType() (*PaidMediaVideo, error) {
-	if p.Type != "video" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "video",
-			Got:      p.Type,
+	case "photo":
+		var result PaidMediaPhoto
+		if err := gotely.DecodeJSON(r, &result); err != nil {
+			return err
 		}
+		p.Photo = &result
+
+	case "video":
+		var result PaidMediaVideo
+		if err := gotely.DecodeJSON(r, &result); err != nil {
+			return err
+		}
+		p.Video = &result
+
+	default:
+		return fmt.Errorf("unknown paid media type: %s", typ)
 	}
-	return &PaidMediaVideo{
-		Type:  p.Type,
-		Video: p.Video,
-	}, nil
+	return nil
 }
 
 // The paid media isn't available before the payment.
@@ -1142,7 +1020,7 @@ type PaidMediaVideo struct {
 	// Type of the paid media, always “video”
 	Type string `json:"type"`
 	// The video
-	Video *Video `json:"video"`
+	Video Video `json:"video"`
 }
 
 // This object represents a phone contact.
@@ -1323,53 +1201,48 @@ type ChatBoostAdded struct {
 //
 // - BackgroundFillFreeformGradient
 type BackgroundFill struct {
-	Type          string `json:"type"`
-	Color         *int   `json:"color,omitempty"`
-	TopColor      *int   `json:"top_color,omitempty"`
-	BottomColor   *int   `json:"bottom_color,omitempty"`
-	RotationAngle *int   `json:"rotation_angle,omitempty"`
-	Colors        *[]int `json:"colors,omitempty"`
+	Type             string `json:"type"`
+	Solid            *BackgroundFillSolid
+	Gradient         *BackgroundFillGradient
+	FreeformGradient *BackgroundFillFreeformGradient
 }
 
-func (b BackgroundFill) SolidType() (*BackgroundFillSolid, error) {
-	if b.Type != "solid" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "solid",
-			Got:      b.Type,
-		}
+func (b *BackgroundFill) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
+	var typ string
+	if err := gotely.DecodeExactField(br, "type", &typ); err != nil {
+		return err
 	}
-	return &BackgroundFillSolid{
-		Type:  b.Type,
-		Color: *b.Color,
-	}, nil
-}
+	r.Seek(0, io.SeekStart)
+	br.Reset(r)
 
-func (b BackgroundFill) GradientType() (*BackgroundFillGradient, error) {
-	if b.Type != "gradient" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "gradient",
-			Got:      b.Type,
+	switch typ {
+	case "solid":
+		var result BackgroundFillSolid
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
 		}
-	}
-	return &BackgroundFillGradient{
-		Type:          b.Type,
-		TopColor:      *b.TopColor,
-		BottomColor:   *b.BottomColor,
-		RotationAngle: *b.RotationAngle,
-	}, nil
-}
+		b.Solid = &result
 
-func (b BackgroundFill) FreeformGradientType() (*BackgroundFillFreeformGradient, error) {
-	if b.Type != "freeform_gradient" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "freeform_gradient",
-			Got:      b.Type,
+	case "gradient":
+		var result BackgroundFillGradient
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
 		}
+		b.Gradient = &result
+
+	case "freeform_gradient":
+		var result BackgroundFillFreeformGradient
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		b.FreeformGradient = &result
+
+	default:
+		return fmt.Errorf("unknown background fill type: %s", typ)
 	}
-	return &BackgroundFillFreeformGradient{
-		Type:   b.Type,
-		Colors: *b.Colors,
-	}, nil
+	return nil
 }
 
 // The background is filled using the selected color.
@@ -1402,83 +1275,64 @@ type BackgroundFillFreeformGradient struct {
 
 // This object describes the type of a background. Currently, it can be one of
 //
-// - BackgroundTypeFill
+//   - BackgroundTypeFill
 //
-// - BackgroundTypeWallpaper
+//   - BackgroundTypeWallpaper
 //
-// - BackgroundTypePattern
+//   - BackgroundTypePattern
 //
-// - BackgroundTypeChatTheme
+//   - BackgroundTypeChatTheme
 type BackgroundType struct {
-	Type             string          `json:"type"`
-	Fill             *BackgroundFill `json:"fill,omitempty"`
-	DarkThemeDimming *int            `json:"dark_theme_dimming,omitempty"`
-	Document         *Document       `json:"document,omitempty"`
-	IsBlurred        *bool           `json:"is_blurred,omitempty"`
-	IsMoving         *bool           `json:"is_moving,omitempty"`
-	Intensity        *int            `json:"intensity,omitempty"`
-	IsInverted       *bool           `json:"is_inverted,omitempty"`
-	ThemeName        *string         `json:"theme_name,omitempty"`
+	Type      string `json:"type"`
+	Fill      *BackgroundTypeFill
+	Wallpaper *BackgroundTypeWallpaper
+	Pattern   *BackgroundTypePattern
+	ChatTheme *BackgroundTypeChatTheme
 }
 
-func (b BackgroundType) FillType() (*BackgroundTypeFill, error) {
-	if b.Type != "fill" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "fill",
-			Got:      b.Type,
-		}
+func (b *BackgroundType) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
+	var typ string
+	if err := gotely.DecodeExactField(br, "type", &typ); err != nil {
+		return err
 	}
-	return &BackgroundTypeFill{
-		Type:             b.Type,
-		Fill:             *b.Fill,
-		DarkThemeDimming: *b.DarkThemeDimming,
-	}, nil
-}
+	r.Seek(0, io.SeekStart)
+	br.Reset(r)
 
-func (b BackgroundType) WallpaperType() (*BackgroundTypeWallpaper, error) {
-	if b.Type != "wallpaper" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "wallpaper",
-			Got:      b.Type,
+	switch typ {
+	case "fill":
+		var result BackgroundTypeFill
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
 		}
-	}
-	return &BackgroundTypeWallpaper{
-		Type:             b.Type,
-		Document:         *b.Document,
-		DarkThemeDimming: *b.DarkThemeDimming,
-		IsBlurred:        b.IsBlurred,
-		IsMoving:         b.IsMoving,
-	}, nil
-}
+		b.Fill = &result
 
-func (b BackgroundType) PatternType() (*BackgroundTypePattern, error) {
-	if b.Type != "pattern" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "pattern",
-			Got:      b.Type,
+	case "wallpaper":
+		var result BackgroundTypeWallpaper
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
 		}
-	}
-	return &BackgroundTypePattern{
-		Type:       b.Type,
-		Document:   *b.Document,
-		Fill:       *b.Fill,
-		Intensity:  *b.Intensity,
-		IsInverted: b.IsInverted,
-		IsMoving:   b.IsMoving,
-	}, nil
-}
+		b.Wallpaper = &result
 
-func (b BackgroundType) ChatThemeType() (*BackgroundTypeChatTheme, error) {
-	if b.Type != "chat_theme" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "chat_theme",
-			Got:      b.Type,
+	case "pattern":
+		var result BackgroundTypePattern
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
 		}
+		b.Pattern = &result
+
+	case "chat_theme":
+		var result BackgroundTypeChatTheme
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		b.ChatTheme = &result
+
+	default:
+		return fmt.Errorf("unknown background type: %s", typ)
 	}
-	return &BackgroundTypeChatTheme{
-		Type:      b.Type,
-		ThemeName: *b.ThemeName,
-	}, nil
+	return nil
 }
 
 // The background is automatically filled based on the selected colors.
@@ -1754,7 +1608,7 @@ type UserProfilePhotos struct {
 }
 
 // This object represents a file ready to be downloaded.
-// The file can be downloaded via the link https://api.telegram.org/file/bot<token>/<file_path>.
+// The file can be downloaded via the link https://gotely.telegram.org/file/bot<token>/<file_path>.
 // It is guaranteed that the link will be valid for at least 1 hour.
 // When the link expires, a new one can be requested by calling getFile.
 type File struct {
@@ -1766,7 +1620,7 @@ type File struct {
 	// some programming languages may have difficulty/silent defects in interpreting it.
 	// But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this value.
 	FileSize *int64 `json:"file_size,omitempty"`
-	// Optional. File path. Use https://api.telegram.org/file/bot<token>/<file_path> to get the file.
+	// Optional. File path. Use https://gotely.telegram.org/file/bot<token>/<file_path> to get the file.
 	FilePath *string `json:"file_path,omitempty"`
 }
 
@@ -1774,7 +1628,7 @@ func (f File) GetFileUrl(botToken string) (string, error) {
 	if botToken == "" || strings.TrimSpace(botToken) == "" {
 		return "", fmt.Errorf("bot token can't be empty")
 	}
-	return fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", botToken, *f.FilePath), nil
+	return fmt.Sprintf("https://gotely.telegram.org/file/bot%s/%s", botToken, *f.FilePath), nil
 }
 
 // Describes a Web App.
@@ -1785,7 +1639,7 @@ type WebAppInfo struct {
 
 func (w WebAppInfo) Validate() error {
 	if strings.TrimSpace(w.Url) == "" {
-		return ErrInvalidParam("url parameter can't be empty")
+		return gotely.ErrInvalidParam("url parameter can't be empty")
 	}
 	return nil
 }
@@ -1873,7 +1727,7 @@ type KeyboardButton struct {
 
 func (k KeyboardButton) Validate() error {
 	if strings.TrimSpace(k.Text) == "" {
-		return ErrInvalidParam("text parameter can't be empty")
+		return gotely.ErrInvalidParam("text parameter can't be empty")
 	}
 
 	requestsProvided := 0
@@ -1939,7 +1793,7 @@ type KeyboardButtonRequestUsers struct {
 
 func (k KeyboardButtonRequestUsers) Validate() error {
 	if k.RequestId == 0 {
-		return ErrInvalidParam("request_id parameter can't be empty")
+		return gotely.ErrInvalidParam("request_id parameter can't be empty")
 	}
 	if *k.MaxQuantity < 1 || *k.MaxQuantity > 10 {
 		return fmt.Errorf("MaxQuantity parameter must be between 1 and 10")
@@ -1984,7 +1838,7 @@ type KeyboardButtonRequestChat struct {
 
 func (k KeyboardButtonRequestChat) Validate() error {
 	if k.RequestId == 0 {
-		return ErrInvalidParam("request_id parameter can't be empty")
+		return gotely.ErrInvalidParam("request_id parameter can't be empty")
 	}
 	return nil
 }
@@ -1999,7 +1853,7 @@ type KeyboardButtonPollType struct {
 func (k KeyboardButtonPollType) Validate() error {
 	if k.Type != nil {
 		if *k.Type != "regular" && *k.Type != "quiz" {
-			return ErrInvalidParam("type must be regular or quiz if specified")
+			return gotely.ErrInvalidParam("type must be regular or quiz if specified")
 		}
 	}
 	return nil
@@ -2042,12 +1896,12 @@ func (m InlineKeyboardMarkup) Validate() error {
 			}
 			if key.Pay != nil {
 				if i == 0 || j == 0 {
-					return ErrInvalidParam("the button with a specified pay parameter must always be the first button at the first row")
+					return gotely.ErrInvalidParam("the button with a specified pay parameter must always be the first button at the first row")
 				}
 			}
 			if key.CallbackGame != nil {
 				if i == 0 || j == 0 {
-					return ErrInvalidParam("the button with a specified callback_game parameter must always be the first button at the first row")
+					return gotely.ErrInvalidParam("the button with a specified callback_game parameter must always be the first button at the first row")
 				}
 			}
 		}
@@ -2100,11 +1954,11 @@ type InlineKeyboardButton struct {
 
 func (b InlineKeyboardButton) Validate() error {
 	if strings.TrimSpace(b.Text) == "" {
-		return ErrInvalidParam("text parameter can't be empty")
+		return gotely.ErrInvalidParam("text parameter can't be empty")
 	}
 	if b.CallbackData != nil {
 		if len([]byte(*b.CallbackData)) > 64 {
-			return ErrInvalidParam("callback_data must not be longer than 64 bytes if specified")
+			return gotely.ErrInvalidParam("callback_data must not be longer than 64 bytes if specified")
 		}
 	}
 	if b.CopyText != nil {
@@ -2150,7 +2004,7 @@ type LoginUrl struct {
 
 func (l LoginUrl) Validate() error {
 	if strings.TrimSpace(l.Url) == "" {
-		return ErrInvalidParam("url parameter can't be empty")
+		return gotely.ErrInvalidParam("url parameter can't be empty")
 	}
 	return nil
 }
@@ -2177,7 +2031,7 @@ type CopyTextButton struct {
 
 func (c CopyTextButton) Validate() error {
 	if len(c.Text) < 1 || len(c.Text) > 256 {
-		return ErrInvalidParam("text parameter must be between 1 and 256 characters")
+		return gotely.ErrInvalidParam("text parameter must be between 1 and 256 characters")
 	}
 	return nil
 }
@@ -2363,152 +2217,72 @@ type ChatMemberUpdated struct {
 //
 // - ChatMemberBanned
 type ChatMember struct {
-	Status                string  `json:"status"`
-	User                  *User   `json:"user,omitempty"`
-	IsAnonymous           *bool   `json:"is_anonymous,omitempty"`
-	CustomTitle           *string `json:"custom_title,omitempty"`
-	CanBeEdited           *bool   `json:"can_be_edited,omitempty"`
-	CanManageChat         *bool   `json:"can_manage_chat"`
-	CanDeleteMessages     *bool   `json:"can_delete_messages,omitempty"`
-	CanManageVideoChats   *bool   `json:"can_manage_video_chats,omitempty"`
-	CanRestrictMembers    *bool   `json:"can_restrict_members,omitempty"`
-	CanPromoteMembers     *bool   `json:"can_promote_members,omitempty"`
-	CanChangeInfo         *bool   `json:"can_change_info,omitempty"`
-	CanInviteUsers        *bool   `json:"can_invite_users,omitempty"`
-	CanPostStories        *bool   `json:"can_post_stories,omitempty"`
-	CanEditStories        *bool   `json:"can_edit_stories,omitempty"`
-	CanDeleteStories      *bool   `json:"can_delete_stories,omitempty"`
-	CanPostMessages       *bool   `json:"can_post_messages,omitempty"`
-	CanEditMessages       *bool   `json:"can_edit_messages,omitempty"`
-	CanPinMessages        *bool   `json:"can_pin_messages,omitempty"`
-	CanManageTopics       *bool   `json:"can_manage_topics,omitempty"`
-	UntilDate             *int    `json:"until_date,omitempty,"`
-	IsMember              *bool   `json:"is_member,omitempty"`
-	CanSendMessages       *bool   `json:"can_send_messages,omitempty"`
-	CanSendAudios         *bool   `json:"can_send_audios,omitempty"`
-	CanSendDocuments      *bool   `json:"can_send_documents,omitempty"`
-	CanSendPhotos         *bool   `json:"can_send_photos,omitempty"`
-	CanSendVideos         *bool   `json:"can_send_videos,omitempty"`
-	CanSendVideoNotes     *bool   `json:"can_send_video_notes,omitempty"`
-	CanSendVoiceNotes     *bool   `json:"can_send_voice_notes,omitempty"`
-	CanSendPolls          *bool   `json:"can_send_polls,omitempty"`
-	CanSendOtherMessages  *bool   `json:"can_send_other_messages,omitempty"`
-	CanAddWebpagePreviews *bool   `json:"can_add_webpage_previews,omitempty"`
+	Status        string `json:"status"`
+	Owner         *ChatMemberOwner
+	Administrator *ChatMemberAdministrator
+	Member        *ChatMemberMember
+	Restricted    *ChatMemberRestricted
+	Left          *ChatMemberLeft
+	Banned        *ChatMemberBanned
 }
 
-func (c ChatMember) OwnerType() (*ChatMemberOwner, error) {
-	if c.Status != "creator" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "creator",
-			Got:      c.Status,
-		}
+func (c *ChatMember) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
+	var status string
+	if err := gotely.DecodeExactField(br, "status", &status); err != nil {
+		return err
 	}
-	return &ChatMemberOwner{
-		Status:      c.Status,
-		User:        *c.User,
-		IsAnonymous: *c.IsAnonymous,
-		CustomTitle: c.CustomTitle,
-	}, nil
-}
+	r.Seek(0, io.SeekStart)
+	br.Reset(r)
 
-func (c ChatMember) AdministratorType() (*ChatMemberAdministrator, error) {
-	if c.Status != "“administrator”" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "“administrator”",
-			Got:      c.Status,
+	switch status {
+	case "creator":
+		var result ChatMemberOwner
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
 		}
-	}
-	return &ChatMemberAdministrator{
-		Status:              c.Status,
-		User:                *c.User,
-		CanBeEdited:         *c.CanBeEdited,
-		IsAnonymous:         *c.IsAnonymous,
-		CanManageChat:       *c.CanManageChat,
-		CanDeleteMessages:   *c.CanDeleteMessages,
-		CanManageVideoChats: *c.CanManageVideoChats,
-		CanRestrictMembers:  *c.CanRestrictMembers,
-		CanPromoteMembers:   *c.CanPromoteMembers,
-		CanChangeInfo:       *c.CanChangeInfo,
-		CanInviteUsers:      *c.CanInviteUsers,
-		CanPostStories:      *c.CanPostStories,
-		CanEditStories:      *c.CanEditStories,
-		CanDeleteStories:    *c.CanDeleteStories,
-		CanPostMessages:     c.CanPostMessages,
-		CanEditMessages:     c.CanEditMessages,
-		CanPinMessages:      c.CanPinMessages,
-		CanManageTopics:     c.CanManageTopics,
-		CustomTitle:         c.CustomTitle,
-	}, nil
-}
+		c.Owner = &result
 
-func (c ChatMember) MemberType() (*ChatMemberMember, error) {
-	if c.Status != "member" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "member",
-			Got:      c.Status,
+	case "administrator":
+		var result ChatMemberAdministrator
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
 		}
-	}
-	return &ChatMemberMember{
-		Status:    c.Status,
-		User:      *c.User,
-		UntilDate: c.UntilDate,
-	}, nil
-}
+		c.Administrator = &result
 
-func (c ChatMember) RestrictedType() (*ChatMemberRestricted, error) {
-	if c.Status != "restricted" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "restricted",
-			Got:      c.Status,
+	case "member":
+		var result ChatMemberMember
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
 		}
-	}
-	return &ChatMemberRestricted{
-		Status:                c.Status,
-		User:                  c.User,
-		IsMember:              *c.IsMember,
-		CanSendMessages:       *c.CanSendMessages,
-		CanSendAudios:         *c.CanSendAudios,
-		CanSendDocuments:      *c.CanSendDocuments,
-		CanSendPhotos:         *c.CanSendPhotos,
-		CanSendVideos:         *c.CanSendVideos,
-		CanSendVideoNotes:     *c.CanSendVideoNotes,
-		CanSendVoiceNotes:     *c.CanSendVoiceNotes,
-		CanSendPolls:          *c.CanSendPolls,
-		CanSendOtherMessages:  *c.CanSendOtherMessages,
-		CanAddWebpagePreviews: *c.CanAddWebpagePreviews,
-		CanChangeInfo:         *c.CanChangeInfo,
-		CanInviteUsers:        *c.CanInviteUsers,
-		CanPinMessages:        *c.CanPinMessages,
-		CanManageTopics:       *c.CanManageTopics,
-		UntilDate:             *c.UntilDate,
-	}, nil
-}
+		c.Member = &result
 
-func (c ChatMember) LeftType() (*ChatMemberLeft, error) {
-	if c.Status != "left" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "left",
-			Got:      c.Status,
+	case "restricted":
+		var result ChatMemberRestricted
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
 		}
-	}
-	return &ChatMemberLeft{
-		Status: c.Status,
-		User:   c.User,
-	}, nil
-}
+		c.Restricted = &result
 
-func (c ChatMember) BannedType() (*ChatMemberBanned, error) {
-	if c.Status != "kicked" {
-		return nil, ErrInvalidSubtypeConversion{
-			Expected: "kicked",
-			Got:      c.Status,
+	case "left":
+		var result ChatMemberLeft
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
 		}
+		c.Left = &result
+
+	case "kicked":
+		var result ChatMemberBanned
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		c.Banned = &result
+
+	default:
+		return fmt.Errorf("unknown chat member status: %s", status)
 	}
-	return &ChatMemberBanned{
-		Status:    c.Status,
-		User:      *c.User,
-		UntilDate: *c.UntilDate,
-	}, nil
+	return nil
 }
 
 // Represents a chat member that owns the chat and has all administrator privileges.
@@ -2773,10 +2547,10 @@ func (r ReactionTypeEmoji) GetReactionType() string {
 
 func (r ReactionTypeEmoji) Validate() error {
 	if strings.TrimSpace(r.Emoji) == "" {
-		return ErrInvalidParam("emoji parameter can't be empty")
+		return gotely.ErrInvalidParam("emoji parameter can't be empty")
 	}
 	if r.Type != "emoji" {
-		return ErrInvalidParam("type must be \"emoji\"")
+		return gotely.ErrInvalidParam("type must be \"emoji\"")
 	}
 	return nil
 }
@@ -2795,10 +2569,10 @@ func (r ReactionTypeCustomEmoji) GetReactionType() string {
 
 func (r ReactionTypeCustomEmoji) Validate() error {
 	if strings.TrimSpace(r.CustomEmojiId) == "" {
-		return ErrInvalidParam("custom_emoji_id parameter can't be empty")
+		return gotely.ErrInvalidParam("custom_emoji_id parameter can't be empty")
 	}
 	if r.Type != "custom_emoji" {
-		return ErrInvalidParam("type must be \"custom_emoji\"")
+		return gotely.ErrInvalidParam("type must be \"custom_emoji\"")
 	}
 	return nil
 }
@@ -2815,7 +2589,7 @@ func (r ReactionTypePaid) GetReactionType() string {
 
 func (r ReactionTypePaid) Validate() error {
 	if r.Type != "paid" {
-		return ErrInvalidParam("type must be\"paid\"")
+		return gotely.ErrInvalidParam("type must be\"paid\"")
 	}
 	return nil
 }
@@ -2882,13 +2656,13 @@ var valid_command = regexp.MustCompile(`^[a-z0-9_]+$`)
 
 func (b BotCommand) Validate() error {
 	if len(b.Command) < 1 || len(b.Command) > 32 {
-		return ErrInvalidParam("command parameter must be between 1 and 32 characters")
+		return gotely.ErrInvalidParam("command parameter must be between 1 and 32 characters")
 	}
 	if !valid_command.MatchString(b.Command) {
-		return ErrInvalidParam("command parameter can contain only lowercase English letters, digits and underscores")
+		return gotely.ErrInvalidParam("command parameter can contain only lowercase English letters, digits and underscores")
 	}
 	if len(b.Description) < 1 || len(b.Description) > 256 {
-		return ErrInvalidParam("description parameter must be between 1 and 256 characters")
+		return gotely.ErrInvalidParam("description parameter must be between 1 and 256 characters")
 	}
 	return nil
 }
@@ -2925,7 +2699,7 @@ func (b BotCommandScopeDefault) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeDefault) Validate() error {
 	if b.Type != "default" {
-		return ErrInvalidParam("type must be \"default\"")
+		return gotely.ErrInvalidParam("type must be \"default\"")
 	}
 	return nil
 }
@@ -2942,7 +2716,7 @@ func (b BotCommandScopeAllPrivateChats) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeAllPrivateChats) Validate() error {
 	if b.Type != "all_private_chats" {
-		return ErrInvalidParam("type must be \"all_private_chats\"")
+		return gotely.ErrInvalidParam("type must be \"all_private_chats\"")
 	}
 	return nil
 }
@@ -2959,7 +2733,7 @@ func (b BotCommandScopeAllGroupChats) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeAllGroupChats) Validate() error {
 	if b.Type != "all_group_chats" {
-		return ErrInvalidParam("type must be \"all_group_chats\"")
+		return gotely.ErrInvalidParam("type must be \"all_group_chats\"")
 	}
 	return nil
 }
@@ -2976,7 +2750,7 @@ func (b BotCommandScopeAllChatAdministrators) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeAllChatAdministrators) Validate() error {
 	if b.Type != "all_chat_administrators" {
-		return ErrInvalidParam("type must be \"all_chat_administrators\"")
+		return gotely.ErrInvalidParam("type must be \"all_chat_administrators\"")
 	}
 	return nil
 }
@@ -2995,16 +2769,16 @@ func (b BotCommandScopeChat[T]) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeChat[T]) Validate() error {
 	if b.Type != "chat" {
-		return ErrInvalidParam("type must be \"chat\"")
+		return gotely.ErrInvalidParam("type must be \"chat\"")
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return ErrInvalidParam("chat_id parameter can't be empty")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
 		if c == 0 {
-			return ErrInvalidParam("chat_id parameter can't be empty")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -3024,16 +2798,16 @@ func (b BotCommandScopeChatAdministrators[T]) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeChatAdministrators[T]) Validate() error {
 	if b.Type != "chat_administrators" {
-		return ErrInvalidParam("type must be \"chat_administrators\"")
+		return gotely.ErrInvalidParam("type must be \"chat_administrators\"")
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return ErrInvalidParam("chat_id parameter can't be empty")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
 		if c == 0 {
-			return ErrInvalidParam("chat_id parameter can't be empty")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -3055,20 +2829,20 @@ func (b BotCommandScopeChatMember[T]) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeChatMember[T]) Validate() error {
 	if b.Type != "chat_member" {
-		return ErrInvalidParam("type must be \"chat_member\"")
+		return gotely.ErrInvalidParam("type must be \"chat_member\"")
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return ErrInvalidParam("chat_id parameter can't be empty")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
 		if c == 0 {
-			return ErrInvalidParam("chat_id parameter can't be empty")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 		}
 	}
 	if b.UserId < 1 {
-		return ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -3133,7 +2907,7 @@ type MenuButtonCommands struct {
 
 func (m MenuButtonCommands) Validate() error {
 	if m.Type != "commands" {
-		return ErrInvalidParam("type must be \"commands\"")
+		return gotely.ErrInvalidParam("type must be \"commands\"")
 	}
 	return nil
 }
@@ -3161,10 +2935,10 @@ func (m MenuButtonWebApp) GetMenuButtonType() string {
 
 func (m MenuButtonWebApp) Validate() error {
 	if m.Type != "web_app" {
-		return ErrInvalidParam("type must be \"web_app\"")
+		return gotely.ErrInvalidParam("type must be \"web_app\"")
 	}
 	if strings.TrimSpace(m.Text) == "" {
-		return ErrInvalidParam("text parameter can't be empty")
+		return gotely.ErrInvalidParam("text parameter can't be empty")
 	}
 	if err := m.WebApp.Validate(); err != nil {
 		return err
@@ -3180,7 +2954,7 @@ type MenuButtonDefault struct {
 
 func (m MenuButtonDefault) Validate() error {
 	if m.Type != "default" {
-		return ErrInvalidParam("type must be \"default\"")
+		return gotely.ErrInvalidParam("type must be \"default\"")
 	}
 	return nil
 }
@@ -3426,10 +3200,10 @@ func (i InputMediaPhoto) WriteTo(mw *multipart.Writer) error {
 
 func (i InputMediaPhoto) Validate() error {
 	if i.Type != "photo" {
-		return ErrInvalidParam("type must be photo")
+		return gotely.ErrInvalidParam("type must be photo")
 	}
 	if len(i.Media) == 0 {
-		return ErrInvalidParam("media parameter can't be empty")
+		return gotely.ErrInvalidParam("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3482,10 +3256,10 @@ type InputMediaVideo struct {
 
 func (i InputMediaVideo) Validate() error {
 	if i.Type != "video" {
-		return ErrInvalidParam("type must be video")
+		return gotely.ErrInvalidParam("type must be video")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return ErrInvalidParam("media parameter can't be empty")
+		return gotely.ErrInvalidParam("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3622,10 +3396,10 @@ type InputMediaAnimation struct {
 
 func (i InputMediaAnimation) Validate() error {
 	if i.Type != "animation" {
-		return ErrInvalidParam("type must be animation")
+		return gotely.ErrInvalidParam("type must be animation")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return ErrInvalidParam("media parameter can't be empty")
+		return gotely.ErrInvalidParam("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3665,7 +3439,7 @@ func (i InputMediaAnimation) WriteTo(mw *multipart.Writer) error {
 		}
 	}
 	if i.CaptionEntities != nil {
-		if err := api.WriteJSONToForm(mw, "caption_entities", *i.CaptionEntities); err != nil {
+		if err := gotely.WriteJSONToForm(mw, "caption_entities", *i.CaptionEntities); err != nil {
 			return err
 		}
 	}
@@ -3749,10 +3523,10 @@ type InputMediaAudio struct {
 
 func (i InputMediaAudio) Validate() error {
 	if i.Type != "audio" {
-		return ErrInvalidParam("type must be audio")
+		return gotely.ErrInvalidParam("type must be audio")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return ErrInvalidParam("media parameter can't be empty")
+		return gotely.ErrInvalidParam("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3865,10 +3639,10 @@ type InputMediaDocument struct {
 
 func (i InputMediaDocument) Validate() error {
 	if i.Type != "document" {
-		return ErrInvalidParam("type must be document")
+		return gotely.ErrInvalidParam("type must be document")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return ErrInvalidParam("media parameter can't be empty")
+		return gotely.ErrInvalidParam("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3961,10 +3735,10 @@ func (i InputFileFromReader) WriteTo(mw *multipart.Writer, field string) error {
 // Validates the file path and checks file existence.
 func (i InputFileFromReader) Validate() error {
 	if i.Reader == nil {
-		return ErrInvalidParam("reader can't be nil")
+		return gotely.ErrInvalidParam("reader can't be nil")
 	}
 	if i.FileName == "" {
-		return ErrInvalidParam("file name can't be empty")
+		return gotely.ErrInvalidParam("file name can't be empty")
 	}
 	return nil
 }
@@ -3975,7 +3749,7 @@ type InputFileFromRemote string
 // Validates the remote FileId or URL.
 func (i InputFileFromRemote) Validate() error {
 	if i == "" {
-		return ErrInvalidParam("file id or url can't be empty")
+		return gotely.ErrInvalidParam("file id or url can't be empty")
 	}
 	return nil
 }
@@ -4015,10 +3789,10 @@ type InputPaidMediaPhoto struct {
 
 func (i InputPaidMediaPhoto) Validate() error {
 	if i.Type != "photo" {
-		return ErrInvalidParam("type must be photo")
+		return gotely.ErrInvalidParam("type must be photo")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return ErrInvalidParam("media parameter can't be empty")
+		return gotely.ErrInvalidParam("media parameter can't be empty")
 	}
 	return nil
 }
@@ -4101,10 +3875,10 @@ func (i *InputPaidMediaVideo) SetPaidMedia(media string, r io.Reader) {
 
 func (i InputPaidMediaVideo) Validate() error {
 	if i.Type != "video" {
-		return ErrInvalidParam("type must be video")
+		return gotely.ErrInvalidParam("type must be video")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return ErrInvalidParam("media parameter can't be empty")
+		return gotely.ErrInvalidParam("media parameter can't be empty")
 	}
 	return nil
 }

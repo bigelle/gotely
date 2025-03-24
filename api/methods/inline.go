@@ -1,12 +1,10 @@
-// TODO: replace marshal json with encoder
 package methods
 
 import (
-	"bytes"
-	"encoding/json"
 	"io"
 	"strings"
 
+	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/api/objects"
 )
 
@@ -38,7 +36,7 @@ type AnswerInlineQuery struct {
 
 func (a AnswerInlineQuery) Validate() error {
 	if strings.TrimSpace(a.InlineQueryId) == "" {
-		return objects.ErrInvalidParam("inline_query_id parameter can't be empty")
+		return gotely.ErrInvalidParam("inline_query_id parameter can't be empty")
 	}
 	for _, res := range a.Results {
 		if err := res.Validate(); err != nil {
@@ -47,7 +45,7 @@ func (a AnswerInlineQuery) Validate() error {
 	}
 	if a.NextOffset != nil {
 		if len([]byte(*a.NextOffset)) > 64 {
-			return objects.ErrInvalidParam("next_offset parameter can't exceed 64 bytes")
+			return gotely.ErrInvalidParam("next_offset parameter can't exceed 64 bytes")
 		}
 	}
 	if a.Button != nil {
@@ -62,12 +60,8 @@ func (s AnswerInlineQuery) Endpoint() string {
 	return "answerInlineQuery"
 }
 
-func (s AnswerInlineQuery) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s AnswerInlineQuery) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s AnswerInlineQuery) ContentType() string {
@@ -88,7 +82,7 @@ type AnswerWebAppQuery struct {
 
 func (a AnswerWebAppQuery) Validate() error {
 	if strings.TrimSpace(a.WebAppQueryId) == "" {
-		return objects.ErrInvalidParam("web_app_query_id parameter can't be empty")
+		return gotely.ErrInvalidParam("web_app_query_id parameter can't be empty")
 	}
 	if err := a.Result.Validate(); err != nil {
 		return err
@@ -100,12 +94,8 @@ func (s AnswerWebAppQuery) Endpoint() string {
 	return "answerWebAppQuery"
 }
 
-func (s AnswerWebAppQuery) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s AnswerWebAppQuery) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s AnswerWebAppQuery) ContentType() string {
@@ -134,7 +124,7 @@ type SavePreparedInlineMessage struct {
 
 func (s SavePreparedInlineMessage) Validate() error {
 	if s.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if err := s.Result.Validate(); err != nil {
 		return err
@@ -146,12 +136,8 @@ func (s SavePreparedInlineMessage) Endpoint() string {
 	return "savePreparedInlineMessage"
 }
 
-func (s SavePreparedInlineMessage) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SavePreparedInlineMessage) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SavePreparedInlineMessage) ContentType() string {

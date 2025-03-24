@@ -1,9 +1,7 @@
 package longpolling
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -12,6 +10,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/api/objects"
@@ -89,7 +88,13 @@ func New(token string, onUpdate bot.OnUpdateFunc, opts ...Option) *LongPollingBo
 		token:    token,
 		onUpdate: onUpdate,
 		// no middleware
-		client:  http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				MaxIdleConns:        100,
+				IdleConnTimeout:     90 * time.Second,
+				TLSHandshakeTimeout: 10 * time.Second,
+			},
+		},
 		apiUrl:  "https://api.telegram.org/bot<token>/<method>",
 		limit:   100,
 		timeout: 30,
@@ -279,12 +284,8 @@ func (g GetUpdates) Validate() error {
 	return nil
 }
 
-func (g GetUpdates) Reader() (io.Reader, error) {
-	b, err := json.Marshal(g)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (g GetUpdates) Reader() io.Reader {
+	return gotely.EncodeJSON(g)
 }
 
 func (g GetUpdates) ContentType() string {

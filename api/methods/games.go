@@ -1,12 +1,10 @@
-// TODO: replace marshal json with encoder
 package methods
 
 import (
-	"bytes"
-	"encoding/json"
 	"io"
 	"strings"
 
+	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/api/objects"
 )
 
@@ -42,10 +40,10 @@ type SendGame struct {
 
 func (s SendGame) Validate() error {
 	if s.ChatId == 0 {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.GameShortName) == "" {
-		return objects.ErrInvalidParam("game_short_name parameter can't be empty")
+		return gotely.ErrInvalidParam("game_short_name parameter can't be empty")
 	}
 	if s.ReplyMarkup != nil {
 		if err := s.ReplyMarkup.Validate(); err != nil {
@@ -64,12 +62,8 @@ func (s SendGame) Endpoint() string {
 	return "sendGame"
 }
 
-func (s SendGame) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SendGame) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SendGame) ContentType() string {
@@ -101,22 +95,22 @@ type SetGameScore struct {
 
 func (s SetGameScore) Validate() error {
 	if s.UserId == 0 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if s.Score < 0 {
-		return objects.ErrInvalidParam("score parameter must be non-negative")
+		return gotely.ErrInvalidParam("score parameter must be non-negative")
 	}
 	if s.InlineMessageId == nil {
 		if s.ChatId == nil {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if s.MessageId == nil {
-			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if s.ChatId == nil && s.MessageId == nil {
 		if s.InlineMessageId == nil {
-			return objects.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
+			return gotely.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
 		}
 	}
 	return nil
@@ -126,12 +120,8 @@ func (s SetGameScore) Endpoint() string {
 	return "setGameScore"
 }
 
-func (s SetGameScore) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetGameScore) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetGameScore) ContentType() string {
@@ -159,19 +149,19 @@ type GetGameHighScores struct {
 
 func (s GetGameHighScores) Validate() error {
 	if s.UserId == 0 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if s.InlineMessageId == nil {
 		if s.ChatId == nil {
-			return objects.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if s.MessageId == nil {
-			return objects.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return gotely.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if s.ChatId == nil && s.MessageId == nil {
 		if s.InlineMessageId == nil {
-			return objects.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
+			return gotely.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
 		}
 	}
 	return nil
@@ -181,12 +171,8 @@ func (s GetGameHighScores) Endpoint() string {
 	return "getGameHighScores"
 }
 
-func (s GetGameHighScores) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetGameHighScores) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetGameHighScores) ContentType() string {

@@ -1,9 +1,6 @@
-// TODO: replace marshal json with encoder
 package methods
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -11,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/bigelle/gotely/api"
+	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/api/objects"
 )
 
@@ -55,7 +52,7 @@ type SendSticker struct {
 
 func (s SendSticker) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return objects.ErrInvalidParam("chat_id parameter can't be empty")
+		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
 	}
 	if err := s.Sticker.Validate(); err != nil {
 		return fmt.Errorf("invalid photo parameter: %w", err)
@@ -67,7 +64,7 @@ func (s SendSticker) Endpoint() string {
 	return "sendSticker"
 }
 
-func (s SendSticker) Reader() (io.Reader, error) {
+func (s SendSticker) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -128,19 +125,19 @@ func (s SendSticker) Reader() (io.Reader, error) {
 			}
 		}
 		if s.ReplyMarkup != nil {
-			if err := api.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 		if s.ReplyParameters != nil {
-			if err := api.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_parameters", *s.ReplyParameters); err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 		}
 	}()
-	return pr, nil
+	return pr
 }
 
 func (s SendSticker) ContentType() string {
@@ -160,7 +157,7 @@ type GetStickerSet struct {
 
 func (g GetStickerSet) Validate() error {
 	if strings.TrimSpace(g.Name) == "" {
-		return objects.ErrInvalidParam("name parameter can't be empty")
+		return gotely.ErrInvalidParam("name parameter can't be empty")
 	}
 	return nil
 }
@@ -169,12 +166,8 @@ func (s GetStickerSet) Endpoint() string {
 	return "getStickerSet"
 }
 
-func (s GetStickerSet) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetStickerSet) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetStickerSet) ContentType() string {
@@ -192,7 +185,7 @@ type GetCustomEmojiStickers struct {
 
 func (g GetCustomEmojiStickers) Validate() error {
 	if len(g.CustomEmojiIds) == 0 {
-		return objects.ErrInvalidParam("custom_emoji_ids parameter can't be empty")
+		return gotely.ErrInvalidParam("custom_emoji_ids parameter can't be empty")
 	}
 	return nil
 }
@@ -201,12 +194,8 @@ func (s GetCustomEmojiStickers) Endpoint() string {
 	return "getCustomEmojiStickers"
 }
 
-func (s GetCustomEmojiStickers) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetCustomEmojiStickers) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetCustomEmojiStickers) ContentType() string {
@@ -232,7 +221,7 @@ type UploadStickerFile struct {
 
 func (u UploadStickerFile) Validate() error {
 	if u.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if err := u.Sticker.Validate(); err != nil {
 		return err
@@ -243,7 +232,7 @@ func (u UploadStickerFile) Validate() error {
 		"video",
 	}
 	if !slices.Contains(allowed_formats, u.StickerFormat) {
-		return objects.ErrInvalidParam("sticker_format must be one of \"static\", \"animated\", \"video\"")
+		return gotely.ErrInvalidParam("sticker_format must be one of \"static\", \"animated\", \"video\"")
 	}
 	return nil
 }
@@ -252,12 +241,8 @@ func (s UploadStickerFile) Endpoint() string {
 	return "uploadStickerFile"
 }
 
-func (s UploadStickerFile) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s UploadStickerFile) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 } // TODO multipart
 
 func (s UploadStickerFile) ContentType() string {
@@ -296,10 +281,10 @@ type CreateNewStickerSet struct {
 
 func (c CreateNewStickerSet) Validate() error {
 	if c.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if len(c.Name) < 1 || len(c.Name) > 64 {
-		return objects.ErrInvalidParam("name parameter must be between 1 and 64 characters")
+		return gotely.ErrInvalidParam("name parameter must be between 1 and 64 characters")
 	}
 	valid_stickerset_name := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*$`)
 	consecutive_underscores := regexp.MustCompile(`__+`)
@@ -309,13 +294,13 @@ func (c CreateNewStickerSet) Validate() error {
 		"custom_emoji",
 	}
 	if !valid_stickerset_name.MatchString(c.Name) {
-		return objects.ErrInvalidParam("name parameter can contain only English letters, digits and underscores")
+		return gotely.ErrInvalidParam("name parameter can contain only English letters, digits and underscores")
 	}
 	if consecutive_underscores.MatchString(c.Name) {
-		return objects.ErrInvalidParam("name parameter can't contain consecutive underscores")
+		return gotely.ErrInvalidParam("name parameter can't contain consecutive underscores")
 	}
 	if len(c.Title) < 1 || len(c.Title) > 64 {
-		return objects.ErrInvalidParam("title parameter must be between 1 and 64 characters")
+		return gotely.ErrInvalidParam("title parameter must be between 1 and 64 characters")
 	}
 	for _, sticker := range c.Stickers {
 		if err := sticker.Validate(); err != nil {
@@ -324,7 +309,7 @@ func (c CreateNewStickerSet) Validate() error {
 	}
 	if c.StickerType != nil {
 		if !slices.Contains(valid_stickerobjects, *c.StickerType) {
-			return objects.ErrInvalidParam("sticker_type must be \"regular\", \"mask\" or \"custom_emoji\"")
+			return gotely.ErrInvalidParam("sticker_type must be \"regular\", \"mask\" or \"custom_emoji\"")
 		}
 	}
 	return nil
@@ -334,7 +319,7 @@ func (s CreateNewStickerSet) Endpoint() string {
 	return "createNewStickerSet"
 }
 
-func (s *CreateNewStickerSet) Reader() (io.Reader, error) {
+func (s *CreateNewStickerSet) Reader() io.Reader {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	s.contentType = mw.FormDataContentType()
@@ -375,7 +360,7 @@ func (s *CreateNewStickerSet) Reader() (io.Reader, error) {
 			}
 		}
 	}()
-	return pr, nil
+	return pr
 }
 
 func (s CreateNewStickerSet) ContentType() string {
@@ -400,10 +385,10 @@ type AddStickerToSet struct {
 
 func (a AddStickerToSet) Validate() error {
 	if a.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(a.Name) == "" {
-		return objects.ErrInvalidParam("name parameter can't be empty")
+		return gotely.ErrInvalidParam("name parameter can't be empty")
 	}
 	if err := a.Sticker.Validate(); err != nil {
 		return err
@@ -415,12 +400,8 @@ func (s AddStickerToSet) Endpoint() string {
 	return "addStickerToSet"
 }
 
-func (s AddStickerToSet) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s AddStickerToSet) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s AddStickerToSet) ContentType() string {
@@ -440,10 +421,10 @@ type SetStickerPositionInSet struct {
 
 func (s SetStickerPositionInSet) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return objects.ErrInvalidParam("sticker parameter can't be empty")
+		return gotely.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if s.Position < 0 {
-		return objects.ErrInvalidParam("position parameter must be positive")
+		return gotely.ErrInvalidParam("position parameter must be positive")
 	}
 	return nil
 }
@@ -452,12 +433,8 @@ func (s SetStickerPositionInSet) Endpoint() string {
 	return "setStickerPositionInSet"
 }
 
-func (s SetStickerPositionInSet) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetStickerPositionInSet) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetStickerPositionInSet) ContentType() string {
@@ -473,7 +450,7 @@ type DeleteStickerFromSet struct {
 
 func (d DeleteStickerFromSet) Validate() error {
 	if strings.TrimSpace(d.Sticker) == "" {
-		return objects.ErrInvalidParam("sticker parameter can't be empty")
+		return gotely.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	return nil
 }
@@ -482,12 +459,8 @@ func (s DeleteStickerFromSet) Endpoint() string {
 	return "deleteStickerFromSet"
 }
 
-func (s DeleteStickerFromSet) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s DeleteStickerFromSet) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s DeleteStickerFromSet) ContentType() string {
@@ -515,13 +488,13 @@ type ReplaceStickerInSet struct {
 
 func (r ReplaceStickerInSet) Validate() error {
 	if r.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(r.OldSticker) == "" {
-		return objects.ErrInvalidParam("old_sticker parameter can't be empty")
+		return gotely.ErrInvalidParam("old_sticker parameter can't be empty")
 	}
 	if strings.TrimSpace(r.Name) == "" {
-		return objects.ErrInvalidParam("name parameter can't be empty")
+		return gotely.ErrInvalidParam("name parameter can't be empty")
 	}
 	if err := r.Sticker.Validate(); err != nil {
 		return err
@@ -533,12 +506,8 @@ func (s ReplaceStickerInSet) Endpoint() string {
 	return "replaceStickerInSet"
 }
 
-func (s ReplaceStickerInSet) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s ReplaceStickerInSet) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s ReplaceStickerInSet) ContentType() string {
@@ -559,10 +528,10 @@ type SetStickerEmojiList struct {
 
 func (s SetStickerEmojiList) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return objects.ErrInvalidParam("sticker parameter can't be empty")
+		return gotely.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if len(s.EmojiList) < 1 || len(s.EmojiList) > 20 {
-		return objects.ErrInvalidParam("emoji_list parameter can contain only 1-20 elements")
+		return gotely.ErrInvalidParam("emoji_list parameter can contain only 1-20 elements")
 	}
 	return nil
 }
@@ -571,12 +540,8 @@ func (s SetStickerEmojiList) Endpoint() string {
 	return "setStickerEmojiList"
 }
 
-func (s SetStickerEmojiList) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetStickerEmojiList) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetStickerEmojiList) ContentType() string {
@@ -596,11 +561,11 @@ type SetStickerKeywords struct {
 
 func (s SetStickerKeywords) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return objects.ErrInvalidParam("sticker parameter can't be empty")
+		return gotely.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if s.Keywords != nil {
 		if len(*s.Keywords) > 20 {
-			return objects.ErrInvalidParam("keywords parameter can't be longer than 20")
+			return gotely.ErrInvalidParam("keywords parameter can't be longer than 20")
 		}
 	}
 	return nil
@@ -610,12 +575,8 @@ func (s SetStickerKeywords) Endpoint() string {
 	return "setStickerKeywords"
 }
 
-func (s SetStickerKeywords) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetStickerKeywords) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetStickerKeywords) ContentType() string {
@@ -637,7 +598,7 @@ type SetStickerMaskPosition struct {
 
 func (s SetStickerMaskPosition) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return objects.ErrInvalidParam("sticker parameter can't be empty")
+		return gotely.ErrInvalidParam("sticker parameter can't be empty")
 	}
 	if s.MaskPosition != nil {
 		if err := s.MaskPosition.Validate(); err != nil {
@@ -651,12 +612,8 @@ func (s SetStickerMaskPosition) Endpoint() string {
 	return "setStickerMaskPosition"
 }
 
-func (s SetStickerMaskPosition) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetStickerMaskPosition) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetStickerMaskPosition) ContentType() string {
@@ -675,10 +632,10 @@ type SetStickerSetTitle struct {
 
 func (s SetStickerSetTitle) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return objects.ErrInvalidParam("name parameter can't be empty")
+		return gotely.ErrInvalidParam("name parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Title) == "" {
-		return objects.ErrInvalidParam("title parameter can't be empty")
+		return gotely.ErrInvalidParam("title parameter can't be empty")
 	}
 	return nil
 }
@@ -687,12 +644,8 @@ func (s SetStickerSetTitle) Endpoint() string {
 	return "setStickerSetTitle"
 }
 
-func (s SetStickerSetTitle) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetStickerSetTitle) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetStickerSetTitle) ContentType() string {
@@ -728,10 +681,10 @@ type SetStickerSetThumbnail struct {
 
 func (s SetStickerSetThumbnail) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return objects.ErrInvalidParam("name parameter can't be empty")
+		return gotely.ErrInvalidParam("name parameter can't be empty")
 	}
 	if s.UserId < 1 {
-		return objects.ErrInvalidParam("user_id parameter can't be empty")
+		return gotely.ErrInvalidParam("user_id parameter can't be empty")
 	}
 	if s.Thumbnail != nil {
 		if t, ok := any(*s.Thumbnail).(objects.InputFile); ok {
@@ -741,7 +694,7 @@ func (s SetStickerSetThumbnail) Validate() error {
 		}
 		if t, ok := any(*s.Thumbnail).(string); ok {
 			if strings.TrimSpace(t) == "" {
-				return objects.ErrInvalidParam("thumbnail file id can't be empty")
+				return gotely.ErrInvalidParam("thumbnail file id can't be empty")
 			}
 		}
 	}
@@ -751,7 +704,7 @@ func (s SetStickerSetThumbnail) Validate() error {
 		"video",
 	}
 	if !slices.Contains(valid_stickerset_thumbnail, s.Format) {
-		return objects.ErrInvalidParam("format parameter must be one of “static”, “animated” or “video”")
+		return gotely.ErrInvalidParam("format parameter must be one of “static”, “animated” or “video”")
 	}
 	return nil
 }
@@ -760,12 +713,8 @@ func (s SetStickerSetThumbnail) Endpoint() string {
 	return "setStickerSetThumbnail"
 }
 
-func (s SetStickerSetThumbnail) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetStickerSetThumbnail) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetStickerSetThumbnail) ContentType() string {
@@ -786,11 +735,11 @@ type SetCustomEmojiStickerSetThumbnail struct {
 
 func (s SetCustomEmojiStickerSetThumbnail) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return objects.ErrInvalidParam("name parameter can't be empty")
+		return gotely.ErrInvalidParam("name parameter can't be empty")
 	}
 	if s.CustomEmojiId != nil {
 		if strings.TrimSpace(*s.CustomEmojiId) == "" {
-			return objects.ErrInvalidParam("custom_emoji_id parameter can't be empty")
+			return gotely.ErrInvalidParam("custom_emoji_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -800,12 +749,8 @@ func (s SetCustomEmojiStickerSetThumbnail) Endpoint() string {
 	return "setCustomEmojiStickerSetThumbnail"
 }
 
-func (s SetCustomEmojiStickerSetThumbnail) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SetCustomEmojiStickerSetThumbnail) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SetCustomEmojiStickerSetThumbnail) ContentType() string {
@@ -822,7 +767,7 @@ type DeleteStickerSet struct {
 
 func (d DeleteStickerSet) Validate() error {
 	if strings.TrimSpace(d.Name) == "" {
-		return objects.ErrInvalidParam("name parameter can't be empty")
+		return gotely.ErrInvalidParam("name parameter can't be empty")
 	}
 	return nil
 }
@@ -831,12 +776,8 @@ func (s DeleteStickerSet) Endpoint() string {
 	return "deleteStickerSet"
 }
 
-func (s DeleteStickerSet) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s DeleteStickerSet) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s DeleteStickerSet) ContentType() string {
@@ -856,12 +797,8 @@ func (s GetAvailableGifts) Endpoint() string {
 	return "getAvailableGifts"
 }
 
-func (s GetAvailableGifts) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s GetAvailableGifts) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s GetAvailableGifts) ContentType() string {
@@ -899,24 +836,24 @@ type SendGift struct {
 func (s SendGift) Validate() error {
 	if s.UserId != nil {
 		if *s.UserId < 1 {
-			return objects.ErrInvalidParam("user_id parameter can't be empty")
+			return gotely.ErrInvalidParam("user_id parameter can't be empty")
 		}
 	}
 	if s.ChatId != nil {
 		if *s.ChatId == "" {
-			return objects.ErrInvalidParam("user_id parameter can't be empty")
+			return gotely.ErrInvalidParam("user_id parameter can't be empty")
 		}
 	}
 	if strings.TrimSpace(s.GiftId) == "" {
-		return objects.ErrInvalidParam("gift_id parameter can't be empty")
+		return gotely.ErrInvalidParam("gift_id parameter can't be empty")
 	}
 	if s.Text != nil {
 		if len(*s.Text) > 255 {
-			return objects.ErrInvalidParam("text parameter must not be longer than 255 characters")
+			return gotely.ErrInvalidParam("text parameter must not be longer than 255 characters")
 		}
 	}
 	if s.TextParseMode != nil && s.TextEntities != nil {
-		return objects.ErrInvalidParam("parse_mode can't be used if entities are provided")
+		return gotely.ErrInvalidParam("parse_mode can't be used if entities are provided")
 	}
 	return nil
 }
@@ -925,12 +862,8 @@ func (s SendGift) Endpoint() string {
 	return "sendGift"
 }
 
-func (s SendGift) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s SendGift) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s SendGift) ContentType() string {
@@ -950,11 +883,11 @@ type VerifyUser struct {
 
 func (v VerifyUser) Validate() error {
 	if v.UserId <= 0 {
-		return objects.ErrInvalidParam("user_id can't be empty or negative")
+		return gotely.ErrInvalidParam("user_id can't be empty or negative")
 	}
 	if v.CustomDescription != nil {
 		if len(*v.CustomDescription) > 70 {
-			return objects.ErrInvalidParam("custom_description must be between 0 and 70 characters")
+			return gotely.ErrInvalidParam("custom_description must be between 0 and 70 characters")
 		}
 	}
 	return nil
@@ -964,12 +897,8 @@ func (s VerifyUser) Endpoint() string {
 	return "verifyUser"
 }
 
-func (s VerifyUser) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s VerifyUser) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s VerifyUser) ContentType() string {
@@ -990,11 +919,11 @@ type VerifyChat struct {
 
 func (v VerifyChat) Validate() error {
 	if v.ChatId == "" {
-		return objects.ErrInvalidParam("user_id can't be empty or negative")
+		return gotely.ErrInvalidParam("user_id can't be empty or negative")
 	}
 	if v.CustomDescription != nil {
 		if len(*v.CustomDescription) > 70 {
-			return objects.ErrInvalidParam("custom_description must be between 0 and 70 characters")
+			return gotely.ErrInvalidParam("custom_description must be between 0 and 70 characters")
 		}
 	}
 	return nil
@@ -1004,12 +933,8 @@ func (s VerifyChat) Endpoint() string {
 	return "verifyChat"
 }
 
-func (s VerifyChat) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s VerifyChat) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s VerifyChat) ContentType() string {
@@ -1026,7 +951,7 @@ type RemoveUserVerification struct {
 
 func (r RemoveUserVerification) Validate() error {
 	if r.UserId <= 0 {
-		return objects.ErrInvalidParam("user_id can't be empty or negative")
+		return gotely.ErrInvalidParam("user_id can't be empty or negative")
 	}
 	return nil
 }
@@ -1035,12 +960,8 @@ func (s RemoveUserVerification) Endpoint() string {
 	return "removeUserVerification"
 }
 
-func (s RemoveUserVerification) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s RemoveUserVerification) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s RemoveUserVerification) ContentType() string {
@@ -1057,7 +978,7 @@ type RemoveChatVerification struct {
 
 func (r RemoveChatVerification) Validate() error {
 	if r.ChatId == "" {
-		return objects.ErrInvalidParam("user_id can't be empty or negative")
+		return gotely.ErrInvalidParam("user_id can't be empty or negative")
 	}
 	return nil
 }
@@ -1066,12 +987,8 @@ func (s RemoveChatVerification) Endpoint() string {
 	return "removeChatVerification"
 }
 
-func (s RemoveChatVerification) Reader() (io.Reader, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewReader(b), nil
+func (s RemoveChatVerification) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
 }
 
 func (s RemoveChatVerification) ContentType() string {

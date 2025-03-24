@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/bigelle/gotely"
 )
 
 // This object represents a portion of the price for goods or services.
@@ -20,10 +22,10 @@ type LabeledPrice struct {
 
 func (l LabeledPrice) Validate() error {
 	if strings.TrimSpace(l.Label) == "" {
-		return ErrInvalidParam("label parameter can't be empty")
+		return gotely.ErrInvalidParam("label parameter can't be empty")
 	}
 	if l.Amount < 0 {
-		return ErrInvalidParam("amount can't be less than zero")
+		return gotely.ErrInvalidParam("amount can't be less than zero")
 	}
 	return nil
 }
@@ -85,10 +87,10 @@ type ShippingOption struct {
 
 func (s ShippingOption) Validate() error {
 	if strings.TrimSpace(s.Id) == "" {
-		return ErrInvalidParam("id parameter can't be empty")
+		return gotely.ErrInvalidParam("id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Title) == "" {
-		return ErrInvalidParam("title parameter can't be empty")
+		return gotely.ErrInvalidParam("title parameter can't be empty")
 	}
 	for _, price := range s.Prices {
 		if err := price.Validate(); err != nil {
