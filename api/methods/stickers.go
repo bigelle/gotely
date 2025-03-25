@@ -217,6 +217,8 @@ type UploadStickerFile struct {
 	// REQUIRED:
 	// Format of the sticker, must be one of “static”, “animated”, “video”
 	StickerFormat string `json:"sticker_format"`
+
+	contentType string
 }
 
 func (u UploadStickerFile) Validate() error {
@@ -242,8 +244,29 @@ func (s UploadStickerFile) Endpoint() string {
 }
 
 func (s UploadStickerFile) Reader() io.Reader {
-	return gotely.EncodeJSON(s)
-} // TODO multipart
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
+
+	go func() {
+		defer pw.Close()
+		defer mw.Close()
+
+		if err := mw.WriteField("user_id", fmt.Sprint(s.UserId)); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := s.Sticker.WriteTo(mw, "sticker"); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := mw.WriteField("sticker_format", s.StickerFormat); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+	}()
+	return pr
+}
 
 func (s UploadStickerFile) ContentType() string {
 	return "application/json"
@@ -364,7 +387,10 @@ func (s *CreateNewStickerSet) Reader() io.Reader {
 }
 
 func (s CreateNewStickerSet) ContentType() string {
-	return "application/json"
+	if s.contentType == "" {
+		return "multipart/form-data"
+	}
+	return s.contentType
 }
 
 // Use this method to add a new sticker to a set created by the bot. Emoji sticker sets can have up to 200 stickers.
@@ -381,7 +407,9 @@ type AddStickerToSet struct {
 	// A JSON-serialized object with information about the added sticker.
 	// If exactly the same sticker had already been added to the set, then the set isn't changed.
 	Sticker objects.InputSticker `json:"sticker"`
-} // TODO multipart
+
+	contentType string
+}
 
 func (a AddStickerToSet) Validate() error {
 	if a.UserId < 1 {
@@ -400,12 +428,36 @@ func (s AddStickerToSet) Endpoint() string {
 	return "addStickerToSet"
 }
 
-func (s AddStickerToSet) Reader() io.Reader {
-	return gotely.EncodeJSON(s)
+func (s *AddStickerToSet) Reader() io.Reader {
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
+
+	go func() {
+		defer pw.Close()
+		defer mw.Close()
+
+		if err := mw.WriteField("user_id", fmt.Sprint(s.UserId)); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := mw.WriteField("name", s.Name); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := s.Sticker.WriteTo(mw); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+	}()
+	return pr
 }
 
 func (s AddStickerToSet) ContentType() string {
-	return "application/json"
+	if s.contentType == "" {
+		return "multipart/form-data"
+	}
+	return s.contentType
 }
 
 // Use this method to move a sticker in a set created by the bot to a specific position.
@@ -484,7 +536,9 @@ type ReplaceStickerInSet struct {
 	// A JSON-serialized object with information about the added sticker.
 	// If exactly the same sticker had already been added to the set, then the set remains unchanged.
 	Sticker objects.InputSticker `json:"sticker"`
-} // TODO multipart
+
+	contentType string
+}
 
 func (r ReplaceStickerInSet) Validate() error {
 	if r.UserId < 1 {
@@ -507,11 +561,39 @@ func (s ReplaceStickerInSet) Endpoint() string {
 }
 
 func (s ReplaceStickerInSet) Reader() io.Reader {
-	return gotely.EncodeJSON(s)
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
+
+	go func() {
+		defer pw.Close()
+		defer mw.Close()
+
+		if err := mw.WriteField("user_id", fmt.Sprint(s.UserId)); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := mw.WriteField("name", s.Name); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := mw.WriteField("old_sticker", s.OldSticker); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := s.Sticker.WriteTo(mw); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+	}()
+	return pr
 }
 
 func (s ReplaceStickerInSet) ContentType() string {
-	return "application/json"
+	if s.contentType == "" {
+		return "multipart/form-data"
+	}
+	return s.contentType
 }
 
 // Use this method to change the list of emoji assigned to a regular or custom emoji sticker.

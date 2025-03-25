@@ -1,9 +1,12 @@
 package objects
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/bigelle/gotely"
@@ -308,55 +311,56 @@ type TransactionPartner struct {
 }
 
 func (t *TransactionPartner) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Type string `json:"type"`
-	}
-	if err := json.Unmarshal(data, &raw); err != nil {
+	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
+	var typ string
+	if err := gotely.DecodeExactField(br, "type", &typ); err != nil {
 		return err
 	}
+	r.Seek(0, io.SeekStart)
+	br.Reset(r)
 
-	// FIXME: probably better to use decoder
-	switch raw.Type {
+	switch typ {
 	case "user":
-		tmp := TransactionPartnerUser{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
+		var result TransactionPartnerUser
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
-		t.User = &tmp
+		t.User = &result
 	case "affiliate_program":
-		tmp := TransactionPartnerAffiliateProgram{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
+		var result TransactionPartnerAffiliateProgram
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
-		t.AffiliateProgram = &tmp
+		t.AffiliateProgram = &result
 	case "fragment":
-		tmp := TransactionPartnerFragment{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
+		var result TransactionPartnerFragment
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
-		t.Fragment = &tmp
+		t.Fragment = &result
 	case "telegram_ads":
-		tmp := TransactionPartnerTelegramAds{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
+		var result TransactionPartnerTelegramAds
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
-		t.TelegramAds = &tmp
+		t.TelegramAds = &result
 	case "telegram_api":
-		tmp := TransactionPartnerTelegramApi{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
+		var result TransactionPartnerTelegramApi
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
-		t.TelegramApi = &tmp
+		t.TelegramApi = &result
 	case "other":
-		tmp := TransactionPartnerOther{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
+		var result TransactionPartnerOther
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
-		t.Other = &tmp
+		t.Other = &result
 	default:
-		return fmt.Errorf("unknown transaction partner type: %s", raw.Type)
+		return fmt.Errorf("unknown transaction partner type: %s", typ)
 	}
-	t.Type = raw.Type
+	t.Type = typ
 	return nil
 }
 

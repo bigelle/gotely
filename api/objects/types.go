@@ -1332,6 +1332,7 @@ func (b *BackgroundType) UnmarshalJSON(data []byte) error {
 	default:
 		return fmt.Errorf("unknown background type: %s", typ)
 	}
+	b.Type = typ
 	return nil
 }
 

@@ -1,7 +1,9 @@
 package methods
 
 import (
+	"fmt"
 	"io"
+	"mime/multipart"
 	"strings"
 
 	"github.com/bigelle/gotely"
@@ -176,7 +178,7 @@ type EditMessageMedia struct {
 	ReplyMarkup *objects.InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 
 	contentType string
-} // TODO multipart
+}
 
 func (e EditMessageMedia) Validate() error {
 	if err := e.Media.Validate(); err != nil {
@@ -207,12 +209,58 @@ func (s EditMessageMedia) Endpoint() string {
 	return "editMessageMedia"
 }
 
-func (s EditMessageMedia) Reader() io.Reader {
-	return gotely.EncodeJSON(s)
+func (s *EditMessageMedia) Reader() io.Reader {
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
+
+	go func() {
+		defer pw.Close()
+		defer mw.Close()
+
+		if err := s.Media.WriteTo(mw); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if s.BusinessConnectionId != nil {
+			if err := mw.WriteField("business_connection_id", *s.BusinessConnectionId); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ChatId != nil {
+			if err := mw.WriteField("chat_id", *s.ChatId); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.MessageId != nil {
+			if err := mw.WriteField("message_id", fmt.Sprint(*s.MessageId)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.InlineMessageId != nil {
+			if err := mw.WriteField("inline_message_id", *s.InlineMessageId); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ReplyMarkup != nil {
+			if err := gotely.WriteJSONToForm(mw, "reply_markup", *s.ReplyMarkup); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+	}()
+	return pr
 }
 
 func (s EditMessageMedia) ContentType() string {
-	return "application/json"
+	if s.contentType == "" {
+		return "multipart/form-data"
+	}
+	return s.contentType
 }
 
 // Use this method to edit live location messages.
