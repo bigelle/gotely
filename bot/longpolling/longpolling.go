@@ -76,7 +76,7 @@ func (g GetUpdates) Validate() error {
 	}
 	for _, upd := range *g.AllowedUpdates {
 		if _, ok := allowed[upd]; !ok {
-			return fmt.Errorf(fmt.Sprintf("unknown update type: %s", upd))
+			return fmt.Errorf("unknown update type: %s", upd)
 		}
 	}
 	return nil

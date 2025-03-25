@@ -9,6 +9,8 @@ import (
 )
 
 // TODO: implement it everywhere
+// ErrFailedValidation contains a list of errors
+// that occurred during validation.
 type ErrFailedValidation []error
 
 func (e ErrFailedValidation) Error() string {
@@ -31,6 +33,8 @@ func (e ErrFailedValidation) Unwrap() []error {
 	return e
 }
 
+// ErrTelegramAPIFailedRequest describes the reason
+// why the request to the Telegram Bot API was unsuccessful.
 type ErrTelegramAPIFailedRequest struct {
 	Code               int
 	Description        string
@@ -60,6 +64,8 @@ func (e ErrTelegramAPIFailedRequest) Unwrap() error {
 	return e
 }
 
+// DecodeExactField reads the contents of source, searches for the specified field
+// and writes it's value to dest
 func DecodeExactField(source io.Reader, field string, dest any) error {
 	dec := json.NewDecoder(source)
 	for {
@@ -75,10 +81,13 @@ func DecodeExactField(source io.Reader, field string, dest any) error {
 	return fmt.Errorf("unknown field: %s", field)
 }
 
+// DecodeJSON reads JSON from source and decodes it into dest
 func DecodeJSON(source io.Reader, dest any) error {
 	return json.NewDecoder(source).Decode(dest)
 }
 
+// WriteJSONToForm creates multipart form field with the given key
+// and writes the JSON-encoded value into it
 func WriteJSONToForm(mw *multipart.Writer, key string, value any) error {
 	r, err := mw.CreateFormField(key)
 	if err != nil {
@@ -87,6 +96,7 @@ func WriteJSONToForm(mw *multipart.Writer, key string, value any) error {
 	return json.NewEncoder(r).Encode(value)
 }
 
+// EncodeJSON encodes the given value into JSON and returns as [io.Reader]
 func EncodeJSON(body any) io.Reader {
 	pr, pw := io.Pipe()
 	enc := json.NewEncoder(pw)
