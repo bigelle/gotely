@@ -25,10 +25,10 @@ type LabeledPrice struct {
 
 func (l LabeledPrice) Validate() error {
 	if strings.TrimSpace(l.Label) == "" {
-		return gotely.ErrInvalidParam("label parameter can't be empty")
+		return fmt.Errorf("label parameter can't be empty")
 	}
 	if l.Amount < 0 {
-		return gotely.ErrInvalidParam("amount can't be less than zero")
+		return fmt.Errorf("amount can't be less than zero")
 	}
 	return nil
 }
@@ -90,10 +90,10 @@ type ShippingOption struct {
 
 func (s ShippingOption) Validate() error {
 	if strings.TrimSpace(s.Id) == "" {
-		return gotely.ErrInvalidParam("id parameter can't be empty")
+		return fmt.Errorf("id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Title) == "" {
-		return gotely.ErrInvalidParam("title parameter can't be empty")
+		return fmt.Errorf("title parameter can't be empty")
 	}
 	for _, price := range s.Prices {
 		if err := price.Validate(); err != nil {

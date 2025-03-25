@@ -1,6 +1,7 @@
 package methods
 
 import (
+	"fmt"
 	"io"
 	"strings"
 
@@ -100,19 +101,19 @@ type SendInvoice struct {
 
 func (s SendInvoice) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
+		return fmt.Errorf("chat_id parameter can't be empty")
 	}
 	if len(s.Title) < 1 || len(s.Title) > 32 {
-		return gotely.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
+		return fmt.Errorf("title parameter must be between 1 and 32 characters long")
 	}
 	if len(s.Description) < 1 || len(s.Description) > 255 {
-		return gotely.ErrInvalidParam("description parameter must be between 1 and 255 characters long")
+		return fmt.Errorf("description parameter must be between 1 and 255 characters long")
 	}
 	if len([]byte(s.Payload)) < 1 || len([]byte(s.Payload)) > 128 {
-		return gotely.ErrInvalidParam("payload parameter must be between 1 and 128 bytes long")
+		return fmt.Errorf("payload parameter must be between 1 and 128 bytes long")
 	}
 	if len(s.Prices) < 1 {
-		return gotely.ErrInvalidParam("prices parameter can't be empty")
+		return fmt.Errorf("prices parameter can't be empty")
 	}
 	for _, price := range s.Prices {
 		if err := price.Validate(); err != nil {
@@ -121,17 +122,17 @@ func (s SendInvoice) Validate() error {
 	}
 	if s.SuggestedTipAmounts != nil {
 		if len(*s.SuggestedTipAmounts) > 4 {
-			return gotely.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
+			return fmt.Errorf("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
 		}
 		for i := len(*s.SuggestedTipAmounts); i >= 0; i-- {
 			if (*s.SuggestedTipAmounts)[i] < 0 {
-				return gotely.ErrInvalidParam("suggested_tip_amounts must be positive")
+				return fmt.Errorf("suggested_tip_amounts must be positive")
 			}
 			if (*s.SuggestedTipAmounts)[i-1] > (*s.SuggestedTipAmounts)[i] {
-				return gotely.ErrInvalidParam("suggested_tip_amounts must be passed in a strictly increased order")
+				return fmt.Errorf("suggested_tip_amounts must be passed in a strictly increased order")
 			}
 			if (*s.SuggestedTipAmounts)[i] > *s.MaxTipAmount {
-				return gotely.ErrInvalidParam("suggested_tip_amounts must not exceed max_tip_amount")
+				return fmt.Errorf("suggested_tip_amounts must not exceed max_tip_amount")
 			}
 		}
 	}
@@ -226,16 +227,16 @@ type CreateInvoiceLink struct {
 
 func (c CreateInvoiceLink) Validate() error {
 	if len(c.Title) < 1 || len(c.Title) > 32 {
-		return gotely.ErrInvalidParam("title parameter must be between 1 and 32 characters long")
+		return fmt.Errorf("title parameter must be between 1 and 32 characters long")
 	}
 	if len(c.Description) < 1 || len(c.Description) > 255 {
-		return gotely.ErrInvalidParam("description parameter must be between 1 and 255 characters long")
+		return fmt.Errorf("description parameter must be between 1 and 255 characters long")
 	}
 	if len([]byte(c.Payload)) < 1 || len([]byte(c.Payload)) > 128 {
-		return gotely.ErrInvalidParam("payload parameter must be between 1 and 128 bytes long")
+		return fmt.Errorf("payload parameter must be between 1 and 128 bytes long")
 	}
 	if len(c.Prices) < 1 {
-		return gotely.ErrInvalidParam("prices parameter can't be empty")
+		return fmt.Errorf("prices parameter can't be empty")
 	}
 	for _, price := range c.Prices {
 		if err := price.Validate(); err != nil {
@@ -244,17 +245,17 @@ func (c CreateInvoiceLink) Validate() error {
 	}
 	if c.SuggestedTipAmounts != nil {
 		if len(*c.SuggestedTipAmounts) > 4 {
-			return gotely.ErrInvalidParam("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
+			return fmt.Errorf("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
 		}
 		for i := len(*c.SuggestedTipAmounts); i >= 0; i-- {
 			if (*c.SuggestedTipAmounts)[i] < 0 {
-				return gotely.ErrInvalidParam("suggested_tip_amounts must be positive")
+				return fmt.Errorf("suggested_tip_amounts must be positive")
 			}
 			if (*c.SuggestedTipAmounts)[i-1] > (*c.SuggestedTipAmounts)[i] {
-				return gotely.ErrInvalidParam("suggested_tip_amounts must be passed in a strictly increased order")
+				return fmt.Errorf("suggested_tip_amounts must be passed in a strictly increased order")
 			}
 			if (*c.SuggestedTipAmounts)[i] > *c.MaxTipAmount {
-				return gotely.ErrInvalidParam("suggested_tip_amounts must not exceed max_tip_amount")
+				return fmt.Errorf("suggested_tip_amounts must not exceed max_tip_amount")
 			}
 		}
 	}
@@ -294,13 +295,13 @@ type AnswerShippingQuery struct {
 
 func (a AnswerShippingQuery) Validate() error {
 	if strings.TrimSpace(a.ShippingQueryId) == "" {
-		return gotely.ErrInvalidParam("shipping_query_id parameter can't be empty")
+		return fmt.Errorf("shipping_query_id parameter can't be empty")
 	}
 	if a.Ok && a.ShippingOptions == nil {
-		return gotely.ErrInvalidParam("shipping_options parameter can't be empty if ok == true")
+		return fmt.Errorf("shipping_options parameter can't be empty if ok == true")
 	}
 	if !a.Ok && a.ErrorMessage == nil {
-		return gotely.ErrInvalidParam("error_message parameter can't be empty if ok == false")
+		return fmt.Errorf("error_message parameter can't be empty if ok == false")
 	}
 	if a.ShippingOptions != nil {
 		for _, opt := range *a.ShippingOptions {
@@ -347,10 +348,10 @@ type AnswerPreCheckoutQuery struct {
 
 func (a AnswerPreCheckoutQuery) Validate() error {
 	if strings.TrimSpace(a.PreCheckoutQueryId) == "" {
-		return gotely.ErrInvalidParam("pre_checkout_query_id parameter can't be empty")
+		return fmt.Errorf("pre_checkout_query_id parameter can't be empty")
 	}
 	if !a.Ok && a.ErrorMessage == nil {
-		return gotely.ErrInvalidParam("error_message parameter can't be empty if ok == false")
+		return fmt.Errorf("error_message parameter can't be empty if ok == false")
 	}
 	return nil
 }
@@ -379,7 +380,7 @@ type GetStarTransactions struct {
 func (g GetStarTransactions) Validate() error {
 	if g.Limit != nil {
 		if *g.Limit < 1 || *g.Limit > 100 {
-			return gotely.ErrInvalidParam("limit parameter must be between 1 and 100")
+			return fmt.Errorf("limit parameter must be between 1 and 100")
 		}
 	}
 	return nil
@@ -409,10 +410,10 @@ type RefundStarPayment struct {
 
 func (r RefundStarPayment) Validate() error {
 	if r.UserId <= 0 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty or negative")
+		return fmt.Errorf("user_id parameter can't be empty or negative")
 	}
 	if strings.TrimSpace(r.TelegramPaymentChargeId) == "" {
-		return gotely.ErrInvalidParam("telegram_payment_charge_id parameter can't be empty")
+		return fmt.Errorf("telegram_payment_charge_id parameter can't be empty")
 	}
 	return nil
 }
@@ -447,10 +448,10 @@ type EditUserStarSubscription struct {
 
 func (e EditUserStarSubscription) Validate() error {
 	if e.UserId < 1 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty")
+		return fmt.Errorf("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(e.TelegramPaymentChargeId) == "" {
-		return gotely.ErrInvalidParam("telegram_payment_charge_id parameter can't be empty")
+		return fmt.Errorf("telegram_payment_charge_id parameter can't be empty")
 	}
 	return nil
 }

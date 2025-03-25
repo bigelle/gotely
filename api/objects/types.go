@@ -672,14 +672,14 @@ type ReplyParameters struct {
 func (r ReplyParameters) Validate() error {
 	if r.ChatId != nil {
 		if strings.TrimSpace(*r.ChatId) == "" {
-			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
+			return fmt.Errorf("chat_id parameter can't be empty")
 		}
 	}
 	if r.MessageId < 1 {
-		return gotely.ErrInvalidParam("message_id parameter can't be empty")
+		return fmt.Errorf("message_id parameter can't be empty")
 	}
 	if r.QuoteParseMode != nil && r.QuoteEntities != nil {
-		return gotely.ErrInvalidParam("quote)parse_mode can't be used if quote_entities are provided")
+		return fmt.Errorf("quote)parse_mode can't be used if quote_entities are provided")
 	}
 	return nil
 }
@@ -1640,7 +1640,7 @@ type WebAppInfo struct {
 
 func (w WebAppInfo) Validate() error {
 	if strings.TrimSpace(w.Url) == "" {
-		return gotely.ErrInvalidParam("url parameter can't be empty")
+		return fmt.Errorf("url parameter can't be empty")
 	}
 	return nil
 }
@@ -1728,7 +1728,7 @@ type KeyboardButton struct {
 
 func (k KeyboardButton) Validate() error {
 	if strings.TrimSpace(k.Text) == "" {
-		return gotely.ErrInvalidParam("text parameter can't be empty")
+		return fmt.Errorf("text parameter can't be empty")
 	}
 
 	requestsProvided := 0
@@ -1794,7 +1794,7 @@ type KeyboardButtonRequestUsers struct {
 
 func (k KeyboardButtonRequestUsers) Validate() error {
 	if k.RequestId == 0 {
-		return gotely.ErrInvalidParam("request_id parameter can't be empty")
+		return fmt.Errorf("request_id parameter can't be empty")
 	}
 	if *k.MaxQuantity < 1 || *k.MaxQuantity > 10 {
 		return fmt.Errorf("MaxQuantity parameter must be between 1 and 10")
@@ -1839,7 +1839,7 @@ type KeyboardButtonRequestChat struct {
 
 func (k KeyboardButtonRequestChat) Validate() error {
 	if k.RequestId == 0 {
-		return gotely.ErrInvalidParam("request_id parameter can't be empty")
+		return fmt.Errorf("request_id parameter can't be empty")
 	}
 	return nil
 }
@@ -1854,7 +1854,7 @@ type KeyboardButtonPollType struct {
 func (k KeyboardButtonPollType) Validate() error {
 	if k.Type != nil {
 		if *k.Type != "regular" && *k.Type != "quiz" {
-			return gotely.ErrInvalidParam("type must be regular or quiz if specified")
+			return fmt.Errorf("type must be regular or quiz if specified")
 		}
 	}
 	return nil
@@ -1897,12 +1897,12 @@ func (m InlineKeyboardMarkup) Validate() error {
 			}
 			if key.Pay != nil {
 				if i == 0 || j == 0 {
-					return gotely.ErrInvalidParam("the button with a specified pay parameter must always be the first button at the first row")
+					return fmt.Errorf("the button with a specified pay parameter must always be the first button at the first row")
 				}
 			}
 			if key.CallbackGame != nil {
 				if i == 0 || j == 0 {
-					return gotely.ErrInvalidParam("the button with a specified callback_game parameter must always be the first button at the first row")
+					return fmt.Errorf("the button with a specified callback_game parameter must always be the first button at the first row")
 				}
 			}
 		}
@@ -1955,11 +1955,11 @@ type InlineKeyboardButton struct {
 
 func (b InlineKeyboardButton) Validate() error {
 	if strings.TrimSpace(b.Text) == "" {
-		return gotely.ErrInvalidParam("text parameter can't be empty")
+		return fmt.Errorf("text parameter can't be empty")
 	}
 	if b.CallbackData != nil {
 		if len([]byte(*b.CallbackData)) > 64 {
-			return gotely.ErrInvalidParam("callback_data must not be longer than 64 bytes if specified")
+			return fmt.Errorf("callback_data must not be longer than 64 bytes if specified")
 		}
 	}
 	if b.CopyText != nil {
@@ -2005,7 +2005,7 @@ type LoginUrl struct {
 
 func (l LoginUrl) Validate() error {
 	if strings.TrimSpace(l.Url) == "" {
-		return gotely.ErrInvalidParam("url parameter can't be empty")
+		return fmt.Errorf("url parameter can't be empty")
 	}
 	return nil
 }
@@ -2032,7 +2032,7 @@ type CopyTextButton struct {
 
 func (c CopyTextButton) Validate() error {
 	if len(c.Text) < 1 || len(c.Text) > 256 {
-		return gotely.ErrInvalidParam("text parameter must be between 1 and 256 characters")
+		return fmt.Errorf("text parameter must be between 1 and 256 characters")
 	}
 	return nil
 }
@@ -2548,10 +2548,10 @@ func (r ReactionTypeEmoji) GetReactionType() string {
 
 func (r ReactionTypeEmoji) Validate() error {
 	if strings.TrimSpace(r.Emoji) == "" {
-		return gotely.ErrInvalidParam("emoji parameter can't be empty")
+		return fmt.Errorf("emoji parameter can't be empty")
 	}
 	if r.Type != "emoji" {
-		return gotely.ErrInvalidParam("type must be \"emoji\"")
+		return fmt.Errorf("type must be \"emoji\"")
 	}
 	return nil
 }
@@ -2570,10 +2570,10 @@ func (r ReactionTypeCustomEmoji) GetReactionType() string {
 
 func (r ReactionTypeCustomEmoji) Validate() error {
 	if strings.TrimSpace(r.CustomEmojiId) == "" {
-		return gotely.ErrInvalidParam("custom_emoji_id parameter can't be empty")
+		return fmt.Errorf("custom_emoji_id parameter can't be empty")
 	}
 	if r.Type != "custom_emoji" {
-		return gotely.ErrInvalidParam("type must be \"custom_emoji\"")
+		return fmt.Errorf("type must be \"custom_emoji\"")
 	}
 	return nil
 }
@@ -2590,7 +2590,7 @@ func (r ReactionTypePaid) GetReactionType() string {
 
 func (r ReactionTypePaid) Validate() error {
 	if r.Type != "paid" {
-		return gotely.ErrInvalidParam("type must be\"paid\"")
+		return fmt.Errorf("type must be\"paid\"")
 	}
 	return nil
 }
@@ -2657,13 +2657,13 @@ var valid_command = regexp.MustCompile(`^[a-z0-9_]+$`)
 
 func (b BotCommand) Validate() error {
 	if len(b.Command) < 1 || len(b.Command) > 32 {
-		return gotely.ErrInvalidParam("command parameter must be between 1 and 32 characters")
+		return fmt.Errorf("command parameter must be between 1 and 32 characters")
 	}
 	if !valid_command.MatchString(b.Command) {
-		return gotely.ErrInvalidParam("command parameter can contain only lowercase English letters, digits and underscores")
+		return fmt.Errorf("command parameter can contain only lowercase English letters, digits and underscores")
 	}
 	if len(b.Description) < 1 || len(b.Description) > 256 {
-		return gotely.ErrInvalidParam("description parameter must be between 1 and 256 characters")
+		return fmt.Errorf("description parameter must be between 1 and 256 characters")
 	}
 	return nil
 }
@@ -2700,7 +2700,7 @@ func (b BotCommandScopeDefault) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeDefault) Validate() error {
 	if b.Type != "default" {
-		return gotely.ErrInvalidParam("type must be \"default\"")
+		return fmt.Errorf("type must be \"default\"")
 	}
 	return nil
 }
@@ -2717,7 +2717,7 @@ func (b BotCommandScopeAllPrivateChats) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeAllPrivateChats) Validate() error {
 	if b.Type != "all_private_chats" {
-		return gotely.ErrInvalidParam("type must be \"all_private_chats\"")
+		return fmt.Errorf("type must be \"all_private_chats\"")
 	}
 	return nil
 }
@@ -2734,7 +2734,7 @@ func (b BotCommandScopeAllGroupChats) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeAllGroupChats) Validate() error {
 	if b.Type != "all_group_chats" {
-		return gotely.ErrInvalidParam("type must be \"all_group_chats\"")
+		return fmt.Errorf("type must be \"all_group_chats\"")
 	}
 	return nil
 }
@@ -2751,7 +2751,7 @@ func (b BotCommandScopeAllChatAdministrators) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeAllChatAdministrators) Validate() error {
 	if b.Type != "all_chat_administrators" {
-		return gotely.ErrInvalidParam("type must be \"all_chat_administrators\"")
+		return fmt.Errorf("type must be \"all_chat_administrators\"")
 	}
 	return nil
 }
@@ -2770,16 +2770,16 @@ func (b BotCommandScopeChat[T]) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeChat[T]) Validate() error {
 	if b.Type != "chat" {
-		return gotely.ErrInvalidParam("type must be \"chat\"")
+		return fmt.Errorf("type must be \"chat\"")
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
+			return fmt.Errorf("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
 		if c == 0 {
-			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
+			return fmt.Errorf("chat_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -2799,16 +2799,16 @@ func (b BotCommandScopeChatAdministrators[T]) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeChatAdministrators[T]) Validate() error {
 	if b.Type != "chat_administrators" {
-		return gotely.ErrInvalidParam("type must be \"chat_administrators\"")
+		return fmt.Errorf("type must be \"chat_administrators\"")
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
+			return fmt.Errorf("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
 		if c == 0 {
-			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
+			return fmt.Errorf("chat_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -2830,20 +2830,20 @@ func (b BotCommandScopeChatMember[T]) GetBotCommandScopeType() string {
 
 func (b BotCommandScopeChatMember[T]) Validate() error {
 	if b.Type != "chat_member" {
-		return gotely.ErrInvalidParam("type must be \"chat_member\"")
+		return fmt.Errorf("type must be \"chat_member\"")
 	}
 	if c, ok := any(b.ChatId).(string); ok {
 		if strings.TrimSpace(c) == "" {
-			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
+			return fmt.Errorf("chat_id parameter can't be empty")
 		}
 	}
 	if c, ok := any(b.ChatId).(int); ok {
 		if c == 0 {
-			return gotely.ErrInvalidParam("chat_id parameter can't be empty")
+			return fmt.Errorf("chat_id parameter can't be empty")
 		}
 	}
 	if b.UserId < 1 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty")
+		return fmt.Errorf("user_id parameter can't be empty")
 	}
 	return nil
 }
@@ -2908,7 +2908,7 @@ type MenuButtonCommands struct {
 
 func (m MenuButtonCommands) Validate() error {
 	if m.Type != "commands" {
-		return gotely.ErrInvalidParam("type must be \"commands\"")
+		return fmt.Errorf("type must be \"commands\"")
 	}
 	return nil
 }
@@ -2936,10 +2936,10 @@ func (m MenuButtonWebApp) GetMenuButtonType() string {
 
 func (m MenuButtonWebApp) Validate() error {
 	if m.Type != "web_app" {
-		return gotely.ErrInvalidParam("type must be \"web_app\"")
+		return fmt.Errorf("type must be \"web_app\"")
 	}
 	if strings.TrimSpace(m.Text) == "" {
-		return gotely.ErrInvalidParam("text parameter can't be empty")
+		return fmt.Errorf("text parameter can't be empty")
 	}
 	if err := m.WebApp.Validate(); err != nil {
 		return err
@@ -2955,7 +2955,7 @@ type MenuButtonDefault struct {
 
 func (m MenuButtonDefault) Validate() error {
 	if m.Type != "default" {
-		return gotely.ErrInvalidParam("type must be \"default\"")
+		return fmt.Errorf("type must be \"default\"")
 	}
 	return nil
 }
@@ -3201,10 +3201,10 @@ func (i InputMediaPhoto) WriteTo(mw *multipart.Writer) error {
 
 func (i InputMediaPhoto) Validate() error {
 	if i.Type != "photo" {
-		return gotely.ErrInvalidParam("type must be photo")
+		return fmt.Errorf("type must be photo")
 	}
 	if len(i.Media) == 0 {
-		return gotely.ErrInvalidParam("media parameter can't be empty")
+		return fmt.Errorf("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3257,10 +3257,10 @@ type InputMediaVideo struct {
 
 func (i InputMediaVideo) Validate() error {
 	if i.Type != "video" {
-		return gotely.ErrInvalidParam("type must be video")
+		return fmt.Errorf("type must be video")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return gotely.ErrInvalidParam("media parameter can't be empty")
+		return fmt.Errorf("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3397,10 +3397,10 @@ type InputMediaAnimation struct {
 
 func (i InputMediaAnimation) Validate() error {
 	if i.Type != "animation" {
-		return gotely.ErrInvalidParam("type must be animation")
+		return fmt.Errorf("type must be animation")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return gotely.ErrInvalidParam("media parameter can't be empty")
+		return fmt.Errorf("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3524,10 +3524,10 @@ type InputMediaAudio struct {
 
 func (i InputMediaAudio) Validate() error {
 	if i.Type != "audio" {
-		return gotely.ErrInvalidParam("type must be audio")
+		return fmt.Errorf("type must be audio")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return gotely.ErrInvalidParam("media parameter can't be empty")
+		return fmt.Errorf("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3640,10 +3640,10 @@ type InputMediaDocument struct {
 
 func (i InputMediaDocument) Validate() error {
 	if i.Type != "document" {
-		return gotely.ErrInvalidParam("type must be document")
+		return fmt.Errorf("type must be document")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return gotely.ErrInvalidParam("media parameter can't be empty")
+		return fmt.Errorf("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3736,10 +3736,10 @@ func (i InputFileFromReader) WriteTo(mw *multipart.Writer, field string) error {
 // Validates the file path and checks file existence.
 func (i InputFileFromReader) Validate() error {
 	if i.Reader == nil {
-		return gotely.ErrInvalidParam("reader can't be nil")
+		return fmt.Errorf("reader can't be nil")
 	}
 	if i.FileName == "" {
-		return gotely.ErrInvalidParam("file name can't be empty")
+		return fmt.Errorf("file name can't be empty")
 	}
 	return nil
 }
@@ -3750,7 +3750,7 @@ type InputFileFromRemote string
 // Validates the remote FileId or URL.
 func (i InputFileFromRemote) Validate() error {
 	if i == "" {
-		return gotely.ErrInvalidParam("file id or url can't be empty")
+		return fmt.Errorf("file id or url can't be empty")
 	}
 	return nil
 }
@@ -3790,10 +3790,10 @@ type InputPaidMediaPhoto struct {
 
 func (i InputPaidMediaPhoto) Validate() error {
 	if i.Type != "photo" {
-		return gotely.ErrInvalidParam("type must be photo")
+		return fmt.Errorf("type must be photo")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return gotely.ErrInvalidParam("media parameter can't be empty")
+		return fmt.Errorf("media parameter can't be empty")
 	}
 	return nil
 }
@@ -3876,10 +3876,10 @@ func (i *InputPaidMediaVideo) SetPaidMedia(media string, r io.Reader) {
 
 func (i InputPaidMediaVideo) Validate() error {
 	if i.Type != "video" {
-		return gotely.ErrInvalidParam("type must be video")
+		return fmt.Errorf("type must be video")
 	}
 	if strings.TrimSpace(i.Media) == "" {
-		return gotely.ErrInvalidParam("media parameter can't be empty")
+		return fmt.Errorf("media parameter can't be empty")
 	}
 	return nil
 }

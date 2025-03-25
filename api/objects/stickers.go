@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"mime/multipart"
 	"slices"
-
-	"github.com/bigelle/gotely"
 )
 
 // This object represents a sticker.
@@ -107,13 +105,13 @@ type InputSticker struct {
 
 func (i InputSticker) Validate() error {
 	if len(i.EmojiList) < 1 || len(i.EmojiList) > 20 {
-		return gotely.ErrInvalidParam("emojiList parameter must be between 1 and 20")
+		return fmt.Errorf("emojiList parameter must be between 1 and 20")
 	}
 	if len(*i.Keywords) < 1 || len(*i.Keywords) > 20 {
-		return gotely.ErrInvalidParam("keyword parameter must be between 1 and 20")
+		return fmt.Errorf("keyword parameter must be between 1 and 20")
 	}
 	if !slices.Contains([]string{"static", "animated", "video"}, i.Format) {
-		return gotely.ErrInvalidParam("format must be 'static', 'animated' or 'video'")
+		return fmt.Errorf("format must be 'static', 'animated' or 'video'")
 	}
 	if i.MaskPosition != nil {
 		if err := i.MaskPosition.Validate(); err != nil {
@@ -127,7 +125,7 @@ func (i InputSticker) Validate() error {
 	}
 	if s, ok := any(i.Sticker).(string); ok {
 		if s == "" {
-			return gotely.ErrInvalidParam("sticker parameter can't be empty")
+			return fmt.Errorf("sticker parameter can't be empty")
 		}
 	}
 	return nil

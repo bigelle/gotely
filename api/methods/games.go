@@ -1,6 +1,7 @@
 package methods
 
 import (
+	"fmt"
 	"io"
 	"strings"
 
@@ -40,10 +41,10 @@ type SendGame struct {
 
 func (s SendGame) Validate() error {
 	if s.ChatId == 0 {
-		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
+		return fmt.Errorf("chat_id parameter can't be empty")
 	}
 	if strings.TrimSpace(s.GameShortName) == "" {
-		return gotely.ErrInvalidParam("game_short_name parameter can't be empty")
+		return fmt.Errorf("game_short_name parameter can't be empty")
 	}
 	if s.ReplyMarkup != nil {
 		if err := s.ReplyMarkup.Validate(); err != nil {
@@ -95,22 +96,22 @@ type SetGameScore struct {
 
 func (s SetGameScore) Validate() error {
 	if s.UserId == 0 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty")
+		return fmt.Errorf("user_id parameter can't be empty")
 	}
 	if s.Score < 0 {
-		return gotely.ErrInvalidParam("score parameter must be non-negative")
+		return fmt.Errorf("score parameter must be non-negative")
 	}
 	if s.InlineMessageId == nil {
 		if s.ChatId == nil {
-			return gotely.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if s.MessageId == nil {
-			return gotely.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if s.ChatId == nil && s.MessageId == nil {
 		if s.InlineMessageId == nil {
-			return gotely.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
+			return fmt.Errorf("inline_message_id can't be empty if chat_id and message_id are not specified")
 		}
 	}
 	return nil
@@ -149,19 +150,19 @@ type GetGameHighScores struct {
 
 func (s GetGameHighScores) Validate() error {
 	if s.UserId == 0 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty")
+		return fmt.Errorf("user_id parameter can't be empty")
 	}
 	if s.InlineMessageId == nil {
 		if s.ChatId == nil {
-			return gotely.ErrInvalidParam("chat_id parameter can't be empty if inline_message_id is not specified")
+			return fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified")
 		}
 		if s.MessageId == nil {
-			return gotely.ErrInvalidParam("message_id parameter can't be empty if inline_message_id is not specified")
+			return fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified")
 		}
 	}
 	if s.ChatId == nil && s.MessageId == nil {
 		if s.InlineMessageId == nil {
-			return gotely.ErrInvalidParam("inline_message_id can't be empty if chat_id and message_id are not specified")
+			return fmt.Errorf("inline_message_id can't be empty if chat_id and message_id are not specified")
 		}
 	}
 	return nil

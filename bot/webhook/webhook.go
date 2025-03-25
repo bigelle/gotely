@@ -55,7 +55,7 @@ func (s SetWebhook) Endpoint() string {
 
 func (s SetWebhook) Validate() error {
 	if s.Url == "" {
-		return gotely.ErrInvalidParam("url can't be empty")
+		return fmt.Errorf("url can't be empty")
 	}
 	if s.Certificate != nil {
 		if err := s.Certificate.Validate(); err != nil {

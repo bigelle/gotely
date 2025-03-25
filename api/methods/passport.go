@@ -1,6 +1,7 @@
 package methods
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/bigelle/gotely"
@@ -26,10 +27,10 @@ type SetPassportDataErrors struct {
 
 func (s SetPassportDataErrors) Validate() error {
 	if s.UserId < 1 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty")
+		return fmt.Errorf("user_id parameter can't be empty")
 	}
 	if len(s.Errors) < 1 {
-		return gotely.ErrInvalidParam("objects.parameter can't be empty")
+		return fmt.Errorf("objects.parameter can't be empty")
 	}
 	return nil
 }

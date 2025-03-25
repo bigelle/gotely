@@ -52,7 +52,7 @@ type SendSticker struct {
 
 func (s SendSticker) Validate() error {
 	if strings.TrimSpace(s.ChatId) == "" {
-		return gotely.ErrInvalidParam("chat_id parameter can't be empty")
+		return fmt.Errorf("chat_id parameter can't be empty")
 	}
 	if err := s.Sticker.Validate(); err != nil {
 		return fmt.Errorf("invalid photo parameter: %w", err)
@@ -157,7 +157,7 @@ type GetStickerSet struct {
 
 func (g GetStickerSet) Validate() error {
 	if strings.TrimSpace(g.Name) == "" {
-		return gotely.ErrInvalidParam("name parameter can't be empty")
+		return fmt.Errorf("name parameter can't be empty")
 	}
 	return nil
 }
@@ -185,7 +185,7 @@ type GetCustomEmojiStickers struct {
 
 func (g GetCustomEmojiStickers) Validate() error {
 	if len(g.CustomEmojiIds) == 0 {
-		return gotely.ErrInvalidParam("custom_emoji_ids parameter can't be empty")
+		return fmt.Errorf("custom_emoji_ids parameter can't be empty")
 	}
 	return nil
 }
@@ -223,7 +223,7 @@ type UploadStickerFile struct {
 
 func (u UploadStickerFile) Validate() error {
 	if u.UserId < 1 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty")
+		return fmt.Errorf("user_id parameter can't be empty")
 	}
 	if err := u.Sticker.Validate(); err != nil {
 		return err
@@ -234,7 +234,7 @@ func (u UploadStickerFile) Validate() error {
 		"video",
 	}
 	if !slices.Contains(allowed_formats, u.StickerFormat) {
-		return gotely.ErrInvalidParam("sticker_format must be one of \"static\", \"animated\", \"video\"")
+		return fmt.Errorf("sticker_format must be one of \"static\", \"animated\", \"video\"")
 	}
 	return nil
 }
@@ -304,10 +304,10 @@ type CreateNewStickerSet struct {
 
 func (c CreateNewStickerSet) Validate() error {
 	if c.UserId < 1 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty")
+		return fmt.Errorf("user_id parameter can't be empty")
 	}
 	if len(c.Name) < 1 || len(c.Name) > 64 {
-		return gotely.ErrInvalidParam("name parameter must be between 1 and 64 characters")
+		return fmt.Errorf("name parameter must be between 1 and 64 characters")
 	}
 	valid_stickerset_name := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*$`)
 	consecutive_underscores := regexp.MustCompile(`__+`)
@@ -317,13 +317,13 @@ func (c CreateNewStickerSet) Validate() error {
 		"custom_emoji",
 	}
 	if !valid_stickerset_name.MatchString(c.Name) {
-		return gotely.ErrInvalidParam("name parameter can contain only English letters, digits and underscores")
+		return fmt.Errorf("name parameter can contain only English letters, digits and underscores")
 	}
 	if consecutive_underscores.MatchString(c.Name) {
-		return gotely.ErrInvalidParam("name parameter can't contain consecutive underscores")
+		return fmt.Errorf("name parameter can't contain consecutive underscores")
 	}
 	if len(c.Title) < 1 || len(c.Title) > 64 {
-		return gotely.ErrInvalidParam("title parameter must be between 1 and 64 characters")
+		return fmt.Errorf("title parameter must be between 1 and 64 characters")
 	}
 	for _, sticker := range c.Stickers {
 		if err := sticker.Validate(); err != nil {
@@ -332,7 +332,7 @@ func (c CreateNewStickerSet) Validate() error {
 	}
 	if c.StickerType != nil {
 		if !slices.Contains(valid_stickerobjects, *c.StickerType) {
-			return gotely.ErrInvalidParam("sticker_type must be \"regular\", \"mask\" or \"custom_emoji\"")
+			return fmt.Errorf("sticker_type must be \"regular\", \"mask\" or \"custom_emoji\"")
 		}
 	}
 	return nil
@@ -413,10 +413,10 @@ type AddStickerToSet struct {
 
 func (a AddStickerToSet) Validate() error {
 	if a.UserId < 1 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty")
+		return fmt.Errorf("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(a.Name) == "" {
-		return gotely.ErrInvalidParam("name parameter can't be empty")
+		return fmt.Errorf("name parameter can't be empty")
 	}
 	if err := a.Sticker.Validate(); err != nil {
 		return err
@@ -473,10 +473,10 @@ type SetStickerPositionInSet struct {
 
 func (s SetStickerPositionInSet) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return gotely.ErrInvalidParam("sticker parameter can't be empty")
+		return fmt.Errorf("sticker parameter can't be empty")
 	}
 	if s.Position < 0 {
-		return gotely.ErrInvalidParam("position parameter must be positive")
+		return fmt.Errorf("position parameter must be positive")
 	}
 	return nil
 }
@@ -502,7 +502,7 @@ type DeleteStickerFromSet struct {
 
 func (d DeleteStickerFromSet) Validate() error {
 	if strings.TrimSpace(d.Sticker) == "" {
-		return gotely.ErrInvalidParam("sticker parameter can't be empty")
+		return fmt.Errorf("sticker parameter can't be empty")
 	}
 	return nil
 }
@@ -542,13 +542,13 @@ type ReplaceStickerInSet struct {
 
 func (r ReplaceStickerInSet) Validate() error {
 	if r.UserId < 1 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty")
+		return fmt.Errorf("user_id parameter can't be empty")
 	}
 	if strings.TrimSpace(r.OldSticker) == "" {
-		return gotely.ErrInvalidParam("old_sticker parameter can't be empty")
+		return fmt.Errorf("old_sticker parameter can't be empty")
 	}
 	if strings.TrimSpace(r.Name) == "" {
-		return gotely.ErrInvalidParam("name parameter can't be empty")
+		return fmt.Errorf("name parameter can't be empty")
 	}
 	if err := r.Sticker.Validate(); err != nil {
 		return err
@@ -610,10 +610,10 @@ type SetStickerEmojiList struct {
 
 func (s SetStickerEmojiList) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return gotely.ErrInvalidParam("sticker parameter can't be empty")
+		return fmt.Errorf("sticker parameter can't be empty")
 	}
 	if len(s.EmojiList) < 1 || len(s.EmojiList) > 20 {
-		return gotely.ErrInvalidParam("emoji_list parameter can contain only 1-20 elements")
+		return fmt.Errorf("emoji_list parameter can contain only 1-20 elements")
 	}
 	return nil
 }
@@ -643,11 +643,11 @@ type SetStickerKeywords struct {
 
 func (s SetStickerKeywords) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return gotely.ErrInvalidParam("sticker parameter can't be empty")
+		return fmt.Errorf("sticker parameter can't be empty")
 	}
 	if s.Keywords != nil {
 		if len(*s.Keywords) > 20 {
-			return gotely.ErrInvalidParam("keywords parameter can't be longer than 20")
+			return fmt.Errorf("keywords parameter can't be longer than 20")
 		}
 	}
 	return nil
@@ -680,7 +680,7 @@ type SetStickerMaskPosition struct {
 
 func (s SetStickerMaskPosition) Validate() error {
 	if strings.TrimSpace(s.Sticker) == "" {
-		return gotely.ErrInvalidParam("sticker parameter can't be empty")
+		return fmt.Errorf("sticker parameter can't be empty")
 	}
 	if s.MaskPosition != nil {
 		if err := s.MaskPosition.Validate(); err != nil {
@@ -714,10 +714,10 @@ type SetStickerSetTitle struct {
 
 func (s SetStickerSetTitle) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return gotely.ErrInvalidParam("name parameter can't be empty")
+		return fmt.Errorf("name parameter can't be empty")
 	}
 	if strings.TrimSpace(s.Title) == "" {
-		return gotely.ErrInvalidParam("title parameter can't be empty")
+		return fmt.Errorf("title parameter can't be empty")
 	}
 	return nil
 }
@@ -763,10 +763,10 @@ type SetStickerSetThumbnail struct {
 
 func (s SetStickerSetThumbnail) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return gotely.ErrInvalidParam("name parameter can't be empty")
+		return fmt.Errorf("name parameter can't be empty")
 	}
 	if s.UserId < 1 {
-		return gotely.ErrInvalidParam("user_id parameter can't be empty")
+		return fmt.Errorf("user_id parameter can't be empty")
 	}
 	if s.Thumbnail != nil {
 		if t, ok := any(*s.Thumbnail).(objects.InputFile); ok {
@@ -776,7 +776,7 @@ func (s SetStickerSetThumbnail) Validate() error {
 		}
 		if t, ok := any(*s.Thumbnail).(string); ok {
 			if strings.TrimSpace(t) == "" {
-				return gotely.ErrInvalidParam("thumbnail file id can't be empty")
+				return fmt.Errorf("thumbnail file id can't be empty")
 			}
 		}
 	}
@@ -786,7 +786,7 @@ func (s SetStickerSetThumbnail) Validate() error {
 		"video",
 	}
 	if !slices.Contains(valid_stickerset_thumbnail, s.Format) {
-		return gotely.ErrInvalidParam("format parameter must be one of “static”, “animated” or “video”")
+		return fmt.Errorf("format parameter must be one of “static”, “animated” or “video”")
 	}
 	return nil
 }
@@ -817,11 +817,11 @@ type SetCustomEmojiStickerSetThumbnail struct {
 
 func (s SetCustomEmojiStickerSetThumbnail) Validate() error {
 	if strings.TrimSpace(s.Name) == "" {
-		return gotely.ErrInvalidParam("name parameter can't be empty")
+		return fmt.Errorf("name parameter can't be empty")
 	}
 	if s.CustomEmojiId != nil {
 		if strings.TrimSpace(*s.CustomEmojiId) == "" {
-			return gotely.ErrInvalidParam("custom_emoji_id parameter can't be empty")
+			return fmt.Errorf("custom_emoji_id parameter can't be empty")
 		}
 	}
 	return nil
@@ -849,7 +849,7 @@ type DeleteStickerSet struct {
 
 func (d DeleteStickerSet) Validate() error {
 	if strings.TrimSpace(d.Name) == "" {
-		return gotely.ErrInvalidParam("name parameter can't be empty")
+		return fmt.Errorf("name parameter can't be empty")
 	}
 	return nil
 }
@@ -918,24 +918,24 @@ type SendGift struct {
 func (s SendGift) Validate() error {
 	if s.UserId != nil {
 		if *s.UserId < 1 {
-			return gotely.ErrInvalidParam("user_id parameter can't be empty")
+			return fmt.Errorf("user_id parameter can't be empty")
 		}
 	}
 	if s.ChatId != nil {
 		if *s.ChatId == "" {
-			return gotely.ErrInvalidParam("user_id parameter can't be empty")
+			return fmt.Errorf("user_id parameter can't be empty")
 		}
 	}
 	if strings.TrimSpace(s.GiftId) == "" {
-		return gotely.ErrInvalidParam("gift_id parameter can't be empty")
+		return fmt.Errorf("gift_id parameter can't be empty")
 	}
 	if s.Text != nil {
 		if len(*s.Text) > 255 {
-			return gotely.ErrInvalidParam("text parameter must not be longer than 255 characters")
+			return fmt.Errorf("text parameter must not be longer than 255 characters")
 		}
 	}
 	if s.TextParseMode != nil && s.TextEntities != nil {
-		return gotely.ErrInvalidParam("parse_mode can't be used if entities are provided")
+		return fmt.Errorf("parse_mode can't be used if entities are provided")
 	}
 	return nil
 }
@@ -965,11 +965,11 @@ type VerifyUser struct {
 
 func (v VerifyUser) Validate() error {
 	if v.UserId <= 0 {
-		return gotely.ErrInvalidParam("user_id can't be empty or negative")
+		return fmt.Errorf("user_id can't be empty or negative")
 	}
 	if v.CustomDescription != nil {
 		if len(*v.CustomDescription) > 70 {
-			return gotely.ErrInvalidParam("custom_description must be between 0 and 70 characters")
+			return fmt.Errorf("custom_description must be between 0 and 70 characters")
 		}
 	}
 	return nil
@@ -1001,11 +1001,11 @@ type VerifyChat struct {
 
 func (v VerifyChat) Validate() error {
 	if v.ChatId == "" {
-		return gotely.ErrInvalidParam("user_id can't be empty or negative")
+		return fmt.Errorf("user_id can't be empty or negative")
 	}
 	if v.CustomDescription != nil {
 		if len(*v.CustomDescription) > 70 {
-			return gotely.ErrInvalidParam("custom_description must be between 0 and 70 characters")
+			return fmt.Errorf("custom_description must be between 0 and 70 characters")
 		}
 	}
 	return nil
@@ -1033,7 +1033,7 @@ type RemoveUserVerification struct {
 
 func (r RemoveUserVerification) Validate() error {
 	if r.UserId <= 0 {
-		return gotely.ErrInvalidParam("user_id can't be empty or negative")
+		return fmt.Errorf("user_id can't be empty or negative")
 	}
 	return nil
 }
@@ -1060,7 +1060,7 @@ type RemoveChatVerification struct {
 
 func (r RemoveChatVerification) Validate() error {
 	if r.ChatId == "" {
-		return gotely.ErrInvalidParam("user_id can't be empty or negative")
+		return fmt.Errorf("user_id can't be empty or negative")
 	}
 	return nil
 }
