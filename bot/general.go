@@ -1,9 +1,14 @@
 package bot
 
-// OnUpdateFunc is a handler function for processing a single incoming update.
-// It receives a `Context` and returns an error if the processing fails.
-type OnUpdateFunc func(Context) error
+import (
+	"net/http"
 
-// MiddlewareFunc is a function that wraps an `OnUpdateFunc`, allowing
-// pre- or post-processing of updates before passing them to the next handler.
-type MiddlewareFunc func(OnUpdateFunc) OnUpdateFunc
+	"github.com/bigelle/gotely/api/objects"
+)
+
+type Bot interface {
+	Token() string
+	ApiUrl() string
+	Client() *http.Client
+	OnUpdate(objects.Update) error
+}
