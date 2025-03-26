@@ -74,9 +74,11 @@ func (g GetUpdates) Validate() error {
 		"chat_boost":                {},
 		"removed_chat_boost":        {},
 	}
-	for _, upd := range *g.AllowedUpdates {
-		if _, ok := allowed[upd]; !ok {
-			return fmt.Errorf("unknown update type: %s", upd)
+	if g.AllowedUpdates != nil {
+		for _, upd := range *g.AllowedUpdates {
+			if _, ok := allowed[upd]; !ok {
+				return fmt.Errorf("unknown update type: %s", upd)
+			}
 		}
 	}
 	return nil

@@ -2,6 +2,7 @@ package gotely
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -53,60 +54,6 @@ type Method interface {
 	ContentType() string
 }
 
-// SendRequest sends a request using the given HTTP `method` and `token` with `body` as parameters.
-// It is a wrapper around `SendRequestWith`, without additional request options (`RequestOption`).
-// Returns a pointer to the expected response object `T` or an error if the request fails.
-func SendRequest(body Method, dest any, token string) error {
-	return SendRequestWith(body, dest, token)
-}
-
-// SendRequestWith sends a request using the given API `method`, `token`, request parameters `body`,
-// and additional request options (`opts`).
-// Returns a pointer to the expected response object `T` or an error if the request fails.
-func SendRequestWith(body Method, dest any, token string, opts ...RequestOption) error {
-	if err := body.Validate(); err != nil {
-		return err
-	}
-
-	// its important to call Reader() before using ContentType()
-	// since content-type boundary is generated inside Reader() and stored inside of a struct
-	r := body.Reader()
-	cfg := RequestConfig{
-		Client: http.DefaultClient,
-		ApiUrl: "https://api.telegram.org/bot<token>/<method>",
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
-
-	url := formatUrl(cfg.ApiUrl, token, body.Endpoint())
-	req, err := http.NewRequest(http.MethodPost, url, r)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", body.ContentType())
-
-	resp, err := cfg.Client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	var result ApiResponse
-	if err := json.Unmarshal(b, &result); err != nil {
-		return err
-	}
-
-	if !result.Ok {
-		return fmt.Errorf("bad request: %s", *result.Description)
-	}
-	return json.NewDecoder(bytes.NewReader(result.Result)).Decode(dest)
-}
-
 // RequestOption represents a function that modifies `RequestConfig`.
 // It is used to customize request settings when calling `SendRequestWith`.
 type RequestOption func(*RequestConfig)
@@ -121,6 +68,8 @@ type RequestConfig struct {
 	// where the first placeholder is replaced by the bot token and the second by the API method.
 	// Use `%s` placeholders to properly insert the token and API method.
 	ApiUrl string
+
+	Context context.Context
 }
 
 // WithClient sets a custom HTTP client for `SendRequestWith`.
@@ -137,6 +86,91 @@ func WithUrl(url string) RequestOption {
 	return func(rc *RequestConfig) {
 		rc.ApiUrl = url
 	}
+}
+
+func WithContext(ctx context.Context) RequestOption {
+	return func(rc *RequestConfig) {
+		rc.Context = ctx
+	}
+}
+
+var defaultReqCfg = RequestConfig{
+	Client:  http.DefaultClient,
+	ApiUrl:  "https://api.telegram.org/bot<token>/<method>",
+	Context: context.Background(),
+}
+
+func makeReqCfg(opts ...RequestOption) RequestConfig {
+	cfg := defaultReqCfg
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
+	// fallback
+	if cfg.Client == nil {
+		cfg.Client = http.DefaultClient
+	}
+	// TODO properly validate url
+	if cfg.ApiUrl == "" {
+		cfg.ApiUrl = defaultReqCfg.ApiUrl
+	}
+	if cfg.Context == nil {
+		cfg.Context = context.Background()
+	}
+	return cfg
+}
+
+// SendRequestWith sends a request to the Telegram Bot API using the provided token,
+// and with parameters described in body.
+// If dest is not nil, the response content is written to it.
+// Pass nil as dest to ignore the response content.
+func SendRequest(body Method, dest any, token string) error {
+	return SendRequestWith(body, dest, token)
+}
+
+// SendRequestWith sends a request to the Telegram Bot API using the provided token,
+// with parameters described in body and optional request options opts.
+// If dest is not nil, the response content is written to it.
+// Pass nil as dest to ignore the response content.
+func SendRequestWith(body Method, dest any, token string, opts ...RequestOption) error {
+	if err := body.Validate(); err != nil {
+		return err
+	}
+	if token == "" {
+		return fmt.Errorf("API token can't be empty")
+	}
+
+	cfg := makeReqCfg(opts...)
+
+	url := formatUrl(cfg.ApiUrl, token, body.Endpoint())
+	// its important to call Reader() before using ContentType()
+	// since content-type boundary is generated inside Reader() and stored inside of a struct
+	req, err := http.NewRequestWithContext(cfg.Context, http.MethodPost, url, body.Reader())
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", body.ContentType())
+
+	resp, err := cfg.Client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var result ApiResponse
+	if err := DecodeJSON(resp.Body, &result); err != nil {
+		return err
+	}
+
+	if !result.Ok {
+		return fmt.Errorf("bad request: %s", *result.Description)
+	}
+	// not writing any results if destination is nil
+	// not returning any errors because the request itself was successful
+	if dest == nil {
+		return nil
+	}
+	return json.NewDecoder(bytes.NewReader(result.Result)).Decode(dest)
 }
 
 func formatUrl(template, token, method string) string {
