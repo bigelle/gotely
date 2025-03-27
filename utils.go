@@ -23,7 +23,9 @@ func IsCorrectUrlTemplate(rawURL string) bool {
 		return false
 	}
 	// parsing with dummy values
-	test := strings.ReplaceAll(strings.ReplaceAll(rawURL, "<token>", "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"), "<method>", "getMe")
+	test := strings.ReplaceAll(
+		strings.ReplaceAll(rawURL, "<token>", "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"),
+		"<method>", "getMe")
 	if _, err := url.Parse(test); err != nil {
 		return false
 	}

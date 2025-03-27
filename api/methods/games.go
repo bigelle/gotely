@@ -40,21 +40,25 @@ type SendGame struct {
 }
 
 func (s SendGame) Validate() error {
+	var err gotely.ErrFailedValidation
 	if s.ChatId == 0 {
-		return fmt.Errorf("chat_id parameter can't be empty")
+		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if strings.TrimSpace(s.GameShortName) == "" {
-		return fmt.Errorf("game_short_name parameter can't be empty")
+		err = append(err, fmt.Errorf("game_short_name parameter can't be empty"))
 	}
 	if s.ReplyMarkup != nil {
-		if err := s.ReplyMarkup.Validate(); err != nil {
-			return err
+		if er := s.ReplyMarkup.Validate(); er != nil {
+			err = append(err, er)
 		}
 	}
 	if s.ReplyParameters != nil {
-		if err := s.ReplyParameters.Validate(); err != nil {
-			return err
+		if er := s.ReplyParameters.Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -95,24 +99,28 @@ type SetGameScore struct {
 }
 
 func (s SetGameScore) Validate() error {
+	var err gotely.ErrFailedValidation
 	if s.UserId == 0 {
-		return fmt.Errorf("user_id parameter can't be empty")
+		err = append(err, fmt.Errorf("user_id parameter can't be empty"))
 	}
 	if s.Score < 0 {
-		return fmt.Errorf("score parameter must be non-negative")
+		err = append(err, fmt.Errorf("score parameter must be non-negative"))
 	}
 	if s.InlineMessageId == nil {
 		if s.ChatId == nil {
-			return fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified"))
 		}
 		if s.MessageId == nil {
-			return fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified"))
 		}
 	}
 	if s.ChatId == nil && s.MessageId == nil {
 		if s.InlineMessageId == nil {
-			return fmt.Errorf("inline_message_id can't be empty if chat_id and message_id are not specified")
+			err = append(err, fmt.Errorf("inline_message_id can't be empty if chat_id and message_id are not specified"))
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -149,21 +157,25 @@ type GetGameHighScores struct {
 }
 
 func (s GetGameHighScores) Validate() error {
+	var err gotely.ErrFailedValidation
 	if s.UserId == 0 {
-		return fmt.Errorf("user_id parameter can't be empty")
+		err = append(err, fmt.Errorf("user_id parameter can't be empty"))
 	}
 	if s.InlineMessageId == nil {
 		if s.ChatId == nil {
-			return fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified"))
 		}
 		if s.MessageId == nil {
-			return fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified"))
 		}
 	}
 	if s.ChatId == nil && s.MessageId == nil {
 		if s.InlineMessageId == nil {
-			return fmt.Errorf("inline_message_id can't be empty if chat_id and message_id are not specified")
+			err = append(err, fmt.Errorf("inline_message_id can't be empty if chat_id and message_id are not specified"))
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }

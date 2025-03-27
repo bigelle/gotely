@@ -100,41 +100,45 @@ type SendInvoice struct {
 }
 
 func (s SendInvoice) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(s.ChatId) == "" {
-		return fmt.Errorf("chat_id parameter can't be empty")
+		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(s.Title) < 1 || len(s.Title) > 32 {
-		return fmt.Errorf("title parameter must be between 1 and 32 characters long")
+		err = append(err, fmt.Errorf("title parameter must be between 1 and 32 characters long"))
 	}
 	if len(s.Description) < 1 || len(s.Description) > 255 {
-		return fmt.Errorf("description parameter must be between 1 and 255 characters long")
+		err = append(err, fmt.Errorf("description parameter must be between 1 and 255 characters long"))
 	}
 	if len([]byte(s.Payload)) < 1 || len([]byte(s.Payload)) > 128 {
-		return fmt.Errorf("payload parameter must be between 1 and 128 bytes long")
+		err = append(err, fmt.Errorf("payload parameter must be between 1 and 128 bytes long"))
 	}
 	if len(s.Prices) < 1 {
-		return fmt.Errorf("prices parameter can't be empty")
+		err = append(err, fmt.Errorf("prices parameter can't be empty"))
 	}
 	for _, price := range s.Prices {
-		if err := price.Validate(); err != nil {
-			return err
+		if er := price.Validate(); er != nil {
+			err = append(err, er)
 		}
 	}
 	if s.SuggestedTipAmounts != nil {
 		if len(*s.SuggestedTipAmounts) > 4 {
-			return fmt.Errorf("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
+			err = append(err, fmt.Errorf("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified"))
 		}
 		for i := len(*s.SuggestedTipAmounts); i >= 0; i-- {
 			if (*s.SuggestedTipAmounts)[i] < 0 {
-				return fmt.Errorf("suggested_tip_amounts must be positive")
+				err = append(err, fmt.Errorf("suggested_tip_amounts must be positive"))
 			}
 			if (*s.SuggestedTipAmounts)[i-1] > (*s.SuggestedTipAmounts)[i] {
-				return fmt.Errorf("suggested_tip_amounts must be passed in a strictly increased order")
+				err = append(err, fmt.Errorf("suggested_tip_amounts must be passed in a strictly increased order"))
 			}
 			if (*s.SuggestedTipAmounts)[i] > *s.MaxTipAmount {
-				return fmt.Errorf("suggested_tip_amounts must not exceed max_tip_amount")
+				err = append(err, fmt.Errorf("suggested_tip_amounts must not exceed max_tip_amount"))
 			}
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -226,38 +230,42 @@ type CreateInvoiceLink struct {
 }
 
 func (c CreateInvoiceLink) Validate() error {
+	var err gotely.ErrFailedValidation
 	if len(c.Title) < 1 || len(c.Title) > 32 {
-		return fmt.Errorf("title parameter must be between 1 and 32 characters long")
+		err = append(err, fmt.Errorf("title parameter must be between 1 and 32 characters long"))
 	}
 	if len(c.Description) < 1 || len(c.Description) > 255 {
-		return fmt.Errorf("description parameter must be between 1 and 255 characters long")
+		err = append(err, fmt.Errorf("description parameter must be between 1 and 255 characters long"))
 	}
 	if len([]byte(c.Payload)) < 1 || len([]byte(c.Payload)) > 128 {
-		return fmt.Errorf("payload parameter must be between 1 and 128 bytes long")
+		err = append(err, fmt.Errorf("payload parameter must be between 1 and 128 bytes long"))
 	}
 	if len(c.Prices) < 1 {
-		return fmt.Errorf("prices parameter can't be empty")
+		err = append(err, fmt.Errorf("prices parameter can't be empty"))
 	}
 	for _, price := range c.Prices {
-		if err := price.Validate(); err != nil {
-			return err
+		if er := price.Validate(); er != nil {
+			err = append(err, er)
 		}
 	}
 	if c.SuggestedTipAmounts != nil {
 		if len(*c.SuggestedTipAmounts) > 4 {
-			return fmt.Errorf("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified")
+			err = append(err, fmt.Errorf("invalid suggested_tip_amounts parameter: at most 4 suggested tip amounts can be specified"))
 		}
 		for i := len(*c.SuggestedTipAmounts); i >= 0; i-- {
 			if (*c.SuggestedTipAmounts)[i] < 0 {
-				return fmt.Errorf("suggested_tip_amounts must be positive")
+				err = append(err, fmt.Errorf("suggested_tip_amounts must be positive"))
 			}
 			if (*c.SuggestedTipAmounts)[i-1] > (*c.SuggestedTipAmounts)[i] {
-				return fmt.Errorf("suggested_tip_amounts must be passed in a strictly increased order")
+				err = append(err, fmt.Errorf("suggested_tip_amounts must be passed in a strictly increased order"))
 			}
 			if (*c.SuggestedTipAmounts)[i] > *c.MaxTipAmount {
-				return fmt.Errorf("suggested_tip_amounts must not exceed max_tip_amount")
+				err = append(err, fmt.Errorf("suggested_tip_amounts must not exceed max_tip_amount"))
 			}
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -294,21 +302,25 @@ type AnswerShippingQuery struct {
 }
 
 func (a AnswerShippingQuery) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(a.ShippingQueryId) == "" {
-		return fmt.Errorf("shipping_query_id parameter can't be empty")
+		err = append(err, fmt.Errorf("shipping_query_id parameter can't be empty"))
 	}
 	if a.Ok && a.ShippingOptions == nil {
-		return fmt.Errorf("shipping_options parameter can't be empty if ok == true")
+		err = append(err, fmt.Errorf("shipping_options parameter can't be empty if ok == true"))
 	}
 	if !a.Ok && a.ErrorMessage == nil {
-		return fmt.Errorf("error_message parameter can't be empty if ok == false")
+		err = append(err, fmt.Errorf("error_message parameter can't be empty if ok == false"))
 	}
 	if a.ShippingOptions != nil {
 		for _, opt := range *a.ShippingOptions {
-			if err := opt.Validate(); err != nil {
-				return err
+			if er := opt.Validate(); er != nil {
+				err = append(err, er)
 			}
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -347,11 +359,15 @@ type AnswerPreCheckoutQuery struct {
 }
 
 func (a AnswerPreCheckoutQuery) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(a.PreCheckoutQueryId) == "" {
-		return fmt.Errorf("pre_checkout_query_id parameter can't be empty")
+		err = append(err, fmt.Errorf("pre_checkout_query_id parameter can't be empty"))
 	}
 	if !a.Ok && a.ErrorMessage == nil {
-		return fmt.Errorf("error_message parameter can't be empty if ok == false")
+		err = append(err, fmt.Errorf("error_message parameter can't be empty if ok == false"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -378,10 +394,14 @@ type GetStarTransactions struct {
 }
 
 func (g GetStarTransactions) Validate() error {
+	var err gotely.ErrFailedValidation
 	if g.Limit != nil {
 		if *g.Limit < 1 || *g.Limit > 100 {
-			return fmt.Errorf("limit parameter must be between 1 and 100")
+			err = append(err, fmt.Errorf("limit parameter must be between 1 and 100"))
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -409,11 +429,15 @@ type RefundStarPayment struct {
 }
 
 func (r RefundStarPayment) Validate() error {
+	var err gotely.ErrFailedValidation
 	if r.UserId <= 0 {
-		return fmt.Errorf("user_id parameter can't be empty or negative")
+		err = append(err, fmt.Errorf("user_id parameter can't be empty or negative"))
 	}
 	if strings.TrimSpace(r.TelegramPaymentChargeId) == "" {
-		return fmt.Errorf("telegram_payment_charge_id parameter can't be empty")
+		err = append(err, fmt.Errorf("telegram_payment_charge_id parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -447,11 +471,15 @@ type EditUserStarSubscription struct {
 }
 
 func (e EditUserStarSubscription) Validate() error {
+	var err gotely.ErrFailedValidation
 	if e.UserId < 1 {
-		return fmt.Errorf("user_id parameter can't be empty")
+		err = append(err, fmt.Errorf("user_id parameter can't be empty"))
 	}
 	if strings.TrimSpace(e.TelegramPaymentChargeId) == "" {
-		return fmt.Errorf("telegram_payment_charge_id parameter can't be empty")
+		err = append(err, fmt.Errorf("telegram_payment_charge_id parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }

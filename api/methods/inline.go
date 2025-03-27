@@ -36,23 +36,27 @@ type AnswerInlineQuery struct {
 }
 
 func (a AnswerInlineQuery) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(a.InlineQueryId) == "" {
-		return fmt.Errorf("inline_query_id parameter can't be empty")
+		err = append(err, fmt.Errorf("inline_query_id parameter can't be empty"))
 	}
 	for _, res := range a.Results {
-		if err := res.Validate(); err != nil {
-			return err
+		if er := res.Validate(); er != nil {
+			err = append(err, er)
 		}
 	}
 	if a.NextOffset != nil {
 		if len([]byte(*a.NextOffset)) > 64 {
-			return fmt.Errorf("next_offset parameter can't exceed 64 bytes")
+			err = append(err, fmt.Errorf("next_offset parameter can't exceed 64 bytes"))
 		}
 	}
 	if a.Button != nil {
-		if err := a.Button.Validate(); err != nil {
-			return err
+		if er := a.Button.Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -82,10 +86,14 @@ type AnswerWebAppQuery struct {
 }
 
 func (a AnswerWebAppQuery) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(a.WebAppQueryId) == "" {
-		return fmt.Errorf("web_app_query_id parameter can't be empty")
+		err = append(err, fmt.Errorf("web_app_query_id parameter can't be empty"))
 	}
-	if err := a.Result.Validate(); err != nil {
+	if er := a.Result.Validate(); er != nil {
+		err = append(err, er)
+	}
+	if len(err) > 0 {
 		return err
 	}
 	return nil
@@ -124,10 +132,14 @@ type SavePreparedInlineMessage struct {
 }
 
 func (s SavePreparedInlineMessage) Validate() error {
+	var err gotely.ErrFailedValidation
 	if s.UserId < 1 {
-		return fmt.Errorf("user_id parameter can't be empty")
+		err = append(err, fmt.Errorf("user_id parameter can't be empty"))
 	}
-	if err := s.Result.Validate(); err != nil {
+	if er := s.Result.Validate(); er != nil {
+		err = append(err, er)
+	}
+	if len(err) > 0 {
 		return err
 	}
 	return nil

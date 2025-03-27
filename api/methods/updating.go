@@ -40,34 +40,38 @@ type EditMessageText struct {
 }
 
 func (e EditMessageText) Validate() error {
+	var err gotely.ErrFailedValidation
 	if len(e.Text) < 1 || len(e.Text) > 4096 {
-		return fmt.Errorf("text parameter must be between 1 and 4096 characters")
+		err = append(err, fmt.Errorf("text parameter must be between 1 and 4096 characters"))
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			err = append(err, fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified"))
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified"))
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified"))
 		}
 	}
 	if e.Entities != nil && e.ParseMode != nil {
-		return fmt.Errorf("entities can't be used if parse_mode is provided")
+		err = append(err, fmt.Errorf("entities can't be used if parse_mode is provided"))
 	}
 	if e.ReplyMarkup != nil {
-		if err := e.ReplyMarkup.Validate(); err != nil {
-			return err
+		if er := e.ReplyMarkup.Validate(); er != nil {
+			err = append(err, er)
 		}
 	}
 	if e.LinkPreviewOptions != nil {
-		if err := e.LinkPreviewOptions.Validate(); err != nil {
-			return err
+		if er := e.LinkPreviewOptions.Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -112,31 +116,35 @@ type EditMessageCaption struct {
 }
 
 func (e EditMessageCaption) Validate() error {
+	var err gotely.ErrFailedValidation
 	if e.Caption != nil {
 		if len(*e.Caption) < 1 || len(*e.Caption) > 4096 {
-			return fmt.Errorf("caption parameter must be between 1 and 4096 characters")
+			err = append(err, fmt.Errorf("caption parameter must be between 1 and 4096 characters"))
 		}
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			err = append(err, fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified"))
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified"))
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified"))
 		}
 	}
 	if e.CaptionEntities != nil && e.ParseMode != nil {
-		return fmt.Errorf("entities can't be used if parse_mode is provided")
+		err = append(err, fmt.Errorf("entities can't be used if parse_mode is provided"))
 	}
 	if e.ReplyMarkup != nil {
-		if err := e.ReplyMarkup.Validate(); err != nil {
-			return err
+		if er := e.ReplyMarkup.Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -181,26 +189,30 @@ type EditMessageMedia struct {
 }
 
 func (e EditMessageMedia) Validate() error {
-	if err := e.Media.Validate(); err != nil {
-		return err
+	var err gotely.ErrFailedValidation
+	if er := e.Media.Validate(); er != nil {
+		err = append(err, er)
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			err = append(err, fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified"))
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified"))
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified"))
 		}
 	}
 	if e.ReplyMarkup != nil {
-		if err := e.ReplyMarkup.Validate(); err != nil {
-			return err
+		if er := e.ReplyMarkup.Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -301,39 +313,43 @@ type EditMessageLiveLocation struct {
 }
 
 func (e EditMessageLiveLocation) Validate() error {
+	var err gotely.ErrFailedValidation
 	if e.Latitude == nil {
-		return fmt.Errorf("latitude parameter can't be empty")
+		err = append(err, fmt.Errorf("latitude parameter can't be empty"))
 	}
 	if e.Longitude == nil {
-		return fmt.Errorf("longitude parameter can't be empty")
+		err = append(err, fmt.Errorf("longitude parameter can't be empty"))
 	}
 	if e.HorizontalAccuracy != nil {
 		if *e.HorizontalAccuracy < 0 || *e.HorizontalAccuracy > 1500 {
-			return fmt.Errorf("horizontal_accuracy parameter must be between 0 and 1500 meters")
+			err = append(err, fmt.Errorf("horizontal_accuracy parameter must be between 0 and 1500 meters"))
 		}
 	}
 	if e.Heading != nil {
 		if *e.Heading < 1 || *e.Heading > 360 {
-			return fmt.Errorf("heading parameter must be between 1 and 360 degrees")
+			err = append(err, fmt.Errorf("heading parameter must be between 1 and 360 degrees"))
 		}
 	}
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			err = append(err, fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified"))
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified"))
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified"))
 		}
 	}
 	if e.ReplyMarkup != nil {
-		if err := e.ReplyMarkup.Validate(); err != nil {
-			return err
+		if er := e.ReplyMarkup.Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -367,23 +383,27 @@ type StopMessageLiveLocation struct {
 }
 
 func (e StopMessageLiveLocation) Validate() error {
+	var err gotely.ErrFailedValidation
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			err = append(err, fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified"))
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified"))
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified"))
 		}
 	}
 	if e.ReplyMarkup != nil {
-		if err := e.ReplyMarkup.Validate(); err != nil {
-			return err
+		if er := e.ReplyMarkup.Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -407,23 +427,27 @@ type EditMessageReplyMarkup struct {
 }
 
 func (e EditMessageReplyMarkup) Validate() error {
+	var err gotely.ErrFailedValidation
 	if e.ChatId == nil && e.MessageId == nil {
 		if e.InlineMessageId == nil {
-			return fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified")
+			err = append(err, fmt.Errorf("inline_message_id parameter can'be empty if chat_id and message_id are not specified"))
 		}
 	}
 	if e.InlineMessageId == nil {
 		if e.ChatId == nil || len(*e.ChatId) == 0 {
-			return fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("chat_id parameter can't be empty if inline_message_id is not specified"))
 		}
 		if e.MessageId == nil || *e.MessageId < 1 {
-			return fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified")
+			err = append(err, fmt.Errorf("message_id parameter can't be empty if inline_message_id is not specified"))
 		}
 	}
 	if e.ReplyMarkup != nil {
-		if err := e.ReplyMarkup.Validate(); err != nil {
-			return err
+		if er := e.ReplyMarkup.Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -445,16 +469,20 @@ type StopPoll struct {
 }
 
 func (s StopPoll) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(s.ChatId) == "" {
-		return fmt.Errorf("chat_id parameter can't be empty")
+		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if s.MessageId < 1 {
-		return fmt.Errorf("message_id parameter can't be empty")
+		err = append(err, fmt.Errorf("message_id parameter can't be empty"))
 	}
 	if s.ReplyMarkup != nil {
-		if err := s.ReplyMarkup.Validate(); err != nil {
-			return err
+		if er := s.ReplyMarkup.Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -500,11 +528,15 @@ type DeleteMessage struct {
 }
 
 func (d DeleteMessage) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(d.ChatId) == "" {
-		return fmt.Errorf("chat_id parameter can't be empty")
+		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if d.MessageId < 1 {
-		return fmt.Errorf("message_id parameter can't be empty")
+		err = append(err, fmt.Errorf("message_id parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -535,11 +567,15 @@ type DeleteMessages struct {
 }
 
 func (d DeleteMessages) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(d.ChatId) == "" {
-		return fmt.Errorf("chat_id parameter can't be empty")
+		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(d.MessageIds) < 1 || len(d.MessageIds) > 100 {
-		return fmt.Errorf("message_ids parameter must be between 1 and 100")
+		err = append(err, fmt.Errorf("message_ids parameter must be between 1 and 100"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }

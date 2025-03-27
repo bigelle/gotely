@@ -26,11 +26,15 @@ type SetPassportDataErrors struct {
 }
 
 func (s SetPassportDataErrors) Validate() error {
+	var err gotely.ErrFailedValidation
 	if s.UserId < 1 {
-		return fmt.Errorf("user_id parameter can't be empty")
+		err = append(err, fmt.Errorf("user_id parameter can't be empty"))
 	}
 	if len(s.Errors) < 1 {
-		return fmt.Errorf("objects.parameter can't be empty")
+		err = append(err, fmt.Errorf("objects.parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }

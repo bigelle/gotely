@@ -162,7 +162,11 @@ func SendRequestWith(body Method, dest any, token string, opts ...RequestOption)
 	}
 
 	if !result.Ok {
-		return fmt.Errorf("bad request: %s", *result.Description)
+		return ErrTelegramAPIFailedRequest{
+			Code:               *result.ErrorCode,
+			Description:        *result.Description,
+			ResponseParameters: &ResponseParameters{},
+		}
 	}
 	// not writing any results if destination is nil
 	// not returning any errors because the request itself was successful
