@@ -96,7 +96,7 @@ func WithContext(ctx context.Context) RequestOption {
 
 var defaultReqCfg = RequestConfig{
 	Client:  http.DefaultClient,
-	ApiUrl:  "https://api.telegram.org/bot<token>/<method>",
+	ApiUrl:  DEFAULT_URL_TEMPLATE,
 	Context: context.Background(),
 }
 
@@ -110,8 +110,7 @@ func makeReqCfg(opts ...RequestOption) RequestConfig {
 	if cfg.Client == nil {
 		cfg.Client = http.DefaultClient
 	}
-	// TODO properly validate url
-	if cfg.ApiUrl == "" {
+	if !IsCorrectUrlTemplate(cfg.ApiUrl) {
 		cfg.ApiUrl = defaultReqCfg.ApiUrl
 	}
 	if cfg.Context == nil {

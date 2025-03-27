@@ -5,8 +5,30 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/url"
 	"strings"
 )
+
+const (
+	// Default Telegram Bot API URL template.
+	// <token> will be replaced with the bot token, and <method> with the API method name.
+	DEFAULT_URL_TEMPLATE = "https://api.telegram.org/bot<token>/<method>"
+)
+
+func IsCorrectUrlTemplate(rawURL string) bool {
+	if strings.Count(rawURL, "<token>") != 1 {
+		return false
+	}
+	if strings.Count(rawURL, "<method>") != 1 {
+		return false
+	}
+	// parsing with dummy values
+	test := strings.ReplaceAll(strings.ReplaceAll(rawURL, "<token>", "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"), "<method>", "getMe")
+	if _, err := url.Parse(test); err != nil {
+		return false
+	}
+	return true
+}
 
 // TODO: implement it everywhere
 // ErrFailedValidation contains a list of errors

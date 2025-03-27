@@ -3114,9 +3114,6 @@ type InputMedia interface {
 // for new files or validation of media URLs.
 type InputMediaPhoto struct {
 	// REQUIRED:
-	// Type of the result, must be photo
-	Type string `json:"type"`
-	// REQUIRED:
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
@@ -3151,7 +3148,7 @@ func (i *InputMediaPhoto) SetMedia(media string, r io.Reader) {
 }
 
 func (i InputMediaPhoto) WriteTo(mw *multipart.Writer) error {
-	if err := mw.WriteField("type", i.Type); err != nil {
+	if err := mw.WriteField("type", "photo"); err != nil {
 		return err
 	}
 	if err := mw.WriteField("media", i.Media); err != nil {
@@ -3200,9 +3197,6 @@ func (i InputMediaPhoto) WriteTo(mw *multipart.Writer) error {
 }
 
 func (i InputMediaPhoto) Validate() error {
-	if i.Type != "photo" {
-		return fmt.Errorf("type must be photo")
-	}
 	if len(i.Media) == 0 {
 		return fmt.Errorf("media parameter can't be empty")
 	}
@@ -3215,9 +3209,6 @@ func (i InputMediaPhoto) Validate() error {
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaVideo struct {
-	// REQUIRED:
-	// Type of the result, must be video
-	Type string `json:"type"`
 	// REQUIRED:
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
@@ -3256,9 +3247,6 @@ type InputMediaVideo struct {
 }
 
 func (i InputMediaVideo) Validate() error {
-	if i.Type != "video" {
-		return fmt.Errorf("type must be video")
-	}
 	if strings.TrimSpace(i.Media) == "" {
 		return fmt.Errorf("media parameter can't be empty")
 	}
@@ -3278,7 +3266,7 @@ func (i *InputMediaVideo) SetMedia(media string, r io.Reader) {
 }
 
 func (i InputMediaVideo) WriteTo(mw *multipart.Writer) error {
-	if err := mw.WriteField("type", i.Type); err != nil {
+	if err := mw.WriteField("type", "video"); err != nil {
 		return err
 	}
 	if err := mw.WriteField("media", i.Media); err != nil {
@@ -3358,9 +3346,6 @@ func (i InputMediaVideo) WriteTo(mw *multipart.Writer) error {
 // for new files or validation of media URLs.
 type InputMediaAnimation struct {
 	// REQUIRED:
-	// Type of the result, must be animation
-	Type string `json:"type"`
-	// REQUIRED:
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
@@ -3396,9 +3381,6 @@ type InputMediaAnimation struct {
 }
 
 func (i InputMediaAnimation) Validate() error {
-	if i.Type != "animation" {
-		return fmt.Errorf("type must be animation")
-	}
 	if strings.TrimSpace(i.Media) == "" {
 		return fmt.Errorf("media parameter can't be empty")
 	}
@@ -3418,7 +3400,7 @@ func (i *InputMediaAnimation) SetMedia(media string, r io.Reader) {
 }
 
 func (i InputMediaAnimation) WriteTo(mw *multipart.Writer) error {
-	if err := mw.WriteField("type", i.Type); err != nil {
+	if err := mw.WriteField("type", "animation"); err != nil {
 		return err
 	}
 	if err := mw.WriteField("media", i.Media); err != nil {
@@ -3489,9 +3471,6 @@ func (i InputMediaAnimation) WriteTo(mw *multipart.Writer) error {
 // for new files or validation of media URLs.
 type InputMediaAudio struct {
 	// REQUIRED:
-	// Type of the result, must be audio
-	Type string `json:"type"`
-	// REQUIRED:
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
@@ -3523,9 +3502,6 @@ type InputMediaAudio struct {
 }
 
 func (i InputMediaAudio) Validate() error {
-	if i.Type != "audio" {
-		return fmt.Errorf("type must be audio")
-	}
 	if strings.TrimSpace(i.Media) == "" {
 		return fmt.Errorf("media parameter can't be empty")
 	}
@@ -3545,7 +3521,7 @@ func (i *InputMediaAudio) SetMedia(media string, r io.Reader) {
 }
 
 func (i InputMediaAudio) WriteTo(mw *multipart.Writer) error {
-	if err := mw.WriteField("type", i.Type); err != nil {
+	if err := mw.WriteField("type", "audio"); err != nil {
 		return err
 	}
 	if err := mw.WriteField("media", i.Media); err != nil {
@@ -3609,8 +3585,6 @@ func (i InputMediaAudio) WriteTo(mw *multipart.Writer) error {
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputMediaDocument struct {
-	// Type of the result, must be document
-	Type string `json:"type"`
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
@@ -3639,9 +3613,6 @@ type InputMediaDocument struct {
 }
 
 func (i InputMediaDocument) Validate() error {
-	if i.Type != "document" {
-		return fmt.Errorf("type must be document")
-	}
 	if strings.TrimSpace(i.Media) == "" {
 		return fmt.Errorf("media parameter can't be empty")
 	}
@@ -3661,7 +3632,7 @@ func (i *InputMediaDocument) SetMedia(media string, r io.Reader) {
 }
 
 func (i InputMediaDocument) WriteTo(mw *multipart.Writer) error {
-	if err := mw.WriteField("type", i.Type); err != nil {
+	if err := mw.WriteField("type", "document"); err != nil {
 		return err
 	}
 	if err := mw.WriteField("media", i.Media); err != nil {
@@ -3776,8 +3747,6 @@ type InputPaidMedia interface {
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputPaidMediaPhoto struct {
-	// Type of the media, must be photo
-	Type string `json:"type"`
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
@@ -3789,9 +3758,6 @@ type InputPaidMediaPhoto struct {
 }
 
 func (i InputPaidMediaPhoto) Validate() error {
-	if i.Type != "photo" {
-		return fmt.Errorf("type must be photo")
-	}
 	if strings.TrimSpace(i.Media) == "" {
 		return fmt.Errorf("media parameter can't be empty")
 	}
@@ -3809,11 +3775,7 @@ func (i *InputPaidMediaPhoto) SetPaidMedia(media string, r io.Reader) {
 }
 
 func (i InputPaidMediaPhoto) WriteTo(mw *multipart.Writer) error {
-	// FIXME: maybe i shouldn`t even store "type" field and just write hard-coded values?
-	// i mean, validation would be easier and there would be no way to fail a request because of type field
-	// and there's no possible way where user may use this field for something
-	// like he already knows the type of the media that he's going to send
-	if err := mw.WriteField("type", i.Type); err != nil {
+	if err := mw.WriteField("type", "photo"); err != nil {
 		return err
 	}
 	if err := mw.WriteField("media", i.Media); err != nil {
@@ -3837,8 +3799,6 @@ func (i InputPaidMediaPhoto) WriteTo(mw *multipart.Writer) error {
 // proper handling of file attachments, including the use of "attach://" prefixes
 // for new files or validation of media URLs.
 type InputPaidMediaVideo struct {
-	// Type of the media, must be video
-	Type string `json:"type"`
 	// File to send. Pass a file_id to send a file that exists on the Telegram servers (recommended),
 	// pass an HTTP URL for Telegram to get a file from the Internet,
 	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
@@ -3875,9 +3835,6 @@ func (i *InputPaidMediaVideo) SetPaidMedia(media string, r io.Reader) {
 }
 
 func (i InputPaidMediaVideo) Validate() error {
-	if i.Type != "video" {
-		return fmt.Errorf("type must be video")
-	}
 	if strings.TrimSpace(i.Media) == "" {
 		return fmt.Errorf("media parameter can't be empty")
 	}
@@ -3885,7 +3842,7 @@ func (i InputPaidMediaVideo) Validate() error {
 }
 
 func (i InputPaidMediaVideo) WriteTo(mw *multipart.Writer) error {
-	if err := mw.WriteField("type", i.Type); err != nil {
+	if err := mw.WriteField("type", "video"); err != nil {
 		return err
 	}
 	if err := mw.WriteField("media", i.Media); err != nil {
