@@ -119,7 +119,7 @@ func (i InlineQueryResultsButton) Validate() error {
 type InlineQueryResult interface {
 	Validate() error
 	GetInlineQueryResultType() string
-} // TODO get rid of type field
+}
 
 // Represents a link to an article or web page.
 type InlineQueryResultArticle struct {

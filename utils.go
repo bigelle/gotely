@@ -32,7 +32,6 @@ func IsCorrectUrlTemplate(rawURL string) bool {
 	return true
 }
 
-// TODO: implement it everywhere
 // ErrFailedValidation contains a list of errors
 // that occurred during validation.
 type ErrFailedValidation []error
