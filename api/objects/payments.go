@@ -3,8 +3,6 @@ package objects
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -24,11 +22,15 @@ type LabeledPrice struct {
 }
 
 func (l LabeledPrice) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(l.Label) == "" {
-		return fmt.Errorf("label parameter can't be empty")
+		err = append(err, fmt.Errorf("label parameter can't be empty"))
 	}
 	if l.Amount < 0 {
-		return fmt.Errorf("amount can't be less than zero")
+		err = append(err, fmt.Errorf("amount can't be less than zero"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -89,16 +91,20 @@ type ShippingOption struct {
 }
 
 func (s ShippingOption) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(s.Id) == "" {
-		return fmt.Errorf("id parameter can't be empty")
+		err = append(err, fmt.Errorf("id parameter can't be empty"))
 	}
 	if strings.TrimSpace(s.Title) == "" {
-		return fmt.Errorf("title parameter can't be empty")
+		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
 	for _, price := range s.Prices {
-		if err := price.Validate(); err != nil {
-			return err
+		if er := price.Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -198,43 +204,49 @@ type PaidMediaPurchased struct {
 //
 // - RevenueWithdrawalStateFailed
 type RevenueWithdrawalState struct {
-	RevenueWithdrawalStateInterface
+	// Type of the state
+	Type      string `json:"type"`
+	Pending   *RevenueWithdrawalStatePending
+	Succeeded *RevenueWithdrawalStateSucceeded
+	Failed    *RevenueWithdrawalStateFailed
 }
 
-type RevenueWithdrawalStateInterface interface {
-	GetRevenueWithdrawalStateType() string
-}
-
-func (r *RevenueWithdrawalState) UnmarshalJSON(data []byte) error {
-	var raw struct {
-		Type string `json:"type"`
-	}
-	if err := json.Unmarshal(data, &raw); err != nil {
+func (s *RevenueWithdrawalState) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
+	var typ string
+	if err := gotely.DecodeExactField(br, "type", &typ); err != nil {
 		return err
 	}
+	r.Seek(0, io.SeekStart)
+	br.Reset(r)
 
-	switch raw.Type {
+	switch typ {
 	case "pending":
-		tmp := RevenueWithdrawalStatePending{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
+		var result RevenueWithdrawalStatePending
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
-		r.RevenueWithdrawalStateInterface = tmp
+		s.Pending = &result
+
 	case "succeeded":
-		tmp := RevenueWithdrawalStateSucceeded{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
+		var result RevenueWithdrawalStateSucceeded
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
-		r.RevenueWithdrawalStateInterface = tmp
+		s.Succeeded = &result
+
 	case "failed":
-		tmp := RevenueWithdrawalStateFailed{}
-		if err := json.Unmarshal(data, &tmp); err != nil {
+		var result RevenueWithdrawalStateFailed
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
-		r.RevenueWithdrawalStateInterface = tmp
+		s.Failed = &result
+
 	default:
-		return errors.New("type must be pending, succeeded or failed")
+		return fmt.Errorf("unknown revenue withdrawal state type: %s", typ)
 	}
+	s.Type = typ
 	return nil
 }
 
@@ -242,10 +254,6 @@ func (r *RevenueWithdrawalState) UnmarshalJSON(data []byte) error {
 type RevenueWithdrawalStatePending struct {
 	// Type of the state, always “pending”
 	Type string `json:"type"`
-}
-
-func (r RevenueWithdrawalStatePending) GetRevenueWithdrawalStateType() string {
-	return "pending"
 }
 
 // The withdrawal succeeded.
@@ -258,18 +266,10 @@ type RevenueWithdrawalStateSucceeded struct {
 	Url string `json:"url"`
 }
 
-func (r RevenueWithdrawalStateSucceeded) GetRevenueWithdrawalStateType() string {
-	return "succeeded"
-}
-
 // The withdrawal failed and the transaction was refunded.
 type RevenueWithdrawalStateFailed struct {
 	// Type of the state, always “failed”
 	Type string `json:"type"`
-}
-
-func (r RevenueWithdrawalStateFailed) GetRevenueWithdrawalStateType() string {
-	return "failed"
 }
 
 // Contains information about the affiliate that received a commission via this transaction.

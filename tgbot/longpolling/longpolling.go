@@ -39,14 +39,15 @@ func (g GetUpdates) Endpoint() string {
 }
 
 func (g GetUpdates) Validate() error {
+	var err gotely.ErrFailedValidation
 	if g.Limit != nil {
 		if *g.Limit < 1 || *g.Limit > 100 {
-			return fmt.Errorf("limit must be between 1 and 100")
+			err = append(err, fmt.Errorf("limit must be between 1 and 100"))
 		}
 	}
 	if g.Timeout != nil {
 		if *g.Timeout < 0 {
-			return fmt.Errorf("timeout must be positive")
+			err = append(err, fmt.Errorf("timeout must be positive"))
 		}
 	}
 	allowed := map[string]struct{}{
@@ -77,9 +78,12 @@ func (g GetUpdates) Validate() error {
 	if g.AllowedUpdates != nil {
 		for _, upd := range *g.AllowedUpdates {
 			if _, ok := allowed[upd]; !ok {
-				return fmt.Errorf("unknown update type: %s", upd)
+				err = append(err, fmt.Errorf("unknown update type: %s", upd))
 			}
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }

@@ -69,14 +69,15 @@ func (l LongPollingBot) Stop() {
 }
 
 func (l LongPollingBot) Validate() error {
+	var err gotely.ErrFailedValidation
 	if l.Bot.Token() == "" {
-		return fmt.Errorf("API token can't be empty")
+		err = append(err, fmt.Errorf("API token can't be empty"))
 	}
 	if l.limit < 1 || l.limit > 100 {
-		return fmt.Errorf("limit must be between 1 and 100")
+		err = append(err, fmt.Errorf("limit must be between 1 and 100"))
 	}
 	if l.timeout < 0 {
-		return fmt.Errorf("timeout must be positive")
+		err = append(err, fmt.Errorf("timeout must be positive"))
 	}
 	allowed := map[string]struct{}{
 		"message":                   {},
@@ -106,9 +107,12 @@ func (l LongPollingBot) Validate() error {
 	if l.allowedUpdates != nil {
 		for _, upd := range *l.allowedUpdates {
 			if _, ok := allowed[upd]; !ok {
-				return fmt.Errorf("unknown update type: %s", upd)
+				err = append(err, fmt.Errorf("unknown update type: %s", upd))
 			}
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }

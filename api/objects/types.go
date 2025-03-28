@@ -528,22 +528,24 @@ type MaybeInaccessibleMessage struct {
 
 func (m *MaybeInaccessibleMessage) UnmarshalJSON(data []byte) error {
 	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
 	var date int
-	if err := gotely.DecodeExactField(r, "date", &date); err != nil {
+	if err := gotely.DecodeExactField(br, "date", &date); err != nil {
 		return err
 	}
 	// Resetting reader to re-read JSON
 	r.Seek(0, io.SeekStart)
+	br.Reset(r)
 
 	if date == 0 {
 		var result InaccessibleMessage
-		if err := gotely.DecodeJSON(r, &result); err != nil {
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		m.Inaccessible = &result
 	} else if date > 0 {
 		var result Message
-		if err := gotely.DecodeJSON(r, &result); err != nil {
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		m.Accessible = &result
@@ -670,16 +672,20 @@ type ReplyParameters struct {
 }
 
 func (r ReplyParameters) Validate() error {
+	var err gotely.ErrFailedValidation
 	if r.ChatId != nil {
 		if strings.TrimSpace(*r.ChatId) == "" {
-			return fmt.Errorf("chat_id parameter can't be empty")
+			err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 		}
 	}
 	if r.MessageId < 1 {
-		return fmt.Errorf("message_id parameter can't be empty")
+		err = append(err, fmt.Errorf("message_id parameter can't be empty"))
 	}
 	if r.QuoteParseMode != nil && r.QuoteEntities != nil {
-		return fmt.Errorf("quote)parse_mode can't be used if quote_entities are provided")
+		err = append(err, fmt.Errorf("quote)parse_mode can't be used if quote_entities are provided"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -703,38 +709,40 @@ type MessageOrigin struct {
 
 func (m *MessageOrigin) UnmarshalJSON(data []byte) error {
 	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
 	var typ string
-	if err := gotely.DecodeExactField(r, "type", &typ); err != nil {
+	if err := gotely.DecodeExactField(br, "type", &typ); err != nil {
 		return err
 	}
 	// resetting reader to re-read JSON
 	r.Seek(0, io.SeekStart)
+	br.Reset(r)
 
 	switch typ {
 	case "user":
 		var result MessageOriginUser
-		if err := gotely.DecodeJSON(r, &result); err != nil {
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		m.User = &result
 
 	case "hidden_user":
 		var result MessageOriginHiddenUser
-		if err := gotely.DecodeJSON(r, &result); err != nil {
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		m.HiddenUser = &result
 
 	case "chat":
 		var result MessageOriginChat
-		if err := gotely.DecodeJSON(r, &result); err != nil {
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		m.Chat = &result
 
 	case "channel":
 		var result MessageOriginChannel
-		if err := gotely.DecodeJSON(r, &result); err != nil {
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		m.Channel = &result
@@ -961,30 +969,32 @@ type PaidMedia struct {
 
 func (p *PaidMedia) UnmarshalJSON(data []byte) error {
 	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
 	var typ string
-	if err := gotely.DecodeExactField(r, "type", &typ); err != nil {
+	if err := gotely.DecodeExactField(br, "type", &typ); err != nil {
 		return err
 	}
 	r.Seek(0, io.SeekStart)
+	br.Reset(r)
 
 	switch typ {
 	case "preview":
 		var result PaidMediaPreview
-		if err := gotely.DecodeJSON(r, &result); err != nil {
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		p.Preview = &result
 
 	case "photo":
 		var result PaidMediaPhoto
-		if err := gotely.DecodeJSON(r, &result); err != nil {
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		p.Photo = &result
 
 	case "video":
 		var result PaidMediaVideo
-		if err := gotely.DecodeJSON(r, &result); err != nil {
+		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		p.Video = &result
@@ -1071,11 +1081,15 @@ type InputPollOption struct {
 }
 
 func (i InputPollOption) Validate() error {
+	var err gotely.ErrFailedValidation
 	if len(i.Text) < 1 || len(i.Text) > 100 {
-		return fmt.Errorf("text must be between 1 and 100 characters")
+		err = append(err, fmt.Errorf("text must be between 1 and 100 characters"))
 	}
 	if i.TextParseMode != nil && i.TextEntities != nil {
-		return fmt.Errorf("parse_mode parameter can't be used if entities are provided")
+		err = append(err, fmt.Errorf("parse_mode parameter can't be used if entities are provided"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -1594,8 +1608,12 @@ type LinkPreviewOptions struct {
 }
 
 func (l LinkPreviewOptions) Validate() error {
+	var err gotely.ErrFailedValidation
 	if *l.PreferLargeMedia && *l.PreferSmallMedia {
-		return fmt.Errorf("PreferSmallMedia and PreferLargeMedia parameters are mutual exclusive")
+		err = append(err, fmt.Errorf("PreferSmallMedia and PreferLargeMedia parameters are mutual exclusive"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -1623,13 +1641,6 @@ type File struct {
 	FileSize *int64 `json:"file_size,omitempty"`
 	// Optional. File path. Use https://gotely.telegram.org/file/bot<token>/<file_path> to get the file.
 	FilePath *string `json:"file_path,omitempty"`
-}
-
-func (f File) GetFileUrl(botToken string) (string, error) {
-	if botToken == "" || strings.TrimSpace(botToken) == "" {
-		return "", fmt.Errorf("bot token can't be empty")
-	}
-	return fmt.Sprintf("https://gotely.telegram.org/file/bot%s/%s", botToken, *f.FilePath), nil
 }
 
 // Describes a Web App.
@@ -1685,15 +1696,19 @@ type ReplyKeyboardMarkup struct {
 func (f ReplyKeyboardMarkup) replyKeyboardContract() {}
 
 func (r ReplyKeyboardMarkup) Validate() error {
+	var err gotely.ErrFailedValidation
 	if len(*r.InputFieldPlaceholder) < 1 || len(*r.InputFieldPlaceholder) > 64 {
-		return fmt.Errorf("InputFieldPlaceholder parameter must be between 1 and 64 characters")
+		err = append(err, fmt.Errorf("InputFieldPlaceholder parameter must be between 1 and 64 characters"))
 	}
 	for _, row := range r.Keyboard {
 		for _, key := range row {
-			if err := key.Validate(); err != nil {
-				return err
+			if er := key.Validate(); er != nil {
+				err = append(err, er)
 			}
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -1727,8 +1742,9 @@ type KeyboardButton struct {
 }
 
 func (k KeyboardButton) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(k.Text) == "" {
-		return fmt.Errorf("text parameter can't be empty")
+		err = append(err, fmt.Errorf("text parameter can't be empty"))
 	}
 
 	requestsProvided := 0
@@ -1739,33 +1755,39 @@ func (k KeyboardButton) Validate() error {
 		requestsProvided++
 	}
 	if k.WebApp != nil {
-		if err := k.WebApp.Validate(); err != nil {
-			return err
+		if er := k.WebApp.Validate(); er != nil {
+			err = append(err, er)
+		} else {
+			requestsProvided++
 		}
-		requestsProvided++
 	}
 	if k.RequestPoll != nil {
-		if err := k.RequestPoll.Validate(); err != nil {
-			return err
+		if er := k.RequestPoll.Validate(); er != nil {
+			err = append(err, er)
+		} else {
+			requestsProvided++
 		}
-		requestsProvided++
 	}
 	if k.RequestChat != nil {
-		if err := k.RequestChat.Validate(); err != nil {
-			return err
+		if er := k.RequestChat.Validate(); er != nil {
+			err = append(err, er)
+		} else {
+			requestsProvided++
 		}
-		requestsProvided++
 	}
 	if k.RequestUsers != nil {
-		if err := k.RequestUsers.Validate(); err != nil {
-			return err
+		if er := k.RequestUsers.Validate(); er != nil {
+			err = append(err, er)
+		} else {
+			requestsProvided++
 		}
-		requestsProvided++
 	}
 	if requestsProvided > 1 {
-		return fmt.Errorf("at most one of the optional fields must be used to specify type of the button")
+		err = append(err, fmt.Errorf("at most one of the optional fields must be used to specify type of the button"))
 	}
-
+	if len(err) > 0 {
+		return err
+	}
 	return nil
 }
 
@@ -1793,11 +1815,15 @@ type KeyboardButtonRequestUsers struct {
 }
 
 func (k KeyboardButtonRequestUsers) Validate() error {
+	var err gotely.ErrFailedValidation
 	if k.RequestId == 0 {
-		return fmt.Errorf("request_id parameter can't be empty")
+		err = append(err, fmt.Errorf("request_id parameter can't be empty"))
 	}
 	if *k.MaxQuantity < 1 || *k.MaxQuantity > 10 {
-		return fmt.Errorf("MaxQuantity parameter must be between 1 and 10")
+		err = append(err, fmt.Errorf("MaxQuantity parameter must be between 1 and 10"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -1852,10 +1878,14 @@ type KeyboardButtonPollType struct {
 }
 
 func (k KeyboardButtonPollType) Validate() error {
+	var err gotely.ErrFailedValidation
 	if k.Type != nil {
 		if *k.Type != "regular" && *k.Type != "quiz" {
-			return fmt.Errorf("type must be regular or quiz if specified")
+			err = append(err, fmt.Errorf("type must be regular or quiz if specified"))
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -1890,22 +1920,26 @@ type InlineKeyboardMarkup struct {
 func (f InlineKeyboardMarkup) replyKeyboardContract() {}
 
 func (m InlineKeyboardMarkup) Validate() error {
+	var err gotely.ErrFailedValidation
 	for i, row := range m.Keyboard {
 		for j, key := range row {
-			if err := key.Validate(); err != nil {
-				return err
+			if er := key.Validate(); er != nil {
+				err = append(err, er)
 			}
 			if key.Pay != nil {
 				if i == 0 || j == 0 {
-					return fmt.Errorf("the button with a specified pay parameter must always be the first button at the first row")
+					err = append(err, fmt.Errorf("the button with a specified pay parameter must always be the first button at the first row"))
 				}
 			}
 			if key.CallbackGame != nil {
 				if i == 0 || j == 0 {
-					return fmt.Errorf("the button with a specified callback_game parameter must always be the first button at the first row")
+					err = append(err, fmt.Errorf("the button with a specified callback_game parameter must always be the first button at the first row"))
 				}
 			}
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -1954,28 +1988,32 @@ type InlineKeyboardButton struct {
 }
 
 func (b InlineKeyboardButton) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(b.Text) == "" {
-		return fmt.Errorf("text parameter can't be empty")
+		err = append(err, fmt.Errorf("text parameter can't be empty"))
 	}
 	if b.CallbackData != nil {
 		if len([]byte(*b.CallbackData)) > 64 {
-			return fmt.Errorf("callback_data must not be longer than 64 bytes if specified")
+			err = append(err, fmt.Errorf("callback_data must not be longer than 64 bytes if specified"))
 		}
 	}
 	if b.CopyText != nil {
-		if err := b.CopyText.Validate(); err != nil {
-			return err
+		if er := b.CopyText.Validate(); er != nil {
+			err = append(err, er)
 		}
 	}
 	if b.LoginUrl != nil {
-		if err := (*b.LoginUrl).Validate(); err != nil {
-			return err
+		if er := (*b.LoginUrl).Validate(); er != nil {
+			err = append(err, er)
 		}
 	}
 	if b.WebApp != nil {
-		if err := (*b.WebApp).Validate(); err != nil {
-			return err
+		if er := (*b.WebApp).Validate(); er != nil {
+			err = append(err, er)
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2004,8 +2042,12 @@ type LoginUrl struct {
 }
 
 func (l LoginUrl) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(l.Url) == "" {
-		return fmt.Errorf("url parameter can't be empty")
+		err = append(err, fmt.Errorf("url parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2031,8 +2073,12 @@ type CopyTextButton struct {
 }
 
 func (c CopyTextButton) Validate() error {
+	var err gotely.ErrFailedValidation
 	if len(c.Text) < 1 || len(c.Text) > 256 {
-		return fmt.Errorf("text parameter must be between 1 and 256 characters")
+		err = append(err, fmt.Errorf("text parameter must be between 1 and 256 characters"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2096,10 +2142,14 @@ type ForceReply struct {
 func (f ForceReply) replyKeyboardContract() {}
 
 func (f ForceReply) Validate() error {
+	var err gotely.ErrFailedValidation
 	if f.InputFieldPlaceholder != nil {
 		if len(*f.InputFieldPlaceholder) < 1 || len(*f.InputFieldPlaceholder) > 64 {
-			return fmt.Errorf("InputFieldPlaceholder parameter must be between 1 and 64 characters")
+			err = append(err, fmt.Errorf("InputFieldPlaceholder parameter must be between 1 and 64 characters"))
 		}
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2547,11 +2597,15 @@ func (r ReactionTypeEmoji) GetReactionType() string {
 }
 
 func (r ReactionTypeEmoji) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(r.Emoji) == "" {
-		return fmt.Errorf("emoji parameter can't be empty")
+		err = append(err, fmt.Errorf("emoji parameter can't be empty"))
 	}
 	if r.Type != "emoji" {
-		return fmt.Errorf("type must be \"emoji\"")
+		err = append(err, fmt.Errorf("type must be \"emoji\""))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2569,11 +2623,15 @@ func (r ReactionTypeCustomEmoji) GetReactionType() string {
 }
 
 func (r ReactionTypeCustomEmoji) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(r.CustomEmojiId) == "" {
-		return fmt.Errorf("custom_emoji_id parameter can't be empty")
+		err = append(err, fmt.Errorf("custom_emoji_id parameter can't be empty"))
 	}
 	if r.Type != "custom_emoji" {
-		return fmt.Errorf("type must be \"custom_emoji\"")
+		err = append(err, fmt.Errorf("type must be \"custom_emoji\""))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2589,8 +2647,12 @@ func (r ReactionTypePaid) GetReactionType() string {
 }
 
 func (r ReactionTypePaid) Validate() error {
+	var err gotely.ErrFailedValidation
 	if r.Type != "paid" {
-		return fmt.Errorf("type must be\"paid\"")
+		err = append(err, fmt.Errorf("type must be\"paid\""))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2656,14 +2718,18 @@ type BotCommand struct {
 var valid_command = regexp.MustCompile(`^[a-z0-9_]+$`)
 
 func (b BotCommand) Validate() error {
+	var err gotely.ErrFailedValidation
 	if len(b.Command) < 1 || len(b.Command) > 32 {
-		return fmt.Errorf("command parameter must be between 1 and 32 characters")
+		err = append(err, fmt.Errorf("command parameter must be between 1 and 32 characters"))
 	}
 	if !valid_command.MatchString(b.Command) {
-		return fmt.Errorf("command parameter can contain only lowercase English letters, digits and underscores")
+		err = append(err, fmt.Errorf("command parameter can contain only lowercase English letters, digits and underscores"))
 	}
 	if len(b.Description) < 1 || len(b.Description) > 256 {
-		return fmt.Errorf("description parameter must be between 1 and 256 characters")
+		err = append(err, fmt.Errorf("description parameter must be between 1 and 256 characters"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2699,8 +2765,12 @@ func (b BotCommandScopeDefault) GetBotCommandScopeType() string {
 }
 
 func (b BotCommandScopeDefault) Validate() error {
+	var err gotely.ErrFailedValidation
 	if b.Type != "default" {
-		return fmt.Errorf("type must be \"default\"")
+		err = append(err, fmt.Errorf("type must be \"default\""))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2716,8 +2786,12 @@ func (b BotCommandScopeAllPrivateChats) GetBotCommandScopeType() string {
 }
 
 func (b BotCommandScopeAllPrivateChats) Validate() error {
+	var err gotely.ErrFailedValidation
 	if b.Type != "all_private_chats" {
-		return fmt.Errorf("type must be \"all_private_chats\"")
+		err = append(err, fmt.Errorf("type must be \"all_private_chats\""))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2733,8 +2807,12 @@ func (b BotCommandScopeAllGroupChats) GetBotCommandScopeType() string {
 }
 
 func (b BotCommandScopeAllGroupChats) Validate() error {
+	var err gotely.ErrFailedValidation
 	if b.Type != "all_group_chats" {
-		return fmt.Errorf("type must be \"all_group_chats\"")
+		err = append(err, fmt.Errorf("type must be \"all_group_chats\""))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2750,100 +2828,95 @@ func (b BotCommandScopeAllChatAdministrators) GetBotCommandScopeType() string {
 }
 
 func (b BotCommandScopeAllChatAdministrators) Validate() error {
+	var err gotely.ErrFailedValidation
 	if b.Type != "all_chat_administrators" {
-		return fmt.Errorf("type must be \"all_chat_administrators\"")
+		err = append(err, fmt.Errorf("type must be \"all_chat_administrators\""))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
 
 // Represents the scope of bot commands, covering a specific chat.
-type BotCommandScopeChat[T int | string] struct {
+type BotCommandScopeChat struct {
 	// Scope type, must be chat
 	Type string `json:"type"`
 	// Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 }
 
-func (b BotCommandScopeChat[T]) GetBotCommandScopeType() string {
+func (b BotCommandScopeChat) GetBotCommandScopeType() string {
 	return "chat"
 }
 
-func (b BotCommandScopeChat[T]) Validate() error {
+func (b BotCommandScopeChat) Validate() error {
+	var err gotely.ErrFailedValidation
 	if b.Type != "chat" {
-		return fmt.Errorf("type must be \"chat\"")
+		err = append(err, fmt.Errorf("type must be \"chat\""))
 	}
-	if c, ok := any(b.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return fmt.Errorf("chat_id parameter can't be empty")
-		}
+	if strings.TrimSpace(b.ChatId) == "" {
+		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if c, ok := any(b.ChatId).(int); ok {
-		if c == 0 {
-			return fmt.Errorf("chat_id parameter can't be empty")
-		}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
 
 // Represents the scope of bot commands, covering all administrators of a specific group or supergroup chat.
-type BotCommandScopeChatAdministrators[T int | string] struct {
+type BotCommandScopeChatAdministrators struct {
 	// Scope type, must be chat_administrators
 	Type string `json:"type"`
 	// Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 }
 
-func (b BotCommandScopeChatAdministrators[T]) GetBotCommandScopeType() string {
+func (b BotCommandScopeChatAdministrators) GetBotCommandScopeType() string {
 	return "chat_administrators"
 }
 
-func (b BotCommandScopeChatAdministrators[T]) Validate() error {
+func (b BotCommandScopeChatAdministrators) Validate() error {
+	var err gotely.ErrFailedValidation
 	if b.Type != "chat_administrators" {
-		return fmt.Errorf("type must be \"chat_administrators\"")
+		err = append(err, fmt.Errorf("type must be \"chat_administrators\""))
 	}
-	if c, ok := any(b.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return fmt.Errorf("chat_id parameter can't be empty")
-		}
+	if strings.TrimSpace(b.ChatId) == "" {
+		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if c, ok := any(b.ChatId).(int); ok {
-		if c == 0 {
-			return fmt.Errorf("chat_id parameter can't be empty")
-		}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
 
 // Represents the scope of bot commands, covering a specific member of a group or supergroup chat.
-type BotCommandScopeChatMember[T int | string] struct {
+type BotCommandScopeChatMember struct {
 	// Scope type, must be chat_member
 	Type string `json:"type"`
 	// Unique identifier for the target chat or username of the target supergroup (in the format @supergroupusername)
-	ChatId T `json:"chat_id"`
+	ChatId string `json:"chat_id"`
 	// Unique identifier of the target user
 	UserId int `json:"user_id"`
 }
 
-func (b BotCommandScopeChatMember[T]) GetBotCommandScopeType() string {
+func (b BotCommandScopeChatMember) GetBotCommandScopeType() string {
 	return "chat_member"
 }
 
-func (b BotCommandScopeChatMember[T]) Validate() error {
+func (b BotCommandScopeChatMember) Validate() error {
+	var err gotely.ErrFailedValidation
 	if b.Type != "chat_member" {
-		return fmt.Errorf("type must be \"chat_member\"")
+		err = append(err, fmt.Errorf("type must be \"chat_member\""))
 	}
-	if c, ok := any(b.ChatId).(string); ok {
-		if strings.TrimSpace(c) == "" {
-			return fmt.Errorf("chat_id parameter can't be empty")
-		}
-	}
-	if c, ok := any(b.ChatId).(int); ok {
-		if c == 0 {
-			return fmt.Errorf("chat_id parameter can't be empty")
-		}
+	if strings.TrimSpace(b.ChatId) == "" {
+		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if b.UserId < 1 {
-		return fmt.Errorf("user_id parameter can't be empty")
+		err = append(err, fmt.Errorf("user_id parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2907,8 +2980,12 @@ type MenuButtonCommands struct {
 }
 
 func (m MenuButtonCommands) Validate() error {
+	var err gotely.ErrFailedValidation
 	if m.Type != "commands" {
-		return fmt.Errorf("type must be \"commands\"")
+		err = append(err, fmt.Errorf("type must be \"commands\""))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -2935,13 +3012,17 @@ func (m MenuButtonWebApp) GetMenuButtonType() string {
 }
 
 func (m MenuButtonWebApp) Validate() error {
+	var err gotely.ErrFailedValidation
 	if m.Type != "web_app" {
-		return fmt.Errorf("type must be \"web_app\"")
+		err = append(err, fmt.Errorf("type must be \"web_app\""))
 	}
 	if strings.TrimSpace(m.Text) == "" {
-		return fmt.Errorf("text parameter can't be empty")
+		err = append(err, fmt.Errorf("text parameter can't be empty"))
 	}
-	if err := m.WebApp.Validate(); err != nil {
+	if er := m.WebApp.Validate(); er != nil {
+		err = append(err, er)
+	}
+	if len(err) > 0 {
 		return err
 	}
 	return nil
@@ -2954,8 +3035,12 @@ type MenuButtonDefault struct {
 }
 
 func (m MenuButtonDefault) Validate() error {
+	var err gotely.ErrFailedValidation
 	if m.Type != "default" {
-		return fmt.Errorf("type must be \"default\"")
+		err = append(err, fmt.Errorf("type must be \"default\""))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -3197,8 +3282,12 @@ func (i InputMediaPhoto) WriteTo(mw *multipart.Writer) error {
 }
 
 func (i InputMediaPhoto) Validate() error {
+	var err gotely.ErrFailedValidation
 	if len(i.Media) == 0 {
-		return fmt.Errorf("media parameter can't be empty")
+		err = append(err, fmt.Errorf("media parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -3247,8 +3336,12 @@ type InputMediaVideo struct {
 }
 
 func (i InputMediaVideo) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(i.Media) == "" {
-		return fmt.Errorf("media parameter can't be empty")
+		err = append(err, fmt.Errorf("media parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -3381,8 +3474,12 @@ type InputMediaAnimation struct {
 }
 
 func (i InputMediaAnimation) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(i.Media) == "" {
-		return fmt.Errorf("media parameter can't be empty")
+		err = append(err, fmt.Errorf("media parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -3502,8 +3599,12 @@ type InputMediaAudio struct {
 }
 
 func (i InputMediaAudio) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(i.Media) == "" {
-		return fmt.Errorf("media parameter can't be empty")
+		err = append(err, fmt.Errorf("media parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -3613,8 +3714,12 @@ type InputMediaDocument struct {
 }
 
 func (i InputMediaDocument) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(i.Media) == "" {
-		return fmt.Errorf("media parameter can't be empty")
+		err = append(err, fmt.Errorf("media parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -3706,11 +3811,15 @@ func (i InputFileFromReader) WriteTo(mw *multipart.Writer, field string) error {
 
 // Validates the file path and checks file existence.
 func (i InputFileFromReader) Validate() error {
+	var err gotely.ErrFailedValidation
 	if i.Reader == nil {
-		return fmt.Errorf("reader can't be nil")
+		err = append(err, fmt.Errorf("reader can't be nil"))
 	}
 	if i.FileName == "" {
-		return fmt.Errorf("file name can't be empty")
+		err = append(err, fmt.Errorf("file name can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -3720,8 +3829,12 @@ type InputFileFromRemote string
 
 // Validates the remote FileId or URL.
 func (i InputFileFromRemote) Validate() error {
+	var err gotely.ErrFailedValidation
 	if i == "" {
-		return fmt.Errorf("file id or url can't be empty")
+		err = append(err, fmt.Errorf("file id or url can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -3758,8 +3871,12 @@ type InputPaidMediaPhoto struct {
 }
 
 func (i InputPaidMediaPhoto) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(i.Media) == "" {
-		return fmt.Errorf("media parameter can't be empty")
+		err = append(err, fmt.Errorf("media parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -3835,8 +3952,12 @@ func (i *InputPaidMediaVideo) SetPaidMedia(media string, r io.Reader) {
 }
 
 func (i InputPaidMediaVideo) Validate() error {
+	var err gotely.ErrFailedValidation
 	if strings.TrimSpace(i.Media) == "" {
-		return fmt.Errorf("media parameter can't be empty")
+		err = append(err, fmt.Errorf("media parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }

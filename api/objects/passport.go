@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+
+	"github.com/bigelle/gotely"
 )
 
 // Describes Telegram Passport data shared with the bot by the user.
@@ -127,22 +129,26 @@ func (p PassportElementErrorDataField) GetPassportElementErrorSource() string {
 }
 
 func (p PassportElementErrorDataField) Validate() error {
+	var err gotely.ErrFailedValidation
 	if p.Source != "data" {
-		return fmt.Errorf("source must be \"data\"")
+		err = append(err, fmt.Errorf("source must be \"data\""))
 	}
 	if !slices.Contains([]string{"personal_details", "passport", "driver_license", "identity_card", "internal_passport", "address"}, p.Type) {
-		return fmt.Errorf(
+		err = append(err, fmt.Errorf(
 			"type parameter accepts only one of one of \"personal_details\", \"passport”, \"driver_license”, \"identity_card”, \"internal_passport”, \"address\"",
-		)
+		))
 	}
 	if strings.TrimSpace(p.DataHash) == "" {
-		return fmt.Errorf("data_hash parameter can't be empty")
+		err = append(err, fmt.Errorf("data_hash parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return fmt.Errorf("message parameter can't be empty")
+		err = append(err, fmt.Errorf("message parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.FieldName) == "" {
-		return fmt.Errorf("field_name parameter can't be empty")
+		err = append(err, fmt.Errorf("field_name parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -164,17 +170,21 @@ func (p PassportElementErrorFrontSide) GetPassportElementErrorSource() string {
 }
 
 func (p PassportElementErrorFrontSide) Validate() error {
+	var err gotely.ErrFailedValidation
 	if p.Source != "front_side" {
-		return fmt.Errorf("source must be \"front_side\"")
+		err = append(err, fmt.Errorf("source must be \"front_side\""))
 	}
 	if !slices.Contains([]string{"passport", "driver_license", "identity_card", "internal_passport"}, p.Type) {
-		return fmt.Errorf("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\"")
+		err = append(err, fmt.Errorf("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\""))
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return fmt.Errorf("file_hash parameter can't be empty")
+		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return fmt.Errorf("message parameter can't be empty")
+		err = append(err, fmt.Errorf("message parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -196,17 +206,21 @@ func (p PassportElementErrorReverseSide) GetPassportElementErrorSource() string 
 }
 
 func (p PassportElementErrorReverseSide) Validate() error {
+	var err gotely.ErrFailedValidation
 	if p.Source != "reverse_side" {
-		return fmt.Errorf("source must be \"reverse_side\"")
+		err = append(err, fmt.Errorf("source must be \"reverse_side\""))
 	}
 	if !slices.Contains([]string{"driver_license", "identity_card"}, p.Type) {
-		return fmt.Errorf("type parameter accepts only one of \"driver_license\", \"identity_card\"")
+		err = append(err, fmt.Errorf("type parameter accepts only one of \"driver_license\", \"identity_card\""))
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return fmt.Errorf("file_hash parameter can't be empty")
+		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return fmt.Errorf("message parameter can't be empty")
+		err = append(err, fmt.Errorf("message parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -229,17 +243,21 @@ func (p PassportElementErrorSelfie) GetPassportElementErrorSource() string {
 }
 
 func (p PassportElementErrorSelfie) Validate() error {
+	var err gotely.ErrFailedValidation
 	if p.Source != "selfie" {
-		return fmt.Errorf("source must be \"selfie\"")
+		err = append(err, fmt.Errorf("source must be \"selfie\""))
 	}
 	if !slices.Contains([]string{"passport", "driver_license", "identity_card", "internal_passport"}, p.Type) {
-		return fmt.Errorf("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\"")
+		err = append(err, fmt.Errorf("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\""))
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return fmt.Errorf("file_hash parameter can't be empty")
+		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return fmt.Errorf("message parameter can't be empty")
+		err = append(err, fmt.Errorf("message parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -262,19 +280,23 @@ func (p PassportElementErrorFile) GetPassportElementErrorSource() string {
 }
 
 func (p PassportElementErrorFile) Validate() error {
+	var err gotely.ErrFailedValidation
 	if p.Source != "file" {
-		return fmt.Errorf("source must be \"file\"")
+		err = append(err, fmt.Errorf("source must be \"file\""))
 	}
 	if !slices.Contains([]string{"utility_bill", "bank_statement", "rental_agreement", "passport_registration", "temporary_registration"}, p.Type) {
-		return fmt.Errorf(
+		err = append(err, fmt.Errorf(
 			"type parameter accepts only one of \"utility_bill\", \"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
-		)
+		))
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return fmt.Errorf("file_hash parameter can't be empty")
+		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return fmt.Errorf("message parameter can't be empty")
+		err = append(err, fmt.Errorf("message parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -297,19 +319,23 @@ func (p PassportElementErrorFiles) GetPassportElementErrorSource() string {
 }
 
 func (p PassportElementErrorFiles) Validate() error {
+	var err gotely.ErrFailedValidation
 	if p.Source != "files" {
-		return fmt.Errorf("source must be \"files\"")
+		err = append(err, fmt.Errorf("source must be \"files\""))
 	}
 	if !slices.Contains([]string{"utility_bill", "bank_statement", "rental_agreement", "passport_registration", "temporary_registration"}, p.Type) {
-		return fmt.Errorf(
+		err = append(err, fmt.Errorf(
 			"type parameter accepts only one of \"utility_bill\", \"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
-		)
+		))
 	}
 	if len(p.FileHashes) == 0 {
-		return fmt.Errorf("file_hash parameter can't be empty")
+		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return fmt.Errorf("message parameter can't be empty")
+		err = append(err, fmt.Errorf("message parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -333,8 +359,9 @@ func (p PassportElementErrorTranslationFile) GetPassportElementErrorSource() str
 }
 
 func (p PassportElementErrorTranslationFile) Validate() error {
+	var err gotely.ErrFailedValidation
 	if p.Source != "translation_file" {
-		return fmt.Errorf("source must be \"translation_file\"")
+		err = append(err, fmt.Errorf("source must be \"translation_file\""))
 	}
 	// awful
 	if !slices.Contains(
@@ -344,16 +371,19 @@ func (p PassportElementErrorTranslationFile) Validate() error {
 		},
 		p.Type,
 	) {
-		return fmt.Errorf(
-			"type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\", \"utility_bill\", " +
+		err = append(err, fmt.Errorf(
+			"type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\", \"utility_bill\", "+
 				"\"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
-		)
+		))
 	}
 	if strings.TrimSpace(p.FileHash) == "" {
-		return fmt.Errorf("file_hash parameter can't be empty")
+		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return fmt.Errorf("message parameter can't be empty")
+		err = append(err, fmt.Errorf("message parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -378,8 +408,9 @@ func (p PassportElementErrorTranslationFiles) GetPassportElementErrorSource() st
 }
 
 func (p PassportElementErrorTranslationFiles) Validate() error {
+	var err gotely.ErrFailedValidation
 	if p.Source != "translation_files" {
-		return fmt.Errorf("source must be \"translation_files\"")
+		err = append(err, fmt.Errorf("source must be \"translation_files\""))
 	}
 	// awful
 	if !slices.Contains(
@@ -389,16 +420,19 @@ func (p PassportElementErrorTranslationFiles) Validate() error {
 		},
 		p.Type,
 	) {
-		return fmt.Errorf(
-			"type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\", \"utility_bill\", " +
+		err = append(err, fmt.Errorf(
+			"type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\", \"utility_bill\", "+
 				"\"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
-		)
+		))
 	}
 	if len(p.FileHashes) == 0 {
-		return fmt.Errorf("file_hashes parameter can't be empty")
+		err = append(err, fmt.Errorf("file_hashes parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return fmt.Errorf("message parameter can't be empty")
+		err = append(err, fmt.Errorf("message parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
@@ -421,17 +455,21 @@ func (p PassportElementErrorUnspecified) GetPassportElementErrorSource() string 
 }
 
 func (p PassportElementErrorUnspecified) Validate() error {
+	var err gotely.ErrFailedValidation
 	if p.Source != "unspecified" {
-		return fmt.Errorf("source must be \"unspecified\"")
+		err = append(err, fmt.Errorf("source must be \"unspecified\""))
 	}
 	if strings.TrimSpace(p.Type) == "" {
-		return fmt.Errorf("type parameter can't be empty")
+		err = append(err, fmt.Errorf("type parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.ElementHash) == "" {
-		return fmt.Errorf("element_hash parameter can't be empty")
+		err = append(err, fmt.Errorf("element_hash parameter can't be empty"))
 	}
 	if strings.TrimSpace(p.Message) == "" {
-		return fmt.Errorf("message parameter can't be empty")
+		err = append(err, fmt.Errorf("message parameter can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
 	}
 	return nil
 }
