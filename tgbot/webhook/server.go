@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/bigelle/gotely"
@@ -13,60 +14,76 @@ import (
 	"github.com/bigelle/gotely/tgbot"
 )
 
-// WebhookBot is used to create a simple webhook server
-// that will respond to updates coming from Telegram Bot API.
+// WebhookBot creates a simple webhook server
+// that responds to updates from the Telegram Bot API.
 type WebhookBot struct {
 	Bot tgbot.Bot
 
-	s          *http.Server
-	path       string
-	addr       string
-	middleware []func(next http.Handler) http.Handler
-	l          *slog.Logger
+	s               *http.Server
+	path            string
+	addr            string
+	middleware      []func(next http.Handler) http.Handler
+	shutdownTimeout time.Duration
+	l               *slog.Logger
+
+	certFile string
+	keyFile  string
+	useTLS   bool
 }
 
-// New is used to create a new instance of [WebhookBot] using specified options
+// New creates a new instance of [WebhookBot] using the specified options.
 func New(bot tgbot.Bot, opts ...Option) WebhookBot {
 	b := WebhookBot{
 		Bot: bot,
 
-		addr:       ":8080",
-		path:       "/webhook",
-		middleware: []func(next http.Handler) http.Handler{RecoveryMiddleware, LoggingMiddleware},
-		l:          slog.Default(),
+		addr:            ":8080",
+		path:            "/webhook",
+		middleware:      []func(next http.Handler) http.Handler{RecoveryMiddleware, LoggingMiddleware},
+		shutdownTimeout: 5 * time.Second,
+		l:               slog.Default(),
 	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc(b.path, b.handleFunc)
-	h := http.Handler(mux)
-	for i := len(b.middleware) - 1; i >= 0; i-- {
-		h = b.middleware[i](h)
-	}
-	b.s = &http.Server{
-		Addr:    b.addr,
-		Handler: h,
-	}
-
 	for _, opt := range opts {
 		opt(&b)
+	}
+
+	if b.s == nil {
+		mux := http.NewServeMux()
+		mux.HandleFunc(b.path, b.handleFunc)
+		h := http.Handler(mux)
+		for i := len(b.middleware) - 1; i >= 0; i-- {
+			h = b.middleware[i](h)
+		}
+		b.s = &http.Server{
+			Addr:    b.addr,
+			Handler: h,
+		}
 	}
 	return b
 }
 
-// Use is used to add a middleware that will be wrapped around bot's update handler.
+// Use adds middleware that wraps the bot's update handler.
 func (b *WebhookBot) Use(m ...func(http.Handler) http.Handler) {
 	b.middleware = append(b.middleware, m...)
 }
 
-// Start is launching bot's [http.Server]
+// SetMiddleware is used to completely change the list of bot's middleware
+func (b *WebhookBot) SetMiddleware(m []func(http.Handler) http.Handler) {
+	b.middleware = m
+}
+
+// Start launches the bot's [http.Server].
 func (b *WebhookBot) Start() error {
 	b.l.Info("webhook server is listening and serving on", "addr", b.addr, "path", b.path)
+	if b.useTLS {
+		b.l.Debug("starting HTTPS server with TLS", "cert", b.certFile, "key", b.keyFile)
+		return b.s.ListenAndServeTLS(b.certFile, b.keyFile)
+	}
 	return b.s.ListenAndServe()
 }
 
-// Stop is shutting down bot's [http.Server] giving it 5 seconds to complete current requests
+// Stop shuts down the bot's [http.Server], allowing the time specified in the bot's settings for active requests to complete.
 func (b WebhookBot) Stop() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), b.shutdownTimeout)
 	defer cancel()
 	return b.s.Shutdown(ctx)
 }
@@ -119,40 +136,90 @@ func (b *WebhookBot) handleFunc(w http.ResponseWriter, r *http.Request) {
 
 type Option func(*WebhookBot)
 
-// TODO opts
-
-// WithServer is used to completely setup bot's [http.Server]
-func WithServer(s *http.Server) Option {
+// WithReadsTimeout sets the timeout for the bot's [http.Server].
+func WithReadTimeout(t time.Duration) Option {
 	return func(wb *WebhookBot) {
-		wb.s = s
+		wb.s.ReadTimeout = t
 	}
 }
 
-// WithAddress is used to set address that [http.Server] will be working on.
-// Defaults to ":8080"
+// WithWriteTimeout sets the write timeout for the bot's [http.Server].
+func WithWriteTimeout(t time.Duration) Option {
+	return func(wb *WebhookBot) {
+		wb.s.WriteTimeout = t
+	}
+}
+
+// WithIdleTimeout sets the idle timeout for the bot's [http.Server].
+func WithIdleTimeout(t time.Duration) Option {
+	return func(wb *WebhookBot) {
+		wb.s.IdleTimeout = t
+	}
+}
+
+// WithTLS sets the certFile and keyFile to enable HTTPS.
+func WithTLS(certFile, keyFile string) Option {
+	return func(wb *WebhookBot) {
+		wb.useTLS = true
+		wb.certFile = certFile
+		wb.keyFile = keyFile
+	}
+}
+
+// WithAddress sets the address for the [http.Server].
+// Defaults to ":8080".
 func WithAddress(addr string) Option {
 	return func(wb *WebhookBot) {
 		wb.addr = addr
 	}
 }
 
-// WithPath is used to set path that will be used when registering bot's [http.Handler].
-// Defaults to "/webhook"
+// WithPath sets the path for registering the bot's [http.Handler].
+// Defaults to "/webhook".
 func WithPath(p string) Option {
 	return func(wb *WebhookBot) {
 		wb.path = p
 	}
 }
 
-// WithLogger is used to replace default [slog.Logger] that is used
-// to report about any occurred errors, warnings, debug info, etc.
+// WithLogger replaces the default [slog.Logger] used
+// for reporting errors, warnings, debug information, etc.
 func WithLogger(l *slog.Logger) Option {
 	return func(wb *WebhookBot) {
 		wb.l = l
 	}
 }
 
-// RecoveryMiddleware is used to simply recover from panic
+// WithLogLevel sets the logging level for the bot's logger.
+func WithLogLevel(l slog.Level) Option {
+	return func(wb *WebhookBot) {
+		wb.l = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: l}))
+	}
+}
+
+// WithMiddleware replaces the bot's middleware with m.
+func WithMiddleware(m []func(http.Handler) http.Handler) Option {
+	return func(wb *WebhookBot) {
+		wb.SetMiddleware(m)
+	}
+}
+
+// WithCustomHandler replaces the bot's default [http.Handler].
+func WithCustomHandler(h http.Handler) Option {
+	return func(wb *WebhookBot) {
+		wb.s.Handler = h
+	}
+}
+
+// WithShutdownTimeout sets the time the bot will wait before
+// aborting unanswered requests when calling Stop().
+func WithShutdownTimeout(t time.Duration) Option {
+	return func(wb *WebhookBot) {
+		wb.shutdownTimeout = t
+	}
+}
+
+// RecoveryMiddleware recovers from panics in the request handling pipeline.
 func RecoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
@@ -164,7 +231,7 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// LoggingMiddleware is used to report about every request and how long it took
+// LoggingMiddleware logs each request and its duration.
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
