@@ -12,6 +12,8 @@ import (
 	"github.com/bigelle/gotely/tgbot"
 )
 
+// LongPollingBot is used for receiving [objects.Update] from Telegram Bot API
+// using long-polling method and answering using OnUpdate function defined in [tgbot.Bot]
 type LongPollingBot struct {
 	Bot tgbot.Bot
 
@@ -29,6 +31,8 @@ type LongPollingBot struct {
 	logger      slog.Logger
 }
 
+// Start is used to initialize the bot and to start polling for updates.
+// Every new update will be passed to OnUpdate function defined in [tgbot.Bot]
 func (l *LongPollingBot) Start() {
 	l.logger.Info("validating...")
 	if err := l.Validate(); err != nil {
@@ -60,6 +64,7 @@ func (l *LongPollingBot) Start() {
 	wg.Wait()
 }
 
+// Stop is used to safely stop bot's goroutines and channels
 func (l LongPollingBot) Stop() {
 	if l.cancel != nil {
 		l.cancel()
@@ -117,6 +122,7 @@ func (l LongPollingBot) Validate() error {
 	return nil
 }
 
+// New is used to create a new instance of [LongPollingBot] with specified options
 func New(bot tgbot.Bot, opts ...Option) LongPollingBot {
 	lpb := LongPollingBot{
 		Bot: bot,
@@ -136,24 +142,33 @@ func New(bot tgbot.Bot, opts ...Option) LongPollingBot {
 
 type Option func(*LongPollingBot)
 
+// WithTimeout is used to set timeout parameter
+// that will be used when sending [GetUpdates] request
 func WithTimeout(t int) Option {
 	return func(lpb *LongPollingBot) {
 		lpb.timeout = t
 	}
 }
 
+// WithLimit is used to set limit parameter
+// that will be used when sending [GetUpdates] request
 func WithLimit(l int) Option {
 	return func(lpb *LongPollingBot) {
 		lpb.limit = l
 	}
 }
 
+// WithAllowedUpdates is used to specify which of the updates
+// the bot should receive.
+// Pass nil to use previous setting
 func WithAllowedUpdates(u *[]string) Option {
 	return func(lpb *LongPollingBot) {
 		lpb.allowedUpdates = u
 	}
 }
 
+// WithWorkingPool is used to specify the size of bot's working pool.
+// Defaults to 1.
 func WithWorkingPool(p uint) Option {
 	return func(lpb *LongPollingBot) {
 		if p == 0 {
