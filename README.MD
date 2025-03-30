@@ -17,10 +17,14 @@ Nope.
 
 ---
 
-## Changelog
+## Last Changes in v1.1.0
 
-##### API Version 8.3
-- v1.0.0: first release
+### Telegram Bot API Version 8.3
+### Added:
+- documentation for every package
+### Changes:
+- quick refactor: moving api/objects and api/methods to the root directory
+- swapped token and destination in SendRequest and SendRequestWith
 
 --- 
 

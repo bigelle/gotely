@@ -6,7 +6,7 @@ import (
 	"mime/multipart"
 
 	"github.com/bigelle/gotely"
-	"github.com/bigelle/gotely/api/objects"
+	"github.com/bigelle/gotely/objects"
 )
 
 // Use this method to specify a URL and receive incoming updates via an outgoing webhook.

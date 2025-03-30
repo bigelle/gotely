@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/bigelle/gotely"
-	"github.com/bigelle/gotely/api/objects"
+	"github.com/bigelle/gotely/objects"
 	"github.com/bigelle/gotely/tgbot"
 )
 
