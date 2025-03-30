@@ -160,15 +160,18 @@ type ForwardMessage struct {
 	// REQUIRED:
 	// Unique identifier for the chat where the original message was sent (or channel username in the format @channelusername
 	FromChatId string `json:"from_chat_id"`
-
+	// REQUIRED:
 	// Message identifier in the chat specified in from_chat_id
 	MessageId int `json:"message_id"`
+
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
-	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	MessageThreadId *int `json:"message_thread_id,omitempty,"`
+	// New start timestamp for the forwarded video in the message
+	VideoStartTimestamp *int `json:"video_start_timestamp,omitempty"`
 	// Sends the message silently. Users will receive a notification with no sound.
-	DisableNotification *bool `json:"disable_notification,omitempty"`
+	DisableNotification *bool `json:"disable_notification,omitempty,"`
 	// Protects the contents of the forwarded message from forwarding and saving
-	ProtectContent *bool `json:"protect_content,omitempty"`
+	ProtectContent *bool `json:"protect_content,omitempty,"`
 }
 
 func (f ForwardMessage) Validate() error {
@@ -272,6 +275,8 @@ type CopyMessage struct {
 
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId *int `json:"message_thread_id,omitempty"`
+	// New start timestamp for the forwarded video in the message
+	VideoStartTimestamp *int `json:"video_start_timestamp,omitempty"`
 	// New caption for media, 0-1024 characters after entities parsing. If not specified, the original caption is kept
 	Caption *string `json:"caption,omitempty"`
 	// Mode for parsing entities in the new caption.
@@ -973,6 +978,14 @@ type SendVideo struct {
 	// so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files: https://core.telegram.org/bots/api#sending-files
 	Thumbnail objects.InputFile `json:"thumbnail,omitempty"`
+	// Cover for the video in the message.
+	// Pass a file_id to send a file that exists on the Telegram servers (recommended),
+	// pass an HTTP URL for Telegram to get a file from the Internet,
+	// or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
+	// More information on Sending Files: https://core.telegram.org/bots/api#sending-files
+	Cover objects.InputFile `json:"cover,omitempty"`
+	// Start timestamp for the video in the message
+	StartTimestamp *int `json:"start_timestamp,omitempty"`
 	// Video caption (may also be used when resending videos by file_id), 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	// Mode for parsing entities in the video caption.
@@ -1050,6 +1063,12 @@ func (s *SendVideo) Reader() io.Reader {
 				return
 			}
 		}
+		if s.StartTimestamp != nil {
+			if err := mw.WriteField("start_timestamp", fmt.Sprint(*s.StartTimestamp)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
 		if s.Caption != nil {
 			if err := mw.WriteField("caption", *s.Caption); err != nil {
 				pw.CloseWithError(err)
@@ -1122,6 +1141,12 @@ func (s *SendVideo) Reader() io.Reader {
 			return
 		}
 		if s.Thumbnail != nil {
+			if err := s.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.Cover != nil {
 			if err := s.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
 				pw.CloseWithError(err)
 				return

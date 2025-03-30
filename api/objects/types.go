@@ -190,94 +190,96 @@ type ChatFullInfo struct {
 	// Type of the chat, can be either “private”, “group”, “supergroup” or “channel”
 	Type string `json:"type"`
 	// Optional. Title, for supergroups, channels and group chats
-	Title *string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty,"`
 	// Optional. Username, for private chats, supergroups and channels if available
-	UserName *string `json:"user_name,omitempty"`
+	UserName *string `json:"user_name,omitempty,"`
 	// Optional. First name of the other party in a private chat
-	FirstName *string `json:"first_name,omitempty"`
+	FirstName *string `json:"first_name,omitempty,"`
 	// Optional. Last name of the other party in a private chat
-	LastName *string `json:"last_name,omitempty"`
+	LastName *string `json:"last_name,omitempty,"`
 	// Optional. True, if the supergroup chat is a forum (has topics enabled)
-	IsForum *bool `json:"is_forum,omitempty"`
+	IsForum *bool `json:"is_forum,omitempty,"`
 	// Identifier of the accent color for the chat name and backgrounds of the chat photo, reply header, and link preview.
 	// See https://core.telegram.org/bots/api#accent-colors for more details.
 	AccentColorId int `json:"accent_color_id"`
 	// The maximum number of reactions that can be set on a message in the chat
 	MaxReactionCount int `json:"max_reaction_count"`
 	// Optional. Chat photo
-	Photo *ChatPhoto `json:"photo,omitempty"`
+	Photo *ChatPhoto `json:"photo,omitempty,"`
 	// Optional. If non-empty, the list of all active chat usernames; for private chats, supergroups and channels
-	ActiveUsernames *[]string `json:"active_usernames,omitempty"`
+	ActiveUsernames *[]string `json:"active_usernames,omitempty,"`
 	// Optional. For private chats, the date of birth of the user
-	BirthDate *BirthDate `json:"birth_date,omitempty"`
+	BirthDate *BirthDate `json:"birth_date,omitempty,"`
 	// Optional. For private chats with business accounts, the intro of the business
-	BusinessIntro *BusinessIntro `json:"business_intro,omitempty"`
+	BusinessIntro *BusinessIntro `json:"business_intro,omitempty,"`
 	// Optional. For private chats with business accounts, the location of the business
-	BusinessLocation *BusinessLocation `json:"business_location,omitempty"`
+	BusinessLocation *BusinessLocation `json:"business_location,omitempty,"`
 	// Optional. For private chats with business accounts, the opening hours of the business
-	BusinessOpeningHours *BusinessOpeningHours `json:"business_opening_hours,omitempty"`
+	BusinessOpeningHours *BusinessOpeningHours `json:"business_opening_hours,omitempty,"`
 	// Optional. For private chats, the personal channel of the user
-	PersonalChat *Chat `json:"personal_chat,omitempty"`
+	PersonalChat *Chat `json:"personal_chat,omitempty,"`
 	// Optional. List of available reactions allowed in the chat. If omitted, then all emoji reactions are allowed.
-	AvailableReactions *[]ReactionType `json:"available_reactions,omitempty"`
+	AvailableReactions *[]ReactionType `json:"available_reactions,omitempty,"`
 	// Optional. Custom emoji identifier of the emoji chosen by the chat for the reply header and link preview background
-	BackgroundCustomEmojiId *string `json:"background_custom_emoji_id,omitempty"`
+	BackgroundCustomEmojiId *string `json:"background_custom_emoji_id,omitempty,"`
 	// Optional. Identifier of the accent color for the chat's profile background.
 	// See https://core.telegram.org/bots/api#profile-accent-colors for more details.
-	ProfileAccentColorId *bool `json:"profile_accent_color_id,omitempty"`
+	ProfileAccentColorId *bool `json:"profile_accent_color_id,omitempty,"`
 	// Optional. Custom emoji identifier of the emoji chosen by the chat for its profile background
-	ProfileBackgroundCustomEmojiId *string `json:"profile_background_custom_emoji_id,omitempty"`
+	ProfileBackgroundCustomEmojiId *string `json:"profile_background_custom_emoji_id,omitempty,"`
 	// Optional. Custom emoji identifier of the emoji status of the chat or the other party in a private chat
-	EmojiStatusCustomEmojiId *string `json:"emoji_status_custom_emoji_id,omitempty"`
+	EmojiStatusCustomEmojiId *string `json:"emoji_status_custom_emoji_id,omitempty,"`
 	// Optional. Expiration date of the emoji status of the chat or the other party in a private chat, in Unix time, if any
-	EmojiStatusExpirationDate *bool `json:"emoji_status_expiration_date,omitempty"`
+	EmojiStatusExpirationDate *bool `json:"emoji_status_expiration_date,omitempty,"`
 	// Optional. Bio of the other party in a private chat
-	Bio *string `json:"bio,omitempty"`
+	Bio *string `json:"bio,omitempty,"`
 	// Optional. True, if privacy settings of the other party in the private chat allows to use tg://user?id=<user_id> links only in chats with the user
-	HasPrivateForwards *bool `json:"has_private_forwards,omitempty"`
+	HasPrivateForwards *bool `json:"has_private_forwards,omitempty,"`
 	// Optional. True, if the privacy settings of the other party restrict sending voice and video note messages in the private chat
-	HasRestrictedVoiceAndVideoMessages *bool `json:"has_restricted_voice_and_video_messages,omitempty"`
+	HasRestrictedVoiceAndVideoMessages *bool `json:"has_restricted_voice_and_video_messages,omitempty,"`
 	// Optional. True, if users need to join the supergroup before they can send messages
-	JoinToSendMessages *bool `json:"join_to_send_messages,omitempty"`
+	JoinToSendMessages *bool `json:"join_to_send_messages,omitempty,"`
 	// Optional. True, if all users directly joining the supergroup without using an invite link need to be approved by supergroup administrators
-	JoinByRequest *bool `json:"join_by_request,omitempty"`
+	JoinByRequest *bool `json:"join_by_request,omitempty,"`
 	// Optional. Description, for groups, supergroups and channel chats
-	Description *string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty,"`
 	// Optional. Primary invite link, for groups, supergroups and channel chats
-	InviteLink *string `json:"invite_link,omitempty"`
+	InviteLink *string `json:"invite_link,omitempty,"`
 	// Optional. The most recent pinned message (by sending date)
-	PinnedMessage *Message `json:"pinned_message,omitempty"`
+	PinnedMessage *Message `json:"pinned_message,omitempty,"`
 	// Optional. Default chat member permissions, for groups and supergroups
-	Permissions *ChatPermissions `json:"permissions,omitempty"`
+	Permissions *ChatPermissions `json:"permissions,omitempty,"`
+	// Optional. True, if gifts can be sent to the chat
+	CanSendGift *bool `json:"can_send_gift,omitempty"`
 	// Optional. True, if paid media messages can be sent or forwarded to the channel chat. The field is available only for channel chats.
-	CanSendPaidMedia *bool `json:"can_send_paid_media,omitempty"`
+	CanSendPaidMedia *bool `json:"can_send_paid_media,omitempty,"`
 	// Optional. For supergroups, the minimum allowed delay between consecutive messages sent by each unprivileged user; in seconds
-	SlowModeDelay *int `json:"slow_mode_delay,omitempty"`
+	SlowModeDelay *int `json:"slow_mode_delay,omitempty,"`
 	// Optional. For supergroups, the minimum number of boosts that a non-administrator user needs to add in order to ignore slow mode and chat permissions
-	UnrestrictBoostCount *int `json:"unrestrict_boost_count,omitempty"`
+	UnrestrictBoostCount *int `json:"unrestrict_boost_count,omitempty,"`
 	// Optional. The time after which all messages sent to the chat will be automatically deleted; in seconds
-	MessageAutoDeleteTime *int `json:"message_auto_delete_time,omitempty"`
+	MessageAutoDeleteTime *int `json:"message_auto_delete_time,omitempty,"`
 	// Optional. True, if aggressive anti-spam checks are enabled in the supergroup. The field is only available to chat administrators.
-	HasAggressiveAntiSpamEnabled *string `json:"has_aggressive_anti_spam_enabled,omitempty"`
+	HasAggressiveAntiSpamEnabled *string `json:"has_aggressive_anti_spam_enabled,omitempty,"`
 	// Optional. True, if non-administrators can only get the list of bots and administrators in the chat
-	HasHiddenMembers *bool `json:"has_hidden_members,omitempty"`
+	HasHiddenMembers *bool `json:"has_hidden_members,omitempty,"`
 	// Optional. True, if messages from the chat can't be forwarded to other chats
-	HasProtectedCount *bool `json:"has_protected_count,omitempty"`
+	HasProtectedCount *bool `json:"has_protected_count,omitempty,"`
 	// Optional. True, if new chat members will have access to old messages; available only to chat administrators
-	HasVisibleHistory *bool `json:"has_visible_history,omitempty"`
+	HasVisibleHistory *bool `json:"has_visible_history,omitempty,"`
 	// Optional. For supergroups, name of the group sticker set
-	StickerSetName *string `json:"sticker_set_name,omitempty"`
+	StickerSetName *string `json:"sticker_set_name,omitempty,"`
 	// Optional. True, if the bot can change the group sticker set
-	CanSetStickerSet *bool `json:"can_set_sticker_set,omitempty"`
+	CanSetStickerSet *bool `json:"can_set_sticker_set,omitempty,"`
 	// Optional. For supergroups, the name of the group's custom emoji sticker set. Custom emoji from this set can be used by all users and bots in the group.
-	CustomEmojiStickerSetName *string `json:"custom_emoji_sticker_set_name,omitempty"`
+	CustomEmojiStickerSetName *string `json:"custom_emoji_sticker_set_name,omitempty,"`
 	// Optional. Unique identifier for the linked chat, i.e. the discussion group identifier for a channel and vice versa;
 	// for supergroups and channel chats. This identifier may be greater than 32 bits
 	// and some programming languages may have difficulty/silent defects in interpreting it.
 	// But it is smaller than 52 bits, so a signed 64 bit integer or double-precision float type are safe for storing this identifier.
-	LinkedChatId *int64 `json:"linked_chat_id,omitempty"`
+	LinkedChatId *int64 `json:"linked_chat_id,omitempty,"`
 	// Optional. For supergroups, the location to which the supergroup is connected
-	Location *ChatLocation `json:"location,omitempty"`
+	Location *ChatLocation `json:"location,omitempty,"`
 }
 
 // This object represents a message.
@@ -902,15 +904,19 @@ type Video struct {
 	// Duration of the video in seconds as defined by the sender
 	Duration int `json:"duration"`
 	// Optional. Video thumbnail
-	Thumbnail *PhotoSize `json:"thumbnail,omitempty"`
+	Thumbnail *PhotoSize `json:"thumbnail,omitempty,"`
+	// Optional. Available sizes of the cover of the video in the message
+	Cover *[]PhotoSize `json:"cover,omitempty"`
+	// Optional. Timestamp in seconds from which the video will play in the message
+	StartTimestamp *int `json:"start_timestamp,omitempty"`
 	// Optional. Original filename as defined by the sender
-	FileName *string `json:"file_name,omitempty"`
+	FileName *string `json:"file_name,omitempty,"`
 	// Optional. MIME type of the file as defined by the sender
-	MimeType *string `json:"mime_type,omitempty"`
+	MimeType *string `json:"mime_type,omitempty,"`
 	// Optional. File size in bytes. It can be bigger than 2^31 and
 	// some programming languages may have difficulty/silent defects in interpreting it.
 	// But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this value.
-	FileSize *int64 `json:"file_size,omitempty"`
+	FileSize *int64 `json:"file_size,omitempty,"`
 }
 
 // This object represents a video message (available in Telegram apps as of v.4.0).
@@ -3311,7 +3317,15 @@ type InputMediaVideo struct {
 	// Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	// the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail InputFile `json:"thumbnail,omitempty"`
+	Thumbnail *string `json:"thumbnail,omitempty"`
+	// Optional. Cover for the video in the message.
+	//  Pass a file_id to send a file that exists on the Telegram servers (recommended),
+	// pass an HTTP URL for Telegram to get a file from the Internet,
+	//  or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
+	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
+	Cover *string `json:"cover,omitempty"`
+	// Optional. Start timestamp for the video in the message
+	StartTimestamp *int `json:"start_timestamp,omitempty"`
 	// Caption of the video to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	// Mode for parsing entities in the video caption. See https://core.telegram.org/bots/api#formatting-options for more details.
@@ -3331,8 +3345,12 @@ type InputMediaVideo struct {
 	// Pass True if the video needs to be covered with a spoiler animation
 	HasSpoiler *bool `json:"has_spoiler,omitempty"`
 
-	reader    io.Reader
-	mediaName string
+	mediaReader io.Reader
+	mediaName   string
+	thumbReader io.Reader
+	thumbName   string
+	coverReader io.Reader
+	coverName   string
 }
 
 func (i InputMediaVideo) Validate() error {
@@ -3350,11 +3368,37 @@ func (i InputMediaVideo) Validate() error {
 // or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
 func (i *InputMediaVideo) SetMedia(media string, r io.Reader) {
 	i.mediaName = media
-	i.reader = r
+	i.mediaReader = r
 	if r != nil {
 		i.Media = "attach://" + media
 	} else {
 		i.Media = media
+	}
+}
+
+// SetThumbnail sets Media to "attach://<thumbnail>" if r is not nil,
+// or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
+func (i *InputMediaVideo) SetThumbnail(thumb string, r io.Reader) {
+	i.thumbName = thumb
+	i.thumbReader = r
+	if r != nil {
+		thumb = "attach://" + thumb
+		i.Thumbnail = &thumb
+	} else {
+		i.Thumbnail = &thumb
+	}
+}
+
+// SetMedia sets Media to "attach://<media>" if r is not nil,
+// or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
+func (i *InputMediaVideo) SetCover(cover string, r io.Reader) {
+	i.coverName = cover
+	i.coverReader = r
+	if r != nil {
+		cover = "attach://" + cover
+		i.Cover = &cover
+	} else {
+		i.Cover = &cover
 	}
 }
 
@@ -3366,7 +3410,17 @@ func (i InputMediaVideo) WriteTo(mw *multipart.Writer) error {
 		return err
 	}
 	if i.Thumbnail != nil {
-		if err := i.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+		if err := mw.WriteField("thumbnail", *i.Thumbnail); err != nil {
+			return err
+		}
+	}
+	if i.Cover != nil {
+		if err := mw.WriteField("cover", *i.Cover); err != nil {
+			return err
+		}
+	}
+	if i.StartTimestamp != nil {
+		if err := mw.WriteField("start_timestamp", fmt.Sprint(*i.StartTimestamp)); err != nil {
 			return err
 		}
 	}
@@ -3420,12 +3474,30 @@ func (i InputMediaVideo) WriteTo(mw *multipart.Writer) error {
 		}
 	}
 
-	if i.reader != nil {
+	if i.mediaReader != nil {
 		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
 		if err != nil {
 			return err
 		}
-		if _, err := io.Copy(part, i.reader); err != nil {
+		if _, err := io.Copy(part, i.mediaReader); err != nil {
+			return err
+		}
+	}
+	if i.thumbReader != nil {
+		part, err := mw.CreateFormFile(i.thumbName, i.thumbName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.thumbReader); err != nil {
+			return err
+		}
+	}
+	if i.coverReader != nil {
+		part, err := mw.CreateFormFile(i.thumbName, i.coverName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.coverReader); err != nil {
 			return err
 		}
 	}
@@ -3451,7 +3523,7 @@ type InputMediaAnimation struct {
 	// Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	// the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail InputFile `json:"thumbnail,omitempty"`
+	Thumbnail *string `json:"thumbnail,omitempty"`
 	// Caption of the animation to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	// Mode for parsing entities in the animation caption. See https://core.telegram.org/bots/api#formatting-options for more details.
@@ -3469,8 +3541,10 @@ type InputMediaAnimation struct {
 	// Pass True if the animation needs to be covered with a spoiler animation
 	HasSpoiler *bool `json:"has_spoiler,omitempty"`
 
-	reader    io.Reader
-	mediaName string
+	mediaReader io.Reader
+	mediaName   string
+	thumbReader io.Reader
+	thumbName   string
 }
 
 func (i InputMediaAnimation) Validate() error {
@@ -3488,11 +3562,24 @@ func (i InputMediaAnimation) Validate() error {
 // or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
 func (i *InputMediaAnimation) SetMedia(media string, r io.Reader) {
 	i.mediaName = media
-	i.reader = r
+	i.mediaReader = r
 	if r != nil {
 		i.Media = "attach://" + media
 	} else {
 		i.Media = media
+	}
+}
+
+// SetThumbnail sets Thumbnail to "attach://<thumbnail>" if r is not nil,
+// or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
+func (i *InputMediaAnimation) SetThumbnail(thumb string, r io.Reader) {
+	i.thumbName = thumb
+	i.thumbReader = r
+	if r != nil {
+		thumb = "attach://" + thumb
+		i.Thumbnail = &thumb
+	} else {
+		i.Thumbnail = &thumb
 	}
 }
 
@@ -3504,7 +3591,7 @@ func (i InputMediaAnimation) WriteTo(mw *multipart.Writer) error {
 		return err
 	}
 	if i.Thumbnail != nil {
-		if err := i.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+		if err := mw.WriteField("thumbnail", *i.Thumbnail); err != nil {
 			return err
 		}
 	}
@@ -3549,12 +3636,21 @@ func (i InputMediaAnimation) WriteTo(mw *multipart.Writer) error {
 		}
 	}
 
-	if i.reader != nil {
+	if i.mediaReader != nil {
 		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
 		if err != nil {
 			return err
 		}
-		if _, err := io.Copy(part, i.reader); err != nil {
+		if _, err := io.Copy(part, i.mediaReader); err != nil {
+			return err
+		}
+	}
+	if i.thumbReader != nil {
+		part, err := mw.CreateFormFile(i.thumbName, i.thumbName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.thumbReader); err != nil {
 			return err
 		}
 	}
@@ -3580,7 +3676,7 @@ type InputMediaAudio struct {
 	// Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	// the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail InputFile `json:"thumbnail,omitempty"`
+	Thumbnail *string `json:"thumbnail,omitempty"`
 	// Caption of the audio to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	// Mode for parsing entities in the audio caption. See https://core.telegram.org/bots/api#formatting-options for more details.
@@ -3594,8 +3690,10 @@ type InputMediaAudio struct {
 	// Title of the audio
 	Title *string `json:"title,omitempty"`
 
-	reader    io.Reader
-	mediaName string
+	mediaReader io.Reader
+	mediaName   string
+	thumbReader io.Reader
+	thumbName   string
 }
 
 func (i InputMediaAudio) Validate() error {
@@ -3613,11 +3711,24 @@ func (i InputMediaAudio) Validate() error {
 // or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
 func (i *InputMediaAudio) SetMedia(media string, r io.Reader) {
 	i.mediaName = media
-	i.reader = r
+	i.mediaReader = r
 	if r != nil {
 		i.Media = "attach://" + media
 	} else {
 		i.Media = media
+	}
+}
+
+// SetThumbnail sets Media to "attach://<thumb>" if r is not nil,
+// or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
+func (i *InputMediaAudio) SetThumbnail(thumb string, r io.Reader) {
+	i.thumbName = thumb
+	i.thumbReader = r
+	if r != nil {
+		thumb = "attach://" + thumb
+		i.Thumbnail = &thumb
+	} else {
+		i.Thumbnail = &thumb
 	}
 }
 
@@ -3629,7 +3740,7 @@ func (i InputMediaAudio) WriteTo(mw *multipart.Writer) error {
 		return err
 	}
 	if i.Thumbnail != nil {
-		if err := i.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+		if err := mw.WriteField("thumbnail", *i.Thumbnail); err != nil {
 			return err
 		}
 	}
@@ -3668,12 +3779,21 @@ func (i InputMediaAudio) WriteTo(mw *multipart.Writer) error {
 		}
 	}
 
-	if i.reader != nil {
+	if i.mediaReader != nil {
 		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
 		if err != nil {
 			return err
 		}
-		if _, err := io.Copy(part, i.reader); err != nil {
+		if _, err := io.Copy(part, i.mediaReader); err != nil {
+			return err
+		}
+	}
+	if i.thumbReader != nil {
+		part, err := mw.CreateFormFile(i.thumbName, i.thumbName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.thumbReader); err != nil {
 			return err
 		}
 	}
@@ -3697,7 +3817,7 @@ type InputMediaDocument struct {
 	// Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if
 	// the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail InputFile `json:"thumbnail,omitempty"`
+	Thumbnail *string `json:"thumbnail,omitempty"`
 	// Optional. Caption of the document to be sent, 0-1024 characters after entities parsing
 	Caption *string `json:"caption,omitempty"`
 	// Optional. Mode for parsing entities in the document caption.
@@ -3709,8 +3829,10 @@ type InputMediaDocument struct {
 	// Always True, if the document is sent as part of an album.
 	DisableContentTypeDetection *bool `json:"disable_content_type_detection,omitempty"`
 
-	reader    io.Reader
-	mediaName string
+	mediaReader io.Reader
+	mediaName   string
+	thumbReader io.Reader
+	thumbName   string
 }
 
 func (i InputMediaDocument) Validate() error {
@@ -3728,11 +3850,24 @@ func (i InputMediaDocument) Validate() error {
 // or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
 func (i *InputMediaDocument) SetMedia(media string, r io.Reader) {
 	i.mediaName = media
-	i.reader = r
+	i.mediaReader = r
 	if r != nil {
 		i.Media = "attach://" + media
 	} else {
 		i.Media = media
+	}
+}
+
+// SetThumbnail sets Media to "attach://<thumb>" if r is not nil,
+// or to media if r is nil (for remote files like Telegram file ID or HTTP URL).
+func (i *InputMediaDocument) SetThumbnail(thumb string, r io.Reader) {
+	i.thumbName = thumb
+	i.thumbReader = r
+	if r != nil {
+		thumb = "attach://" + thumb
+		i.Thumbnail = &thumb
+	} else {
+		i.Thumbnail = &thumb
 	}
 }
 
@@ -3744,7 +3879,7 @@ func (i InputMediaDocument) WriteTo(mw *multipart.Writer) error {
 		return err
 	}
 	if i.Thumbnail != nil {
-		if err := i.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+		if err := mw.WriteField("thumbnail", *i.Thumbnail); err != nil {
 			return err
 		}
 	}
@@ -3773,12 +3908,21 @@ func (i InputMediaDocument) WriteTo(mw *multipart.Writer) error {
 		}
 	}
 
-	if i.reader != nil {
+	if i.mediaReader != nil {
 		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
 		if err != nil {
 			return err
 		}
-		if _, err := io.Copy(part, i.reader); err != nil {
+		if _, err := io.Copy(part, i.mediaReader); err != nil {
+			return err
+		}
+	}
+	if i.thumbReader != nil {
+		part, err := mw.CreateFormFile(i.thumbName, i.thumbName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.thumbReader); err != nil {
 			return err
 		}
 	}
@@ -3927,27 +4071,61 @@ type InputPaidMediaVideo struct {
 	// Thumbnails can't be reused and can be only uploaded as a new file,
 	// so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>.
 	// More information on Sending Files » https://core.telegram.org/bots/api#sending-files
-	Thumbnail InputFile `json:"thumbnail,omitempty"`
+	Thumbnail *string `json:"thumbnail,omitempty,"`
+	// Optional. Cover for the video in the message.
+	//  Pass a file_id to send a file that exists on the Telegram servers (recommended),
+	// pass an HTTP URL for Telegram to get a file from the Internet,
+	//  or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name.
+	//  More information on Sending Files » https://core.telegram.org/bots/api#sending-files
+	Cover *string `json:"cover,omitempty"`
+	// Optional. Start timestamp for the video in the message
+	StartTimestamp *int `json:"start_timestamp,omitempty"`
 	// Optional. Video width
-	Width *int `json:"width,omitempty"`
+	Width *int `json:"width,omitempty,"`
 	// Optional. Video height
-	Height *int `json:"height,omitempty"`
+	Height *int `json:"height,omitempty,"`
 	// Optional. Video duration in seconds
-	Duration *int `json:"duration,omitempty"`
+	Duration *int `json:"duration,omitempty,"`
 	// Optional. Pass True if the uploaded video is suitable for streaming
-	SupportsStreaming *bool `json:"supports_streaming,omitempty"`
+	SupportsStreaming *bool `json:"supports_streaming,omitempty,"`
 
-	reader    io.Reader
-	mediaName string
+	mediaReader io.Reader
+	mediaName   string
+	thumbReader io.Reader
+	thumbName   string
+	coverReader io.Reader
+	coverName   string
 }
 
 func (i *InputPaidMediaVideo) SetPaidMedia(media string, r io.Reader) {
 	i.mediaName = media
-	i.reader = r
+	i.mediaReader = r
 	if r == nil {
 		i.Media = media
 	} else {
 		i.Media = "attach://" + media
+	}
+}
+
+func (i *InputPaidMediaVideo) SetThumbnail(thumb string, r io.Reader) {
+	i.thumbName = thumb
+	i.thumbReader = r
+	if r == nil {
+		i.Thumbnail = &thumb
+	} else {
+		thumb = "attach://" + thumb
+		i.Thumbnail = &thumb
+	}
+}
+
+func (i *InputPaidMediaVideo) SetCover(cover string, r io.Reader) {
+	i.coverName = cover
+	i.coverReader = r
+	if r == nil {
+		i.Cover = &cover
+	} else {
+		cover = "attach://" + cover
+		i.Cover = &cover
 	}
 }
 
@@ -3969,9 +4147,18 @@ func (i InputPaidMediaVideo) WriteTo(mw *multipart.Writer) error {
 	if err := mw.WriteField("media", i.Media); err != nil {
 		return err
 	}
-
 	if i.Thumbnail != nil {
-		if err := i.Thumbnail.WriteTo(mw, "thumbnail"); err != nil {
+		if err := mw.WriteField("thumbnail", *i.Thumbnail); err != nil {
+			return err
+		}
+	}
+	if i.Cover != nil {
+		if err := mw.WriteField("cover", *i.Cover); err != nil {
+			return err
+		}
+	}
+	if i.StartTimestamp != nil {
+		if err := mw.WriteField("start_timestamp", fmt.Sprint(*i.StartTimestamp)); err != nil {
 			return err
 		}
 	}
@@ -3992,6 +4179,33 @@ func (i InputPaidMediaVideo) WriteTo(mw *multipart.Writer) error {
 	}
 	if i.SupportsStreaming != nil {
 		if err := mw.WriteField("supports_streaming", fmt.Sprint(i.SupportsStreaming)); err != nil {
+			return err
+		}
+	}
+	if i.mediaReader != nil {
+		part, err := mw.CreateFormFile(i.mediaName, i.mediaName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.mediaReader); err != nil {
+			return err
+		}
+	}
+	if i.thumbReader != nil {
+		part, err := mw.CreateFormFile(i.thumbName, i.thumbName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.thumbReader); err != nil {
+			return err
+		}
+	}
+	if i.coverReader != nil {
+		part, err := mw.CreateFormFile(i.coverName, i.coverName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, i.coverReader); err != nil {
 			return err
 		}
 	}

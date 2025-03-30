@@ -288,21 +288,25 @@ type AffiliateInfo struct {
 }
 
 // This object describes the source of a transaction, or its recipient for outgoing transactions.
-// Currently, it can be one of
-// - TransactionPartnerUser
+// Currently, it can be one of:
 //
-// - TransactionPartnerAffiliateProgram
+//   - TransactionPartnerUser
 //
-// - TransactionPartnerFragment
+//   - TransactionPartnerChat
 //
-// - TransactionPartnerTelegramAds
+//   - TransactionPartnerAffiliateProgram
 //
-// - TransactionPartnerTelegramApi
+//   - TransactionPartnerFragment
 //
-// - TransactionPartnerOther
+//   - TransactionPartnerTelegramAds
+//
+//   - TransactionPartnerTelegramApi
+//
+//   - TransactionPartnerOther
 type TransactionPartner struct {
 	Type             string
 	User             *TransactionPartnerUser
+	Chat             *TransactionPartnerChat
 	AffiliateProgram *TransactionPartnerAffiliateProgram
 	Fragment         *TransactionPartnerFragment
 	TelegramAds      *TransactionPartnerTelegramAds
@@ -327,36 +331,49 @@ func (t *TransactionPartner) UnmarshalJSON(data []byte) error {
 			return err
 		}
 		t.User = &result
+
+	case "chat":
+		var result TransactionPartnerChat
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		t.Chat = &result
+
 	case "affiliate_program":
 		var result TransactionPartnerAffiliateProgram
 		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		t.AffiliateProgram = &result
+
 	case "fragment":
 		var result TransactionPartnerFragment
 		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		t.Fragment = &result
+
 	case "telegram_ads":
 		var result TransactionPartnerTelegramAds
 		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		t.TelegramAds = &result
+
 	case "telegram_api":
 		var result TransactionPartnerTelegramApi
 		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		t.TelegramApi = &result
+
 	case "other":
 		var result TransactionPartnerOther
 		if err := gotely.DecodeJSON(br, &result); err != nil {
 			return err
 		}
 		t.Other = &result
+
 	default:
 		return fmt.Errorf("unknown transaction partner type: %s", typ)
 	}
@@ -381,6 +398,16 @@ type TransactionPartnerUser struct {
 	// Optional. Bot-specified paid media payload
 	PaidMediaPayload *string `json:"paid_media_payload,omitempty,"`
 	// Optional. The gift sent to the user by the bot
+	Gift *Gift `json:"gift,omitempty"`
+}
+
+// Describes a transaction with a chat.
+type TransactionPartnerChat struct {
+	// Type of the transaction partner, always “chat”
+	Type string `json:"type"`
+	// Information about the chat
+	Chat Chat `json:"chat"`
+	// Optional. The gift sent to the chat by the bot
 	Gift *Gift `json:"gift,omitempty"`
 }
 

@@ -951,10 +951,9 @@ type SendGift struct {
 	// REQUIRED:
 	// Identifier of the gift
 	GiftId string `json:"gift_id"`
-	// REQUIRED:
+
 	// Text that will be shown along with the gift; 0-128 characters
 	Text *string `json:"text"`
-
 	// Required if chat_id is not specified. Unique identifier of the target user who will receive the gift.
 	UserId *int `json:"user_id"`
 	// Required if user_id is not specified.
