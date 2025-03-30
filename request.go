@@ -123,15 +123,15 @@ func makeReqCfg(opts ...RequestOption) RequestConfig {
 // and with parameters described in body.
 // If dest is not nil, the response content is written to it.
 // Pass nil as dest to ignore the response content.
-func SendRequest(body Method, dest any, token string) error {
-	return SendRequestWith(body, dest, token)
+func SendRequest(body Method, token string, dest any) error {
+	return SendRequestWith(body, token, dest)
 }
 
 // SendRequestWith sends a request to the Telegram Bot API using the provided token,
 // with parameters described in body and optional request options opts.
 // If dest is not nil, the response content is written to it.
 // Pass nil as dest to ignore the response content.
-func SendRequestWith(body Method, dest any, token string, opts ...RequestOption) error {
+func SendRequestWith(body Method, token string, dest any, opts ...RequestOption) error {
 	if err := body.Validate(); err != nil {
 		return err
 	}

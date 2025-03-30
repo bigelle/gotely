@@ -1,9 +1,13 @@
+// This package provides an interface for creating [longpolling.LongPollingBot] or [webhook.WebhookBot].
+// It is used to store the bot's configuration as well as the logic for handling received updates.
+//
+// Licensed under the MIT License. See LICENSE file for details.
 package tgbot
 
 import (
 	"net/http"
 
-	"github.com/bigelle/gotely/api/objects"
+	"github.com/bigelle/gotely/objects"
 )
 
 // Bot is an interface which is used to create and configure

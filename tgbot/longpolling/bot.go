@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/bigelle/gotely"
-	"github.com/bigelle/gotely/api/objects"
+	"github.com/bigelle/gotely/objects"
 	"github.com/bigelle/gotely/tgbot"
 )
 
@@ -195,8 +195,8 @@ func (l LongPollingBot) poll() {
 			var upds []objects.Update
 			err := gotely.SendRequestWith(
 				g,
-				&upds,
 				l.Bot.Token(),
+				&upds,
 				gotely.WithClient(l.Bot.Client()),
 				gotely.WithContext(l.ctx),
 				gotely.WithUrl(l.Bot.ApiUrl()),

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/bigelle/gotely"
-	"github.com/bigelle/gotely/api/objects"
+	"github.com/bigelle/gotely/objects"
 )
 
 // Use this method to edit text and game messages.

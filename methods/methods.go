@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/bigelle/gotely"
-	"github.com/bigelle/gotely/api/objects"
+	"github.com/bigelle/gotely/objects"
 )
 
 // A simple method for testing your bot's authentication token.

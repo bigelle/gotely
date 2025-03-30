@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/bigelle/gotely"
-	"github.com/bigelle/gotely/api/methods"
-	"github.com/bigelle/gotely/api/objects"
+	"github.com/bigelle/gotely/methods"
+	"github.com/bigelle/gotely/objects"
 	"github.com/bigelle/gotely/tgbot/webhook"
 )
 
@@ -68,8 +68,8 @@ func (t TestNoErrBot) OnUpdate(upd objects.Update) error {
 				ChatId: fmt.Sprint(id),
 				Text:   *text,
 			},
-			nil,
 			t.Token(),
+			nil,
 			gotely.WithClient(t.Client()),
 		)
 		if err != nil {

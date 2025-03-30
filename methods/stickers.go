@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/bigelle/gotely"
-	"github.com/bigelle/gotely/api/objects"
+	"github.com/bigelle/gotely/objects"
 )
 
 // Use this method to send static .WEBP, animated .TGS, or video .WEBM stickers.
