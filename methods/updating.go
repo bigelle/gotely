@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"strings"
 
 	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/objects"
@@ -470,7 +469,7 @@ type StopPoll struct {
 
 func (s StopPoll) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if s.MessageId < 1 {
@@ -529,7 +528,7 @@ type DeleteMessage struct {
 
 func (d DeleteMessage) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(d.ChatId) == "" {
+	if d.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if d.MessageId < 1 {
@@ -568,7 +567,7 @@ type DeleteMessages struct {
 
 func (d DeleteMessages) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(d.ChatId) == "" {
+	if d.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(d.MessageIds) < 1 || len(d.MessageIds) > 100 {

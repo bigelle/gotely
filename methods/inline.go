@@ -3,7 +3,6 @@ package methods
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/objects"
@@ -37,7 +36,7 @@ type AnswerInlineQuery struct {
 
 func (a AnswerInlineQuery) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(a.InlineQueryId) == "" {
+	if a.InlineQueryId == "" {
 		err = append(err, fmt.Errorf("inline_query_id parameter can't be empty"))
 	}
 	for _, res := range a.Results {
@@ -87,7 +86,7 @@ type AnswerWebAppQuery struct {
 
 func (a AnswerWebAppQuery) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(a.WebAppQueryId) == "" {
+	if a.WebAppQueryId == "" {
 		err = append(err, fmt.Errorf("web_app_query_id parameter can't be empty"))
 	}
 	if er := a.Result.Validate(); er != nil {

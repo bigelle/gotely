@@ -576,8 +576,61 @@ type MessageEntity struct {
 	User *User `json:"user,omitempty"`
 	// Optional. For “pre” only, the programming language of the entity text
 	Language *string `json:"language,omitempty"`
-	// Optional. For “custom_emoji” only, unique identifier of the custom emoji. Use getCustomEmojiStickers to get full information about the sticker
+	// Optional. For “custom_emoji” only, unique identifier of the custom emoji.
+	// Use [methods.GetCustomEmojiStickers] to get full information about the sticker
 	CustomEmojiId *string `json:"custom_emoji_id,omitempty"`
+}
+
+func (m MessageEntity) Validate() error {
+	var err gotely.ErrFailedValidation
+	allowed_types := map[string]struct{}{
+		"mention":               {},
+		"hashtag":               {},
+		"cashtag":               {},
+		"bot_command":           {},
+		"url":                   {},
+		"email":                 {},
+		"phone_number":          {},
+		"bold":                  {},
+		"italic":                {},
+		"underline":             {},
+		"strikethrough":         {},
+		"spoiler":               {},
+		"blockquote":            {},
+		"expandable_blockquote": {},
+		"code":                  {},
+		"pre":                   {},
+		"text_link":             {},
+		"text_mention":          {},
+		"custom_emoji":          {},
+	}
+	if _, ok := allowed_types[m.Type]; !ok {
+		err = append(err, fmt.Errorf("unknown message entity type: %s", m.Type))
+	}
+	if m.Url != nil {
+		if m.Type != "text_link" {
+			err = append(err, fmt.Errorf("the url parameter can only be used with type 'text_link'"))
+		}
+	}
+	if m.User != nil {
+		if m.Type != "text_mention" {
+			err = append(err, fmt.Errorf("the user parameter can only be used with type 'text_mention'"))
+		}
+	}
+	if m.Language != nil {
+		if m.Type != "pre" {
+			err = append(err, fmt.Errorf("the language parameter can only be used with type 'pre'"))
+		}
+	}
+	if m.CustomEmojiId != nil {
+		if m.Type != "custom_emoji" {
+			err = append(err, fmt.Errorf("the custom_emoji_id parameter can only be used with type 'custom_emoji'"))
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
 }
 
 // This object contains information about the quoted part of a message that is replied to by the given message.

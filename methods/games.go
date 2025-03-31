@@ -3,7 +3,6 @@ package methods
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/objects"
@@ -44,7 +43,7 @@ func (s SendGame) Validate() error {
 	if s.ChatId == 0 {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(s.GameShortName) == "" {
+	if s.GameShortName == "" {
 		err = append(err, fmt.Errorf("game_short_name parameter can't be empty"))
 	}
 	if s.ReplyMarkup != nil {
@@ -84,8 +83,8 @@ type SetGameScore struct {
 	UserId int `json:"user_id"`
 	// REQUIRED:
 	// New score, must be non-negative
-
 	Score int `json:"score"`
+
 	// Pass True if the high score is allowed to decrease. This can be useful when fixing mistakes or banning cheaters
 	Force *bool `json:"force,omitempty"`
 	// Pass True if the game message should not be automatically edited to include the current scoreboard

@@ -3,7 +3,6 @@ package objects
 import (
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/bigelle/gotely"
 )
@@ -138,13 +137,13 @@ func (p PassportElementErrorDataField) Validate() error {
 			"type parameter accepts only one of one of \"personal_details\", \"passport”, \"driver_license”, \"identity_card”, \"internal_passport”, \"address\"",
 		))
 	}
-	if strings.TrimSpace(p.DataHash) == "" {
+	if p.DataHash == "" {
 		err = append(err, fmt.Errorf("data_hash parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.Message) == "" {
+	if p.Message == "" {
 		err = append(err, fmt.Errorf("message parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.FieldName) == "" {
+	if p.FieldName == "" {
 		err = append(err, fmt.Errorf("field_name parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -177,10 +176,10 @@ func (p PassportElementErrorFrontSide) Validate() error {
 	if !slices.Contains([]string{"passport", "driver_license", "identity_card", "internal_passport"}, p.Type) {
 		err = append(err, fmt.Errorf("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\""))
 	}
-	if strings.TrimSpace(p.FileHash) == "" {
+	if p.FileHash == "" {
 		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.Message) == "" {
+	if p.Message == "" {
 		err = append(err, fmt.Errorf("message parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -213,10 +212,10 @@ func (p PassportElementErrorReverseSide) Validate() error {
 	if !slices.Contains([]string{"driver_license", "identity_card"}, p.Type) {
 		err = append(err, fmt.Errorf("type parameter accepts only one of \"driver_license\", \"identity_card\""))
 	}
-	if strings.TrimSpace(p.FileHash) == "" {
+	if p.FileHash == "" {
 		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.Message) == "" {
+	if p.Message == "" {
 		err = append(err, fmt.Errorf("message parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -250,10 +249,10 @@ func (p PassportElementErrorSelfie) Validate() error {
 	if !slices.Contains([]string{"passport", "driver_license", "identity_card", "internal_passport"}, p.Type) {
 		err = append(err, fmt.Errorf("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\""))
 	}
-	if strings.TrimSpace(p.FileHash) == "" {
+	if p.FileHash == "" {
 		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.Message) == "" {
+	if p.Message == "" {
 		err = append(err, fmt.Errorf("message parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -289,10 +288,10 @@ func (p PassportElementErrorFile) Validate() error {
 			"type parameter accepts only one of \"utility_bill\", \"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
 		))
 	}
-	if strings.TrimSpace(p.FileHash) == "" {
+	if p.FileHash == "" {
 		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.Message) == "" {
+	if p.Message == "" {
 		err = append(err, fmt.Errorf("message parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -331,7 +330,7 @@ func (p PassportElementErrorFiles) Validate() error {
 	if len(p.FileHashes) == 0 {
 		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.Message) == "" {
+	if p.Message == "" {
 		err = append(err, fmt.Errorf("message parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -376,10 +375,10 @@ func (p PassportElementErrorTranslationFile) Validate() error {
 				"\"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
 		))
 	}
-	if strings.TrimSpace(p.FileHash) == "" {
+	if p.FileHash == "" {
 		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.Message) == "" {
+	if p.Message == "" {
 		err = append(err, fmt.Errorf("message parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -428,7 +427,7 @@ func (p PassportElementErrorTranslationFiles) Validate() error {
 	if len(p.FileHashes) == 0 {
 		err = append(err, fmt.Errorf("file_hashes parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.Message) == "" {
+	if p.Message == "" {
 		err = append(err, fmt.Errorf("message parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -459,13 +458,13 @@ func (p PassportElementErrorUnspecified) Validate() error {
 	if p.Source != "unspecified" {
 		err = append(err, fmt.Errorf("source must be \"unspecified\""))
 	}
-	if strings.TrimSpace(p.Type) == "" {
+	if p.Type == "" {
 		err = append(err, fmt.Errorf("type parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.ElementHash) == "" {
+	if p.ElementHash == "" {
 		err = append(err, fmt.Errorf("element_hash parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.Message) == "" {
+	if p.Message == "" {
 		err = append(err, fmt.Errorf("message parameter can't be empty"))
 	}
 	if len(err) > 0 {

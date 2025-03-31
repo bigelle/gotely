@@ -3,7 +3,6 @@ package methods
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/objects"
@@ -101,7 +100,7 @@ type SendInvoice struct {
 
 func (s SendInvoice) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(s.Title) < 1 || len(s.Title) > 32 {
@@ -303,7 +302,7 @@ type AnswerShippingQuery struct {
 
 func (a AnswerShippingQuery) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(a.ShippingQueryId) == "" {
+	if a.ShippingQueryId == "" {
 		err = append(err, fmt.Errorf("shipping_query_id parameter can't be empty"))
 	}
 	if a.Ok && a.ShippingOptions == nil {
@@ -360,7 +359,7 @@ type AnswerPreCheckoutQuery struct {
 
 func (a AnswerPreCheckoutQuery) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(a.PreCheckoutQueryId) == "" {
+	if a.PreCheckoutQueryId == "" {
 		err = append(err, fmt.Errorf("pre_checkout_query_id parameter can't be empty"))
 	}
 	if !a.Ok && a.ErrorMessage == nil {
@@ -433,7 +432,7 @@ func (r RefundStarPayment) Validate() error {
 	if r.UserId <= 0 {
 		err = append(err, fmt.Errorf("user_id parameter can't be empty or negative"))
 	}
-	if strings.TrimSpace(r.TelegramPaymentChargeId) == "" {
+	if r.TelegramPaymentChargeId == "" {
 		err = append(err, fmt.Errorf("telegram_payment_charge_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -475,7 +474,7 @@ func (e EditUserStarSubscription) Validate() error {
 	if e.UserId < 1 {
 		err = append(err, fmt.Errorf("user_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(e.TelegramPaymentChargeId) == "" {
+	if e.TelegramPaymentChargeId == "" {
 		err = append(err, fmt.Errorf("telegram_payment_charge_id parameter can't be empty"))
 	}
 	if len(err) > 0 {

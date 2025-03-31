@@ -3,7 +3,6 @@ package objects
 import (
 	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/bigelle/gotely"
 )
@@ -50,7 +49,7 @@ type InlineQueryResultsButton struct {
 
 func (i InlineQueryResultsButton) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(i.Text) == "" {
+	if i.Text == "" {
 		err = append(err, fmt.Errorf("text parameter can't be empty"))
 	}
 	if i.WebApp != nil {
@@ -159,7 +158,7 @@ func (i InlineQueryResultArticle) Validate() error {
 	if len([]byte(i.Id)) > 64 {
 		err = append(err, fmt.Errorf("id parameter must not be longer than 64 bytes"))
 	}
-	if strings.TrimSpace(i.Title) == "" {
+	if i.Title == "" {
 		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
 	if er := i.InputMessageContent.Validate(); er != nil {
@@ -222,10 +221,10 @@ func (i InlineQueryResultPhoto) Validate() error {
 	if len([]byte(i.Id)) > 64 {
 		err = append(err, fmt.Errorf("id parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.PhotoUrl) == "" {
+	if i.PhotoUrl == "" {
 		err = append(err, fmt.Errorf("photo_url parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.ThumbnailUrl) == "" {
+	if i.ThumbnailUrl == "" {
 		err = append(err, fmt.Errorf("thumbnail_url parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -295,10 +294,10 @@ func (i InlineQueryResultGif) Validate() error {
 	if len([]byte(i.Id)) > 64 {
 		err = append(err, fmt.Errorf("id parameter must not be longer than 64 bytes"))
 	}
-	if strings.TrimSpace(i.GifUrl) == "" {
+	if i.GifUrl == "" {
 		err = append(err, fmt.Errorf("gif_url parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.ThumbnailUrl) == "" {
+	if i.ThumbnailUrl == "" {
 		err = append(err, fmt.Errorf("thumbnail_url parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -370,10 +369,10 @@ func (i InlineQueryResultMpeg4Gif) Validate() error {
 	if b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.Mpeg4Url) == "" {
+	if i.Mpeg4Url == "" {
 		err = append(err, fmt.Errorf("mpeg4_url parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.ThumbnailUrl) == "" {
+	if i.ThumbnailUrl == "" {
 		err = append(err, fmt.Errorf("thumbnail_url parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -451,16 +450,16 @@ func (i InlineQueryResultVideo) Validate() error {
 	if b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.VideoUrl) == "" {
+	if i.VideoUrl == "" {
 		err = append(err, fmt.Errorf("video_url parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.MimeType) == "" {
+	if i.MimeType == "" {
 		err = append(err, fmt.Errorf("mime_type parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.ThumbnailUrl) == "" {
+	if i.ThumbnailUrl == "" {
 		err = append(err, fmt.Errorf("thumbnail_url parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.Title) == "" {
+	if i.Title == "" {
 		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -524,10 +523,10 @@ func (i InlineQueryResultAudio) Validate() error {
 	if b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.Title) == "" {
+	if i.Title == "" {
 		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.AudioUrl) == "" {
+	if i.AudioUrl == "" {
 		err = append(err, fmt.Errorf("audio_url parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -589,10 +588,10 @@ func (i InlineQueryResultVoice) Validate() error {
 	if b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.VoiceUrl) == "" {
+	if i.VoiceUrl == "" {
 		err = append(err, fmt.Errorf("voice_url parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.Title) == "" {
+	if i.Title == "" {
 		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -662,13 +661,13 @@ func (i InlineQueryResultDocument) Validate() error {
 	if b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.Title) == "" {
+	if i.Title == "" {
 		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.MimeType) == "" {
+	if i.MimeType == "" {
 		err = append(err, fmt.Errorf("mime_type parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.DocumentUrl) == "" {
+	if i.DocumentUrl == "" {
 		err = append(err, fmt.Errorf("document_url parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -744,7 +743,7 @@ func (i InlineQueryResultLocation) Validate() error {
 	if i.Longitude == nil {
 		err = append(err, fmt.Errorf("longitude parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.Title) == "" {
+	if i.Title == "" {
 		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
 	if i.InputMessageContent != nil {
@@ -812,10 +811,10 @@ func (i InlineQueryResultVenue) Validate() error {
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.Title) == "" {
+	if i.Title == "" {
 		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.Address) == "" {
+	if i.Address == "" {
 		err = append(err, fmt.Errorf("address parameter can't be empty"))
 	}
 	if i.Latitude == nil {
@@ -879,13 +878,13 @@ func (i InlineQueryResultContact) Validate() error {
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.Id) == "" {
+	if i.Id == "" {
 		err = append(err, fmt.Errorf("id parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.PhoneNumber) == "" {
+	if i.PhoneNumber == "" {
 		err = append(err, fmt.Errorf("phone_number parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.FirstName) == "" {
+	if i.FirstName == "" {
 		err = append(err, fmt.Errorf("first_name parameter can't be empty"))
 	}
 	if i.InputMessageContent != nil {
@@ -928,7 +927,7 @@ func (i InlineQueryResultGame) Validate() error {
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.GameShortName) == "" {
+	if i.GameShortName == "" {
 		err = append(err, fmt.Errorf("game_short_name parameter can't be empty"))
 	}
 	if i.ReplyMarkup != nil {
@@ -983,7 +982,7 @@ func (i InlineQueryResultCachedPhoto) Validate() error {
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.PhotoFileId) == "" {
+	if i.PhotoFileId == "" {
 		err = append(err, fmt.Errorf("photo_file_id parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -1044,7 +1043,7 @@ func (i InlineQueryResultCachedGif) Validate() error {
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.GifFileId) == "" {
+	if i.GifFileId == "" {
 		err = append(err, fmt.Errorf("gif_file_id parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -1276,7 +1275,7 @@ func (i InlineQueryResultCachedVideo) Validate() error {
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.VideoFileId) == "" {
+	if i.VideoFileId == "" {
 		err = append(err, fmt.Errorf("video_file_id parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -1335,7 +1334,7 @@ func (i InlineQueryResultCachedVoice) Validate() error {
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.VoiceFileId) == "" {
+	if i.VoiceFileId == "" {
 		err = append(err, fmt.Errorf("voice_file_id parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -1392,7 +1391,7 @@ func (i InlineQueryResultCachedAudio) Validate() error {
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
 	}
-	if strings.TrimSpace(i.AudioFileId) == "" {
+	if i.AudioFileId == "" {
 		err = append(err, fmt.Errorf("audio_file_id parameter can't be empty"))
 	}
 	if i.ParseMode != nil && i.CaptionEntities != nil {
@@ -1556,10 +1555,10 @@ func (i InputVenueMessageContent) Validate() error {
 	if i.Longitude == nil {
 		err = append(err, fmt.Errorf("longitude parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.Title) == "" {
+	if i.Title == "" {
 		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
-	if strings.TrimSpace(i.Address) == "" {
+	if i.Address == "" {
 		err = append(err, fmt.Errorf("address parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -1586,10 +1585,10 @@ func (i InputContactMessageContent) GetInputMessageContentType() string {
 
 func (i InputContactMessageContent) Validate() error {
 	var err gotely.ErrFailedValidation
-	if i.PhoneNumber == "" || strings.TrimSpace(i.PhoneNumber) == "" {
+	if i.PhoneNumber == "" {
 		err = append(err, fmt.Errorf("phone number can't be empty"))
 	}
-	if i.FirstName == "" || strings.TrimSpace(i.FirstName) == "" {
+	if i.FirstName == "" {
 		err = append(err, fmt.Errorf("first name can't be empty"))
 	}
 	if len(err) > 0 {
