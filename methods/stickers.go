@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"regexp"
-	"slices"
+	"strings"
 
 	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/objects"
@@ -240,13 +239,13 @@ func (u UploadStickerFile) Validate() error {
 	if er := u.Sticker.Validate(); er != nil {
 		err = append(err, er)
 	}
-	allowed_formats := []string{
-		"static",
-		"animated",
-		"video",
+	allowed_formats := map[string]struct{}{
+		"static":   {},
+		"animated": {},
+		"video":    {},
 	}
-	if !slices.Contains(allowed_formats, u.StickerFormat) {
-		err = append(err, fmt.Errorf("sticker_format must be one of \"static\", \"animated\", \"video\""))
+	if _, ok := allowed_formats[u.StickerFormat]; !ok {
+		err = append(err, fmt.Errorf("sticker_format must be one of 'static', 'animated', 'video'"))
 	}
 	if len(err) > 0 {
 		return err
@@ -325,17 +324,12 @@ func (c CreateNewStickerSet) Validate() error {
 	if len(c.Name) < 1 || len(c.Name) > 64 {
 		err = append(err, fmt.Errorf("name parameter must be between 1 and 64 characters"))
 	}
-	valid_stickerset_name := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*$`)
-	consecutive_underscores := regexp.MustCompile(`__+`)
-	valid_stickerobjects := []string{
-		"regular",
-		"mask",
-		"custom_emoji",
-	}
-	if !valid_stickerset_name.MatchString(c.Name) {
+	if strings.IndexFunc(c.Name, func(r rune) bool {
+		return !(r == '_' || ('a' <= r && r <= 'z') || ('A' <= r && r <= 'Z') || ('0' <= r && r <= '9'))
+	}) != -1 {
 		err = append(err, fmt.Errorf("name parameter can contain only English letters, digits and underscores"))
 	}
-	if consecutive_underscores.MatchString(c.Name) {
+	if strings.Contains(c.Name, "__") {
 		err = append(err, fmt.Errorf("name parameter can't contain consecutive underscores"))
 	}
 	if len(c.Title) < 1 || len(c.Title) > 64 {
@@ -347,8 +341,13 @@ func (c CreateNewStickerSet) Validate() error {
 		}
 	}
 	if c.StickerType != nil {
-		if !slices.Contains(valid_stickerobjects, *c.StickerType) {
-			err = append(err, fmt.Errorf("sticker_type must be \"regular\", \"mask\" or \"custom_emoji\""))
+		valid_stickerobjects := map[string]struct{}{
+			"regular":      {},
+			"mask":         {},
+			"custom_emoji": {},
+		}
+		if _, ok := valid_stickerobjects[*c.StickerType]; !ok {
+			err = append(err, fmt.Errorf("sticker_type must be 'regular', 'mask' or 'custom_emoji'"))
 		}
 	}
 	if len(err) > 0 {
@@ -825,12 +824,12 @@ func (s SetStickerSetThumbnail) Validate() error {
 			err = append(err, er)
 		}
 	}
-	valid_stickerset_thumbnail := []string{
-		"static",
-		"animated",
-		"video",
+	allowed_formats := map[string]struct{}{
+		"static":   {},
+		"animated": {},
+		"video":    {},
 	}
-	if !slices.Contains(valid_stickerset_thumbnail, s.Format) {
+	if _, ok := allowed_formats[s.Format]; !ok {
 		err = append(err, fmt.Errorf("format parameter must be one of “static”, “animated” or “video”"))
 	}
 	if len(err) > 0 {

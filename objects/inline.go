@@ -2,7 +2,7 @@ package objects
 
 import (
 	"fmt"
-	"regexp"
+	"strings"
 
 	"github.com/bigelle/gotely"
 )
@@ -58,9 +58,10 @@ func (i InlineQueryResultsButton) Validate() error {
 		}
 	}
 	if i.StartParameter != nil {
-		allowed_startparameter := regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
-		if !allowed_startparameter.MatchString(*i.StartParameter) {
-			err = append(err, fmt.Errorf("start_parameter parameter must contain only A-Z, a-z, 0-9, \"_\" and \"-\""))
+		if strings.IndexFunc(*i.StartParameter, func(r rune) bool {
+			return !(r == '_' || r == '-' || ('a' <= r && r <= 'z') || ('A' <= r && r <= 'Z') || ('0' <= r && r <= '9'))
+		}) != -1 {
+			err = append(err, fmt.Errorf("start_parameter parameter must contain only A-Z, a-z, 0-9, '_' and '-'"))
 		}
 		if len(*i.StartParameter) < 1 || len(*i.StartParameter) > 64 {
 			err = append(err, fmt.Errorf("start_parameter parameter must be between 1 and 64 characters"))
@@ -153,7 +154,7 @@ func (i InlineQueryResultArticle) GetInlineQueryResultType() string {
 func (i InlineQueryResultArticle) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "article" {
-		err = append(err, fmt.Errorf("type must be \"article\""))
+		err = append(err, fmt.Errorf("type must be 'article'"))
 	}
 	if len([]byte(i.Id)) > 64 {
 		err = append(err, fmt.Errorf("id parameter must not be longer than 64 bytes"))
@@ -216,7 +217,7 @@ func (i InlineQueryResultPhoto) GetInlineQueryResultType() string {
 func (i InlineQueryResultPhoto) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "photo" {
-		err = append(err, fmt.Errorf("type must be \"photo\""))
+		err = append(err, fmt.Errorf("type must be 'photo'"))
 	}
 	if len([]byte(i.Id)) > 64 {
 		err = append(err, fmt.Errorf("id parameter can't be empty"))
@@ -289,7 +290,7 @@ func (i InlineQueryResultGif) GetInlineQueryResultType() string {
 func (i InlineQueryResultGif) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "gif" {
-		err = append(err, fmt.Errorf("type must be \"gif\""))
+		err = append(err, fmt.Errorf("type must be 'gif'"))
 	}
 	if len([]byte(i.Id)) > 64 {
 		err = append(err, fmt.Errorf("id parameter must not be longer than 64 bytes"))
@@ -363,7 +364,7 @@ func (i InlineQueryResultMpeg4Gif) GetInlineQueryResultType() string {
 func (i InlineQueryResultMpeg4Gif) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "mpeg4_gif" {
-		err = append(err, fmt.Errorf("type must be \"mpeg4_gif\""))
+		err = append(err, fmt.Errorf("type must be 'mpeg4_gif'"))
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
@@ -444,7 +445,7 @@ func (i InlineQueryResultVideo) GetInlineQueryResultType() string {
 func (i InlineQueryResultVideo) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "video" {
-		err = append(err, fmt.Errorf("type must be \"video\""))
+		err = append(err, fmt.Errorf("type must be 'video'"))
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
@@ -517,7 +518,7 @@ func (i InlineQueryResultAudio) GetInlineQueryResultType() string {
 func (i InlineQueryResultAudio) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "audio" {
-		err = append(err, fmt.Errorf("type must be \"audio\""))
+		err = append(err, fmt.Errorf("type must be 'audio'"))
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
@@ -582,7 +583,7 @@ func (i InlineQueryResultVoice) GetInlineQueryResultType() string {
 func (i InlineQueryResultVoice) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "voice" {
-		err = append(err, fmt.Errorf("type must be \"voice\""))
+		err = append(err, fmt.Errorf("type must be 'voice'"))
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
@@ -655,7 +656,7 @@ func (i InlineQueryResultDocument) GetInlineQueryResultType() string {
 func (i InlineQueryResultDocument) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "document" {
-		err = append(err, fmt.Errorf("type must be \"document\""))
+		err = append(err, fmt.Errorf("type must be 'document'"))
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
@@ -731,7 +732,7 @@ func (i InlineQueryResultLocation) GetInlineQueryResultType() string {
 func (i InlineQueryResultLocation) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "location" {
-		err = append(err, fmt.Errorf("type must be \"location\""))
+		err = append(err, fmt.Errorf("type must be 'location'"))
 	}
 	b := len([]byte(i.Id))
 	if b < 1 || b > 64 {
@@ -806,7 +807,7 @@ func (i InlineQueryResultVenue) GetInlineQueryResultType() string {
 func (i InlineQueryResultVenue) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "venue" {
-		err = append(err, fmt.Errorf("type must be \"venue\""))
+		err = append(err, fmt.Errorf("type must be 'venue'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
@@ -873,7 +874,7 @@ func (i InlineQueryResultContact) GetInlineQueryResultType() string {
 func (i InlineQueryResultContact) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "contact" {
-		err = append(err, fmt.Errorf("type must be \"contact\""))
+		err = append(err, fmt.Errorf("type must be 'contact'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
@@ -922,7 +923,7 @@ func (i InlineQueryResultGame) GetInlineQueryResultType() string {
 func (i InlineQueryResultGame) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "game" {
-		err = append(err, fmt.Errorf("type must be \"game\""))
+		err = append(err, fmt.Errorf("type must be 'game'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
@@ -977,7 +978,7 @@ func (i InlineQueryResultCachedPhoto) GetInlineQueryResultType() string {
 func (i InlineQueryResultCachedPhoto) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "photo" {
-		err = append(err, fmt.Errorf("type must be \"photo\""))
+		err = append(err, fmt.Errorf("type must be 'photo'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
@@ -1038,7 +1039,7 @@ func (i InlineQueryResultCachedGif) GetInlineQueryResultType() string {
 func (i InlineQueryResultCachedGif) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "gif" {
-		err = append(err, fmt.Errorf("type must be \"gif\""))
+		err = append(err, fmt.Errorf("type must be 'gif'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
@@ -1099,7 +1100,7 @@ func (i InlineQueryResultCachedMpeg4Gif) GetInlineQueryResultType() string {
 func (i InlineQueryResultCachedMpeg4Gif) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "mpeg4_gif" {
-		err = append(err, fmt.Errorf("type must be \"mpeg4_gif\""))
+		err = append(err, fmt.Errorf("type must be 'mpeg4_gif'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
@@ -1149,7 +1150,7 @@ func (i InlineQueryResultCachedSticker) GetInlineQueryResultType() string {
 func (i InlineQueryResultCachedSticker) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "sticker" {
-		err = append(err, fmt.Errorf("type must be \"sticker\""))
+		err = append(err, fmt.Errorf("type must be 'sticker'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
@@ -1207,7 +1208,7 @@ func (i InlineQueryResultCachedDocument) GetInlineQueryResultType() string {
 func (i InlineQueryResultCachedDocument) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "document" {
-		err = append(err, fmt.Errorf("type must be \"document\""))
+		err = append(err, fmt.Errorf("type must be 'document'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
@@ -1270,7 +1271,7 @@ func (i InlineQueryResultCachedVideo) GetInlineQueryResultType() string {
 func (i InlineQueryResultCachedVideo) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "video" {
-		err = append(err, fmt.Errorf("type must be \"video\""))
+		err = append(err, fmt.Errorf("type must be 'video'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))
@@ -1329,7 +1330,7 @@ func (i InlineQueryResultCachedVoice) GetInlineQueryResultType() string {
 func (i InlineQueryResultCachedVoice) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "voice" {
-		err = append(err, fmt.Errorf("type must be \"voice\""))
+		err = append(err, fmt.Errorf("type must be 'voice'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter can't be empty"))
@@ -1386,7 +1387,7 @@ func (i InlineQueryResultCachedAudio) GetInlineQueryResultType() string {
 func (i InlineQueryResultCachedAudio) Validate() error {
 	var err gotely.ErrFailedValidation
 	if i.Type != "audio" {
-		err = append(err, fmt.Errorf("type must be \"audio\""))
+		err = append(err, fmt.Errorf("type must be 'audio'"))
 	}
 	if b := len([]byte(i.Id)); b < 1 || b > 64 {
 		err = append(err, fmt.Errorf("id parameter must be between 1 and 64 bytes"))

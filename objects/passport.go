@@ -2,7 +2,6 @@ package objects
 
 import (
 	"fmt"
-	"slices"
 
 	"github.com/bigelle/gotely"
 )
@@ -130,11 +129,19 @@ func (p PassportElementErrorDataField) GetPassportElementErrorSource() string {
 func (p PassportElementErrorDataField) Validate() error {
 	var err gotely.ErrFailedValidation
 	if p.Source != "data" {
-		err = append(err, fmt.Errorf("source must be \"data\""))
+		err = append(err, fmt.Errorf("source must be 'data'"))
 	}
-	if !slices.Contains([]string{"personal_details", "passport", "driver_license", "identity_card", "internal_passport", "address"}, p.Type) {
+	types := map[string]struct{}{
+		"personal_details":  {},
+		"passport":          {},
+		"driver_license":    {},
+		"identity_card":     {},
+		"internal_passport": {},
+		"address":           {},
+	}
+	if _, ok := types[p.Type]; !ok {
 		err = append(err, fmt.Errorf(
-			"type parameter accepts only one of one of \"personal_details\", \"passport”, \"driver_license”, \"identity_card”, \"internal_passport”, \"address\"",
+			"type parameter accepts only one of one of 'personal_details', 'passport”, 'driver_license”, 'identity_card”, 'internal_passport”, 'address'",
 		))
 	}
 	if p.DataHash == "" {
@@ -171,10 +178,16 @@ func (p PassportElementErrorFrontSide) GetPassportElementErrorSource() string {
 func (p PassportElementErrorFrontSide) Validate() error {
 	var err gotely.ErrFailedValidation
 	if p.Source != "front_side" {
-		err = append(err, fmt.Errorf("source must be \"front_side\""))
+		err = append(err, fmt.Errorf("source must be 'front_side'"))
 	}
-	if !slices.Contains([]string{"passport", "driver_license", "identity_card", "internal_passport"}, p.Type) {
-		err = append(err, fmt.Errorf("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\""))
+	types := map[string]struct{}{
+		"passport":          {},
+		"driver_license":    {},
+		"identity_card":     {},
+		"internal_passport": {},
+	}
+	if _, ok := types[p.Type]; !ok {
+		err = append(err, fmt.Errorf("type parameter accepts only one of 'passport', 'driver_license', 'identity_card', 'internal_passport'"))
 	}
 	if p.FileHash == "" {
 		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
@@ -207,10 +220,14 @@ func (p PassportElementErrorReverseSide) GetPassportElementErrorSource() string 
 func (p PassportElementErrorReverseSide) Validate() error {
 	var err gotely.ErrFailedValidation
 	if p.Source != "reverse_side" {
-		err = append(err, fmt.Errorf("source must be \"reverse_side\""))
+		err = append(err, fmt.Errorf("source must be 'reverse_side'"))
 	}
-	if !slices.Contains([]string{"driver_license", "identity_card"}, p.Type) {
-		err = append(err, fmt.Errorf("type parameter accepts only one of \"driver_license\", \"identity_card\""))
+	types := map[string]struct{}{
+		"driver_license": {},
+		"identity_card":  {},
+	}
+	if _, ok := types[p.Type]; !ok {
+		err = append(err, fmt.Errorf("type parameter accepts only one of 'driver_license', 'identity_card'"))
 	}
 	if p.FileHash == "" {
 		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
@@ -244,10 +261,16 @@ func (p PassportElementErrorSelfie) GetPassportElementErrorSource() string {
 func (p PassportElementErrorSelfie) Validate() error {
 	var err gotely.ErrFailedValidation
 	if p.Source != "selfie" {
-		err = append(err, fmt.Errorf("source must be \"selfie\""))
+		err = append(err, fmt.Errorf("source must be 'selfie'"))
 	}
-	if !slices.Contains([]string{"passport", "driver_license", "identity_card", "internal_passport"}, p.Type) {
-		err = append(err, fmt.Errorf("type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\""))
+	types := map[string]struct{}{
+		"passport":          {},
+		"driver_license":    {},
+		"identity_card":     {},
+		"internal_passport": {},
+	}
+	if _, ok := types[p.Type]; !ok {
+		err = append(err, fmt.Errorf("type parameter accepts only one of 'passport', 'driver_license', 'identity_card', 'internal_passport'"))
 	}
 	if p.FileHash == "" {
 		err = append(err, fmt.Errorf("file_hash parameter can't be empty"))
@@ -281,11 +304,18 @@ func (p PassportElementErrorFile) GetPassportElementErrorSource() string {
 func (p PassportElementErrorFile) Validate() error {
 	var err gotely.ErrFailedValidation
 	if p.Source != "file" {
-		err = append(err, fmt.Errorf("source must be \"file\""))
+		err = append(err, fmt.Errorf("source must be 'file'"))
 	}
-	if !slices.Contains([]string{"utility_bill", "bank_statement", "rental_agreement", "passport_registration", "temporary_registration"}, p.Type) {
+	types := map[string]struct{}{
+		"utility_bill":           {},
+		"bank_statement":         {},
+		"rental_agreement":       {},
+		"passport_registration":  {},
+		"temporary_registration": {},
+	}
+	if _, ok := types[p.Type]; !ok {
 		err = append(err, fmt.Errorf(
-			"type parameter accepts only one of \"utility_bill\", \"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
+			"type parameter accepts only one of 'utility_bill', 'bank_statement', 'rental_agreement', 'passport_registration', 'temporary_registration'",
 		))
 	}
 	if p.FileHash == "" {
@@ -320,11 +350,18 @@ func (p PassportElementErrorFiles) GetPassportElementErrorSource() string {
 func (p PassportElementErrorFiles) Validate() error {
 	var err gotely.ErrFailedValidation
 	if p.Source != "files" {
-		err = append(err, fmt.Errorf("source must be \"files\""))
+		err = append(err, fmt.Errorf("source must be 'files'"))
 	}
-	if !slices.Contains([]string{"utility_bill", "bank_statement", "rental_agreement", "passport_registration", "temporary_registration"}, p.Type) {
+	types := map[string]struct{}{
+		"utility_bill":           {},
+		"bank_statement":         {},
+		"rental_agreement":       {},
+		"passport_registration":  {},
+		"temporary_registration": {},
+	}
+	if _, ok := types[p.Type]; !ok {
 		err = append(err, fmt.Errorf(
-			"type parameter accepts only one of \"utility_bill\", \"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
+			"type parameter accepts only one of 'utility_bill', 'bank_statement', 'rental_agreement', 'passport_registration', 'temporary_registration'",
 		))
 	}
 	if len(p.FileHashes) == 0 {
@@ -360,19 +397,23 @@ func (p PassportElementErrorTranslationFile) GetPassportElementErrorSource() str
 func (p PassportElementErrorTranslationFile) Validate() error {
 	var err gotely.ErrFailedValidation
 	if p.Source != "translation_file" {
-		err = append(err, fmt.Errorf("source must be \"translation_file\""))
+		err = append(err, fmt.Errorf("source must be 'translation_file'"))
 	}
-	// awful
-	if !slices.Contains(
-		[]string{
-			"passport", "driver_license", "identity_card", "internal_passport", "utility_bill",
-			"bank_statement", "rental_agreement", "passport_registration", "temporary_registration",
-		},
-		p.Type,
-	) {
+	types := map[string]struct{}{
+		"passport":               {},
+		"driver_license":         {},
+		"identity_card":          {},
+		"internal_passport":      {},
+		"utility_bill":           {},
+		"bank_statement":         {},
+		"rental_agreement":       {},
+		"passport_registration":  {},
+		"temporary_registration": {},
+	}
+	if _, ok := types[p.Type]; !ok {
 		err = append(err, fmt.Errorf(
-			"type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\", \"utility_bill\", "+
-				"\"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
+			"type parameter accepts only one of 'passport', 'driver_license', 'identity_card', 'internal_passport', 'utility_bill', "+
+				"'bank_statement', 'rental_agreement', 'passport_registration', 'temporary_registration'",
 		))
 	}
 	if p.FileHash == "" {
@@ -409,19 +450,23 @@ func (p PassportElementErrorTranslationFiles) GetPassportElementErrorSource() st
 func (p PassportElementErrorTranslationFiles) Validate() error {
 	var err gotely.ErrFailedValidation
 	if p.Source != "translation_files" {
-		err = append(err, fmt.Errorf("source must be \"translation_files\""))
+		err = append(err, fmt.Errorf("source must be 'translation_files'"))
 	}
-	// awful
-	if !slices.Contains(
-		[]string{
-			"passport", "driver_license", "identity_card", "internal_passport", "utility_bill",
-			"bank_statement", "rental_agreement", "passport_registration", "temporary_registration",
-		},
-		p.Type,
-	) {
+	types := map[string]struct{}{
+		"passport":               {},
+		"driver_license":         {},
+		"identity_card":          {},
+		"internal_passport":      {},
+		"utility_bill":           {},
+		"bank_statement":         {},
+		"rental_agreement":       {},
+		"passport_registration":  {},
+		"temporary_registration": {},
+	}
+	if _, ok := types[p.Type]; !ok {
 		err = append(err, fmt.Errorf(
-			"type parameter accepts only one of \"passport\", \"driver_license\", \"identity_card\", \"internal_passport\", \"utility_bill\", "+
-				"\"bank_statement\", \"rental_agreement\", \"passport_registration\", \"temporary_registration\"",
+			"type parameter accepts only one of 'passport', 'driver_license', 'identity_card', 'internal_passport', 'utility_bill', "+
+				"'bank_statement', 'rental_agreement', 'passport_registration', 'temporary_registration'",
 		))
 	}
 	if len(p.FileHashes) == 0 {
@@ -456,7 +501,7 @@ func (p PassportElementErrorUnspecified) GetPassportElementErrorSource() string 
 func (p PassportElementErrorUnspecified) Validate() error {
 	var err gotely.ErrFailedValidation
 	if p.Source != "unspecified" {
-		err = append(err, fmt.Errorf("source must be \"unspecified\""))
+		err = append(err, fmt.Errorf("source must be 'unspecified'"))
 	}
 	if p.Type == "" {
 		err = append(err, fmt.Errorf("type parameter can't be empty"))
