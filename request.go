@@ -137,7 +137,7 @@ func makeReqCfg(opts ...RequestOption) RequestConfig {
 //	if err := gotely.SendRequest(sm, "MY-SECRET-TOKEN", &dest); err != nil {
 //		// handling error
 //	}
-//	// now we can something with the result
+//	// now we can do something with the result
 func SendRequest(body Method, token string, dest any) error {
 	return SendRequestWith(body, token, dest)
 }
@@ -162,7 +162,7 @@ func SendRequest(body Method, token string, dest any) error {
 //	if err := gotely.SendRequestWith(sm, "MY-SECRET-TOKEN", &dest, gotely.WithClient(myClient)); err != nil {
 //		// handling error
 //	}
-//	// now we can something with the result
+//	// now we can do something with the result
 func SendRequestWith(body Method, token string, dest any, opts ...RequestOption) error {
 	if err := body.Validate(); err != nil {
 		return err
