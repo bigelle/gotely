@@ -41,7 +41,7 @@ func (l *LongPollingBot) Start() {
 	}
 
 	l.logger.Info("initializing...")
-	l.chUpdate = make(chan objects.Update)
+	l.chUpdate = make(chan objects.Update, l.workingPool)
 	l.ctx, l.cancel = context.WithCancel(context.Background())
 
 	l.logger.Info("launching goroutines...")
