@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"regexp"
-	"slices"
 	"strings"
 
 	"github.com/bigelle/gotely"
@@ -52,7 +50,7 @@ type SendSticker struct {
 
 func (s SendSticker) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if er := s.Sticker.Validate(); er != nil {
@@ -161,7 +159,7 @@ type GetStickerSet struct {
 
 func (g GetStickerSet) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(g.Name) == "" {
+	if g.Name == "" {
 		err = append(err, fmt.Errorf("name parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -241,13 +239,13 @@ func (u UploadStickerFile) Validate() error {
 	if er := u.Sticker.Validate(); er != nil {
 		err = append(err, er)
 	}
-	allowed_formats := []string{
-		"static",
-		"animated",
-		"video",
+	allowed_formats := map[string]struct{}{
+		"static":   {},
+		"animated": {},
+		"video":    {},
 	}
-	if !slices.Contains(allowed_formats, u.StickerFormat) {
-		err = append(err, fmt.Errorf("sticker_format must be one of \"static\", \"animated\", \"video\""))
+	if _, ok := allowed_formats[u.StickerFormat]; !ok {
+		err = append(err, fmt.Errorf("sticker_format must be one of 'static', 'animated', 'video'"))
 	}
 	if len(err) > 0 {
 		return err
@@ -326,17 +324,12 @@ func (c CreateNewStickerSet) Validate() error {
 	if len(c.Name) < 1 || len(c.Name) > 64 {
 		err = append(err, fmt.Errorf("name parameter must be between 1 and 64 characters"))
 	}
-	valid_stickerset_name := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*$`)
-	consecutive_underscores := regexp.MustCompile(`__+`)
-	valid_stickerobjects := []string{
-		"regular",
-		"mask",
-		"custom_emoji",
-	}
-	if !valid_stickerset_name.MatchString(c.Name) {
+	if strings.IndexFunc(c.Name, func(r rune) bool {
+		return !(r == '_' || ('a' <= r && r <= 'z') || ('A' <= r && r <= 'Z') || ('0' <= r && r <= '9'))
+	}) != -1 {
 		err = append(err, fmt.Errorf("name parameter can contain only English letters, digits and underscores"))
 	}
-	if consecutive_underscores.MatchString(c.Name) {
+	if strings.Contains(c.Name, "__") {
 		err = append(err, fmt.Errorf("name parameter can't contain consecutive underscores"))
 	}
 	if len(c.Title) < 1 || len(c.Title) > 64 {
@@ -348,8 +341,13 @@ func (c CreateNewStickerSet) Validate() error {
 		}
 	}
 	if c.StickerType != nil {
-		if !slices.Contains(valid_stickerobjects, *c.StickerType) {
-			err = append(err, fmt.Errorf("sticker_type must be \"regular\", \"mask\" or \"custom_emoji\""))
+		valid_stickerobjects := map[string]struct{}{
+			"regular":      {},
+			"mask":         {},
+			"custom_emoji": {},
+		}
+		if _, ok := valid_stickerobjects[*c.StickerType]; !ok {
+			err = append(err, fmt.Errorf("sticker_type must be 'regular', 'mask' or 'custom_emoji'"))
 		}
 	}
 	if len(err) > 0 {
@@ -436,7 +434,7 @@ func (a AddStickerToSet) Validate() error {
 	if a.UserId < 1 {
 		err = append(err, fmt.Errorf("user_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(a.Name) == "" {
+	if a.Name == "" {
 		err = append(err, fmt.Errorf("name parameter can't be empty"))
 	}
 	if er := a.Sticker.Validate(); er != nil {
@@ -497,7 +495,7 @@ type SetStickerPositionInSet struct {
 
 func (s SetStickerPositionInSet) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.Sticker) == "" {
+	if s.Sticker == "" {
 		err = append(err, fmt.Errorf("sticker parameter can't be empty"))
 	}
 	if s.Position < 0 {
@@ -530,7 +528,7 @@ type DeleteStickerFromSet struct {
 
 func (d DeleteStickerFromSet) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(d.Sticker) == "" {
+	if d.Sticker == "" {
 		err = append(err, fmt.Errorf("sticker parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -577,10 +575,10 @@ func (r ReplaceStickerInSet) Validate() error {
 	if r.UserId < 1 {
 		err = append(err, fmt.Errorf("user_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(r.OldSticker) == "" {
+	if r.OldSticker == "" {
 		err = append(err, fmt.Errorf("old_sticker parameter can't be empty"))
 	}
-	if strings.TrimSpace(r.Name) == "" {
+	if r.Name == "" {
 		err = append(err, fmt.Errorf("name parameter can't be empty"))
 	}
 	if er := r.Sticker.Validate(); er != nil {
@@ -646,7 +644,7 @@ type SetStickerEmojiList struct {
 
 func (s SetStickerEmojiList) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.Sticker) == "" {
+	if s.Sticker == "" {
 		err = append(err, fmt.Errorf("sticker parameter can't be empty"))
 	}
 	if len(s.EmojiList) < 1 || len(s.EmojiList) > 20 {
@@ -683,7 +681,7 @@ type SetStickerKeywords struct {
 
 func (s SetStickerKeywords) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.Sticker) == "" {
+	if s.Sticker == "" {
 		err = append(err, fmt.Errorf("sticker parameter can't be empty"))
 	}
 	if s.Keywords != nil {
@@ -724,7 +722,7 @@ type SetStickerMaskPosition struct {
 
 func (s SetStickerMaskPosition) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.Sticker) == "" {
+	if s.Sticker == "" {
 		err = append(err, fmt.Errorf("sticker parameter can't be empty"))
 	}
 	if s.MaskPosition != nil {
@@ -762,10 +760,10 @@ type SetStickerSetTitle struct {
 
 func (s SetStickerSetTitle) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.Name) == "" {
+	if s.Name == "" {
 		err = append(err, fmt.Errorf("name parameter can't be empty"))
 	}
-	if strings.TrimSpace(s.Title) == "" {
+	if s.Title == "" {
 		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -815,7 +813,7 @@ type SetStickerSetThumbnail struct {
 
 func (s SetStickerSetThumbnail) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.Name) == "" {
+	if s.Name == "" {
 		err = append(err, fmt.Errorf("name parameter can't be empty"))
 	}
 	if s.UserId < 1 {
@@ -826,12 +824,12 @@ func (s SetStickerSetThumbnail) Validate() error {
 			err = append(err, er)
 		}
 	}
-	valid_stickerset_thumbnail := []string{
-		"static",
-		"animated",
-		"video",
+	allowed_formats := map[string]struct{}{
+		"static":   {},
+		"animated": {},
+		"video":    {},
 	}
-	if !slices.Contains(valid_stickerset_thumbnail, s.Format) {
+	if _, ok := allowed_formats[s.Format]; !ok {
 		err = append(err, fmt.Errorf("format parameter must be one of “static”, “animated” or “video”"))
 	}
 	if len(err) > 0 {
@@ -866,11 +864,11 @@ type SetCustomEmojiStickerSetThumbnail struct {
 
 func (s SetCustomEmojiStickerSetThumbnail) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.Name) == "" {
+	if s.Name == "" {
 		err = append(err, fmt.Errorf("name parameter can't be empty"))
 	}
 	if s.CustomEmojiId != nil {
-		if strings.TrimSpace(*s.CustomEmojiId) == "" {
+		if *s.CustomEmojiId == "" {
 			err = append(err, fmt.Errorf("custom_emoji_id parameter can't be empty"))
 		}
 	}
@@ -902,7 +900,7 @@ type DeleteStickerSet struct {
 
 func (d DeleteStickerSet) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(d.Name) == "" {
+	if d.Name == "" {
 		err = append(err, fmt.Errorf("name parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -983,7 +981,7 @@ func (s SendGift) Validate() error {
 			err = append(err, fmt.Errorf("user_id parameter can't be empty"))
 		}
 	}
-	if strings.TrimSpace(s.GiftId) == "" {
+	if s.GiftId == "" {
 		err = append(err, fmt.Errorf("gift_id parameter can't be empty"))
 	}
 	if s.Text != nil {

@@ -123,6 +123,21 @@ func makeReqCfg(opts ...RequestOption) RequestConfig {
 // and with parameters described in body.
 // If dest is not nil, the response content is written to it.
 // Pass nil as dest to ignore the response content.
+//
+// Example: let's say we're going to send a message using [methods.SendMessage].
+// The documentation says, that on success we should expect a [objects.Message] as a result.
+// So, we can do it like this:
+//
+//	sm:=methods.SendMessage{
+//		ChatID: "@cool_username",
+//		Text: "hello",
+//	}
+//
+//	var msg objects.Message
+//	if err := gotely.SendRequest(sm, "MY-SECRET-TOKEN", &dest); err != nil {
+//		// handling error
+//	}
+//	// now we can do something with the result
 func SendRequest(body Method, token string, dest any) error {
 	return SendRequestWith(body, token, dest)
 }
@@ -131,6 +146,23 @@ func SendRequest(body Method, token string, dest any) error {
 // with parameters described in body and optional request options opts.
 // If dest is not nil, the response content is written to it.
 // Pass nil as dest to ignore the response content.
+//
+// Example: let's say we're going to send a message using [methods.SendMessage].
+// The documentation says, that on success we should expect a [objects.Message] as a result.
+// So, we can do it like this:
+//
+//	myClient := http.DefaultClient
+//
+//	sm:=methods.SendMessage{
+//		ChatID: "@cool_username",
+//		Text: "hello",
+//	}
+//
+//	var msg objects.Message
+//	if err := gotely.SendRequestWith(sm, "MY-SECRET-TOKEN", &dest, gotely.WithClient(myClient)); err != nil {
+//		// handling error
+//	}
+//	// now we can do something with the result
 func SendRequestWith(body Method, token string, dest any, opts ...RequestOption) error {
 	if err := body.Validate(); err != nil {
 		return err

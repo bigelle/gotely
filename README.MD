@@ -98,20 +98,12 @@ First, define a type that implements `tgbot.Bot`:
 ```go
 type MyBot struct {
     token string
+    // implement it if you don't want to customize API URL template or HTTP client
+    tgbot.DefaultBot 
 }
 
 func (b MyBot) Token() string {
     return b.token
-}
-}
-
-func (b MyBot) ApiUrl() string {
-    // Return a custom API URL template if needed.
-    return gotely.DEFAULT_URL_TEMPLATE
-}
-
-func (b MyBot) Client() *http.Client {
-    return http.DefaultClient // Or a custom one
 }
 
 func (b MyBot) OnUpdate(objects.Update) error {
@@ -133,6 +125,7 @@ lb.Start()
 The process is similar. First, tell Telegram where to send updates, then define your bot and pass it to the constructor:
 
 ```go
+// setting webhook
 swh := webhook.SetWebhook{
     Url: "https://example.com/webhook", // The URL where Telegram will send updates
 }
@@ -145,6 +138,7 @@ if !ok {
     panic("Telegram API responded with false")
 }
 
+// creating a webhook server
 hook := webhook.New(MyBot{token: "MY-TOP-SECRET-TOKEN"}) // You can pass options here
 if err := hook.Start(); err != nil {
     panic(err)

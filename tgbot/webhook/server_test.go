@@ -12,6 +12,7 @@ import (
 	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/methods"
 	"github.com/bigelle/gotely/objects"
+	"github.com/bigelle/gotely/tgbot"
 	"github.com/bigelle/gotely/tgbot/webhook"
 )
 
@@ -23,6 +24,7 @@ func (f fakeRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 type TestNoErrBot struct {
 	token string
+	tgbot.DefaultBot
 }
 
 func (t TestNoErrBot) Token() string {
@@ -53,10 +55,6 @@ func (t TestNoErrBot) Client() *http.Client {
 			}, nil
 		}),
 	}
-}
-
-func (t TestNoErrBot) ApiUrl() string {
-	return gotely.DEFAULT_URL_TEMPLATE
 }
 
 func (t TestNoErrBot) OnUpdate(upd objects.Update) error {

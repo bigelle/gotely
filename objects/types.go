@@ -8,7 +8,6 @@ import (
 	"io"
 	"mime/multipart"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/bigelle/gotely"
@@ -576,8 +575,61 @@ type MessageEntity struct {
 	User *User `json:"user,omitempty"`
 	// Optional. For “pre” only, the programming language of the entity text
 	Language *string `json:"language,omitempty"`
-	// Optional. For “custom_emoji” only, unique identifier of the custom emoji. Use getCustomEmojiStickers to get full information about the sticker
+	// Optional. For “custom_emoji” only, unique identifier of the custom emoji.
+	// Use [methods.GetCustomEmojiStickers] to get full information about the sticker
 	CustomEmojiId *string `json:"custom_emoji_id,omitempty"`
+}
+
+func (m MessageEntity) Validate() error {
+	var err gotely.ErrFailedValidation
+	allowed_types := map[string]struct{}{
+		"mention":               {},
+		"hashtag":               {},
+		"cashtag":               {},
+		"bot_command":           {},
+		"url":                   {},
+		"email":                 {},
+		"phone_number":          {},
+		"bold":                  {},
+		"italic":                {},
+		"underline":             {},
+		"strikethrough":         {},
+		"spoiler":               {},
+		"blockquote":            {},
+		"expandable_blockquote": {},
+		"code":                  {},
+		"pre":                   {},
+		"text_link":             {},
+		"text_mention":          {},
+		"custom_emoji":          {},
+	}
+	if _, ok := allowed_types[m.Type]; !ok {
+		err = append(err, fmt.Errorf("unknown message entity type: %s", m.Type))
+	}
+	if m.Url != nil {
+		if m.Type != "text_link" {
+			err = append(err, fmt.Errorf("the url parameter can only be used with type 'text_link'"))
+		}
+	}
+	if m.User != nil {
+		if m.Type != "text_mention" {
+			err = append(err, fmt.Errorf("the user parameter can only be used with type 'text_mention'"))
+		}
+	}
+	if m.Language != nil {
+		if m.Type != "pre" {
+			err = append(err, fmt.Errorf("the language parameter can only be used with type 'pre'"))
+		}
+	}
+	if m.CustomEmojiId != nil {
+		if m.Type != "custom_emoji" {
+			err = append(err, fmt.Errorf("the custom_emoji_id parameter can only be used with type 'custom_emoji'"))
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
 }
 
 // This object contains information about the quoted part of a message that is replied to by the given message.
@@ -2608,7 +2660,7 @@ func (r ReactionTypeEmoji) Validate() error {
 		err = append(err, fmt.Errorf("emoji parameter can't be empty"))
 	}
 	if r.Type != "emoji" {
-		err = append(err, fmt.Errorf("type must be \"emoji\""))
+		err = append(err, fmt.Errorf("type must be 'emoji'"))
 	}
 	if len(err) > 0 {
 		return err
@@ -2634,7 +2686,7 @@ func (r ReactionTypeCustomEmoji) Validate() error {
 		err = append(err, fmt.Errorf("custom_emoji_id parameter can't be empty"))
 	}
 	if r.Type != "custom_emoji" {
-		err = append(err, fmt.Errorf("type must be \"custom_emoji\""))
+		err = append(err, fmt.Errorf("type must be 'custom_emoji'"))
 	}
 	if len(err) > 0 {
 		return err
@@ -2655,7 +2707,7 @@ func (r ReactionTypePaid) GetReactionType() string {
 func (r ReactionTypePaid) Validate() error {
 	var err gotely.ErrFailedValidation
 	if r.Type != "paid" {
-		err = append(err, fmt.Errorf("type must be\"paid\""))
+		err = append(err, fmt.Errorf("type must be'paid'"))
 	}
 	if len(err) > 0 {
 		return err
@@ -2721,14 +2773,14 @@ type BotCommand struct {
 	Description string `json:"description"`
 }
 
-var valid_command = regexp.MustCompile(`^[a-z0-9_]+$`)
-
 func (b BotCommand) Validate() error {
 	var err gotely.ErrFailedValidation
 	if len(b.Command) < 1 || len(b.Command) > 32 {
 		err = append(err, fmt.Errorf("command parameter must be between 1 and 32 characters"))
 	}
-	if !valid_command.MatchString(b.Command) {
+	if strings.IndexFunc(b.Command, func(r rune) bool {
+		return !(r == '_' || ('a' <= r && r <= 'z') || ('0' <= r && r <= '9'))
+	}) != -1 {
 		err = append(err, fmt.Errorf("command parameter can contain only lowercase English letters, digits and underscores"))
 	}
 	if len(b.Description) < 1 || len(b.Description) > 256 {
@@ -2773,7 +2825,7 @@ func (b BotCommandScopeDefault) GetBotCommandScopeType() string {
 func (b BotCommandScopeDefault) Validate() error {
 	var err gotely.ErrFailedValidation
 	if b.Type != "default" {
-		err = append(err, fmt.Errorf("type must be \"default\""))
+		err = append(err, fmt.Errorf("type must be 'default'"))
 	}
 	if len(err) > 0 {
 		return err
@@ -2794,7 +2846,7 @@ func (b BotCommandScopeAllPrivateChats) GetBotCommandScopeType() string {
 func (b BotCommandScopeAllPrivateChats) Validate() error {
 	var err gotely.ErrFailedValidation
 	if b.Type != "all_private_chats" {
-		err = append(err, fmt.Errorf("type must be \"all_private_chats\""))
+		err = append(err, fmt.Errorf("type must be 'all_private_chats'"))
 	}
 	if len(err) > 0 {
 		return err
@@ -2815,7 +2867,7 @@ func (b BotCommandScopeAllGroupChats) GetBotCommandScopeType() string {
 func (b BotCommandScopeAllGroupChats) Validate() error {
 	var err gotely.ErrFailedValidation
 	if b.Type != "all_group_chats" {
-		err = append(err, fmt.Errorf("type must be \"all_group_chats\""))
+		err = append(err, fmt.Errorf("type must be 'all_group_chats'"))
 	}
 	if len(err) > 0 {
 		return err
@@ -2836,7 +2888,7 @@ func (b BotCommandScopeAllChatAdministrators) GetBotCommandScopeType() string {
 func (b BotCommandScopeAllChatAdministrators) Validate() error {
 	var err gotely.ErrFailedValidation
 	if b.Type != "all_chat_administrators" {
-		err = append(err, fmt.Errorf("type must be \"all_chat_administrators\""))
+		err = append(err, fmt.Errorf("type must be 'all_chat_administrators'"))
 	}
 	if len(err) > 0 {
 		return err
@@ -2859,7 +2911,7 @@ func (b BotCommandScopeChat) GetBotCommandScopeType() string {
 func (b BotCommandScopeChat) Validate() error {
 	var err gotely.ErrFailedValidation
 	if b.Type != "chat" {
-		err = append(err, fmt.Errorf("type must be \"chat\""))
+		err = append(err, fmt.Errorf("type must be 'chat'"))
 	}
 	if strings.TrimSpace(b.ChatId) == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
@@ -2885,7 +2937,7 @@ func (b BotCommandScopeChatAdministrators) GetBotCommandScopeType() string {
 func (b BotCommandScopeChatAdministrators) Validate() error {
 	var err gotely.ErrFailedValidation
 	if b.Type != "chat_administrators" {
-		err = append(err, fmt.Errorf("type must be \"chat_administrators\""))
+		err = append(err, fmt.Errorf("type must be 'chat_administrators'"))
 	}
 	if strings.TrimSpace(b.ChatId) == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
@@ -2913,7 +2965,7 @@ func (b BotCommandScopeChatMember) GetBotCommandScopeType() string {
 func (b BotCommandScopeChatMember) Validate() error {
 	var err gotely.ErrFailedValidation
 	if b.Type != "chat_member" {
-		err = append(err, fmt.Errorf("type must be \"chat_member\""))
+		err = append(err, fmt.Errorf("type must be 'chat_member'"))
 	}
 	if strings.TrimSpace(b.ChatId) == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
@@ -2988,7 +3040,7 @@ type MenuButtonCommands struct {
 func (m MenuButtonCommands) Validate() error {
 	var err gotely.ErrFailedValidation
 	if m.Type != "commands" {
-		err = append(err, fmt.Errorf("type must be \"commands\""))
+		err = append(err, fmt.Errorf("type must be 'commands'"))
 	}
 	if len(err) > 0 {
 		return err
@@ -3020,7 +3072,7 @@ func (m MenuButtonWebApp) GetMenuButtonType() string {
 func (m MenuButtonWebApp) Validate() error {
 	var err gotely.ErrFailedValidation
 	if m.Type != "web_app" {
-		err = append(err, fmt.Errorf("type must be \"web_app\""))
+		err = append(err, fmt.Errorf("type must be 'web_app'"))
 	}
 	if strings.TrimSpace(m.Text) == "" {
 		err = append(err, fmt.Errorf("text parameter can't be empty"))
@@ -3043,7 +3095,7 @@ type MenuButtonDefault struct {
 func (m MenuButtonDefault) Validate() error {
 	var err gotely.ErrFailedValidation
 	if m.Type != "default" {
-		err = append(err, fmt.Errorf("type must be \"default\""))
+		err = append(err, fmt.Errorf("type must be 'default'"))
 	}
 	if len(err) > 0 {
 		return err

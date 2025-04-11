@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"mime/multipart"
-	"slices"
 
 	"github.com/bigelle/gotely"
 )
@@ -117,7 +116,12 @@ func (i InputSticker) Validate() error {
 	if len(*i.Keywords) < 1 || len(*i.Keywords) > 20 {
 		err = append(err, fmt.Errorf("keyword parameter must be between 1 and 20"))
 	}
-	if !slices.Contains([]string{"static", "animated", "video"}, i.Format) {
+	formats := map[string]struct{}{
+		"static":   {},
+		"animated": {},
+		"video":    {},
+	}
+	if _, ok := formats[i.Format]; !ok {
 		err = append(err, fmt.Errorf("format must be 'static', 'animated' or 'video'"))
 	}
 	if i.MaskPosition != nil {

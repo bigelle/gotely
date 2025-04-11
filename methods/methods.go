@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"strings"
 
 	"github.com/bigelle/gotely"
 	"github.com/bigelle/gotely/objects"
@@ -122,6 +121,14 @@ func (s SendMessage) Validate() error {
 	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
+	if s.Entities != nil {
+		for _, ent := range *s.Entities {
+			if er := ent.Validate(); er != nil {
+				err = append(err, er)
+				break
+			}
+		}
+	}
 	if s.LinkPreviewOptions != nil {
 		if er := s.LinkPreviewOptions.Validate(); er != nil {
 			err = append(err, er)
@@ -176,10 +183,10 @@ type ForwardMessage struct {
 
 func (f ForwardMessage) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(f.ChatId) == "" {
+	if f.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(f.FromChatId) == "" {
+	if f.FromChatId == "" {
 		err = append(err, fmt.Errorf("from_chat_id parameter can't be empty"))
 	}
 	if f.MessageId < 1 {
@@ -230,14 +237,24 @@ type ForwardMessages struct {
 
 func (f ForwardMessages) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(f.ChatId) == "" {
+	if f.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(f.FromChatId) == "" {
+	if f.FromChatId == "" {
 		err = append(err, fmt.Errorf("from_chat_id parameter can't be empty"))
 	}
-	if len(f.MessageIds) < 1 {
-		err = append(err, fmt.Errorf("message_ids parameter can't be empty"))
+	if len(f.MessageIds) < 1 || len(f.MessageIds) > 100 {
+		err = append(err, fmt.Errorf("message_ids parameter must contain 1-100 identifiers"))
+	}
+	for i, id := range f.MessageIds {
+		if f.MessageIds[i-1] >= id {
+			err = append(err, fmt.Errorf("message_ids must be specified in a strictly increasing order"))
+			break
+		}
+		if id < 1 {
+			err = append(err, fmt.Errorf("message_ids can't be 0 or negative"))
+			break
+		}
 	}
 	if len(err) > 0 {
 		return err
@@ -303,14 +320,22 @@ type CopyMessage struct {
 
 func (c CopyMessage) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(c.ChatId) == "" {
+	if c.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(c.FromChatId) == "" {
+	if c.FromChatId == "" {
 		err = append(err, fmt.Errorf("from_chat_id parameter can't be empty"))
 	}
 	if c.MessageId < 1 {
 		err = append(err, fmt.Errorf("message_ids parameter can't be empty"))
+	}
+	if c.CaptionEntities != nil {
+		for _, ent := range *c.CaptionEntities {
+			if er := ent.Validate(); er != nil {
+				err = append(err, er)
+				break
+			}
+		}
 	}
 	if c.ReplyParameters != nil {
 		if er := c.ReplyParameters.Validate(); er != nil {
@@ -366,14 +391,24 @@ type CopyMessages struct {
 
 func (c CopyMessages) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(c.ChatId) == "" {
+	if c.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(c.FromChatId) == "" {
+	if c.FromChatId == "" {
 		err = append(err, fmt.Errorf("from_chat_id parameter can't be empty"))
 	}
-	if len(c.MessageIds) < 1 {
-		err = append(err, fmt.Errorf("message_ids parameter can't be empty"))
+	if len(c.MessageIds) < 1 || len(c.MessageIds) > 100 {
+		err = append(err, fmt.Errorf("message_ids parameter must contain 1-100 identifiers"))
+	}
+	for i, id := range c.MessageIds {
+		if c.MessageIds[i-1] >= id {
+			err = append(err, fmt.Errorf("message_ids must be specified in a strictly increasing order"))
+			break
+		}
+		if id < 1 {
+			err = append(err, fmt.Errorf("message_ids can't be 0 or negative"))
+			break
+		}
 	}
 	if len(err) > 0 {
 		return err
@@ -443,11 +478,19 @@ type SendPhoto struct {
 
 func (s SendPhoto) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if er := s.Photo.Validate(); er != nil {
 		err = append(err, er)
+	}
+	if s.CaptionEntities != nil {
+		for _, ent := range *s.CaptionEntities {
+			if er := ent.Validate(); er != nil {
+				err = append(err, er)
+				break
+			}
+		}
 	}
 	if s.ReplyParameters != nil {
 		if er := s.ReplyParameters.Validate(); er != nil {
@@ -630,11 +673,24 @@ type SendAudio struct {
 
 func (s SendAudio) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if er := s.Audio.Validate(); er != nil {
 		err = append(err, er)
+	}
+	if s.CaptionEntities != nil {
+		for _, ent := range *s.CaptionEntities {
+			if er := ent.Validate(); er != nil {
+				err = append(err, er)
+				break
+			}
+		}
+	}
+	if s.Thumbnail != nil {
+		if er := s.Thumbnail.Validate(); er != nil {
+			err = append(err, er)
+		}
 	}
 	if s.ReplyParameters != nil {
 		if er := s.ReplyParameters.Validate(); er != nil {
@@ -821,11 +877,24 @@ type SendDocument struct {
 
 func (s SendDocument) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if er := s.Document.Validate(); er != nil {
 		err = append(err, er)
+	}
+	if s.Thumbnail != nil {
+		if er := s.Thumbnail.Validate(); er != nil {
+			err = append(err, er)
+		}
+	}
+	if s.CaptionEntities != nil {
+		for _, ent := range *s.CaptionEntities {
+			if er := ent.Validate(); er != nil {
+				err = append(err, er)
+				break
+			}
+		}
 	}
 	if s.ReplyParameters != nil {
 		if er := s.ReplyParameters.Validate(); er != nil {
@@ -1169,9 +1238,17 @@ func (s SendVideo) Validate() error {
 			err = append(err, er)
 		}
 	}
-	if s.Caption != nil {
-		if len(*s.Caption) > 1024 {
-			err = append(err, fmt.Errorf("caption must not be longer than 1024 characters if specified"))
+	if s.Cover != nil {
+		if er := s.Cover.Validate(); er != nil {
+			err = append(err, er)
+		}
+	}
+	if s.CaptionEntities != nil {
+		for _, ent := range *s.CaptionEntities {
+			if er := ent.Validate(); er != nil {
+				err = append(err, er)
+				break
+			}
 		}
 	}
 	if s.ReplyParameters != nil {
@@ -1255,11 +1332,24 @@ func (s SendAnimation) Endpoint() string {
 
 func (s SendAnimation) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if er := s.Animation.Validate(); er != nil {
 		err = append(err, er)
+	}
+	if s.Thumbnail != nil {
+		if er := s.Thumbnail.Validate(); er != nil {
+			err = append(err, er)
+		}
+	}
+	if s.CaptionEntities != nil {
+		for _, ent := range *s.CaptionEntities {
+			if er := ent.Validate(); er != nil {
+				err = append(err, er)
+				break
+			}
+		}
 	}
 	if s.ReplyParameters != nil {
 		if er := s.ReplyParameters.Validate(); er != nil {
@@ -1444,11 +1534,19 @@ type SendVoice struct {
 
 func (s SendVoice) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if er := s.Voice.Validate(); er != nil {
 		err = append(err, er)
+	}
+	if s.CaptionEntities != nil {
+		for _, ent := range *s.CaptionEntities {
+			if er := ent.Validate(); er != nil {
+				err = append(err, er)
+				break
+			}
+		}
 	}
 	if s.ReplyParameters != nil {
 		if er := s.ReplyParameters.Validate(); er != nil {
@@ -1618,11 +1716,16 @@ func (s SendVideoNote) Endpoint() string {
 
 func (s SendVideoNote) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if er := s.VideoNote.Validate(); er != nil {
 		err = append(err, er)
+	}
+	if s.Thumbnail != nil {
+		if er := s.Thumbnail.Validate(); er != nil {
+			err = append(err, er)
+		}
 	}
 	if s.ReplyParameters != nil {
 		if er := s.ReplyParameters.Validate(); er != nil {
@@ -1776,7 +1879,7 @@ type SendPaidMedia struct {
 
 func (s SendPaidMedia) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if s.StarCount < 1 || s.StarCount > 2500 {
@@ -1791,6 +1894,14 @@ func (s SendPaidMedia) Validate() error {
 	for _, m := range s.Media {
 		if er := m.Validate(); er != nil {
 			err = append(err, er)
+		}
+	}
+	if s.CaptionEntities != nil {
+		for _, ent := range *s.CaptionEntities {
+			if er := ent.Validate(); er != nil {
+				err = append(err, er)
+				break
+			}
 		}
 	}
 	if s.ReplyParameters != nil {
@@ -1945,7 +2056,7 @@ func (s SendMediaGroup) Endpoint() string {
 
 func (s SendMediaGroup) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(s.Media) < 1 {
@@ -2097,7 +2208,7 @@ func (s SendLocation) Endpoint() string {
 
 func (s SendLocation) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if s.Latitude == nil {
@@ -2105,6 +2216,26 @@ func (s SendLocation) Validate() error {
 	}
 	if s.Longitude == nil {
 		err = append(err, fmt.Errorf("longitude parameter can't be empty"))
+	}
+	if s.HorizontalAccuracy != nil {
+		if *s.HorizontalAccuracy < 0 || *s.HorizontalAccuracy > 1500 {
+			err = append(err, fmt.Errorf("horizontal_accuracy must be between 0 and 1500 if specified"))
+		}
+	}
+	if s.LivePeriod != nil {
+		if *s.LivePeriod != 0x7FFFFFFF && (*s.LivePeriod < 60 || *s.LivePeriod > 86400) {
+			err = append(err, fmt.Errorf("live_period must be between 60 and 86400 or 0x7FFFFFFF if specified"))
+		}
+	}
+	if s.Heading != nil {
+		if *s.Heading < 0 || *s.Heading > 360 {
+			err = append(err, fmt.Errorf("heading must be between 0 and 360 if specified"))
+		}
+	}
+	if s.ProximityAlertRadius != nil {
+		if *s.ProximityAlertRadius < 0 || *s.ProximityAlertRadius > 100000 {
+			err = append(err, fmt.Errorf("proximity_alert_radius must be between 0 and 100000 if specified"))
+		}
 	}
 	if s.ReplyParameters != nil {
 		if er := s.ReplyParameters.Validate(); er != nil {
@@ -2174,7 +2305,7 @@ type SendVenue struct {
 
 func (s SendVenue) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if s.Latitude == nil {
@@ -2182,6 +2313,12 @@ func (s SendVenue) Validate() error {
 	}
 	if s.Longitude == nil {
 		err = append(err, fmt.Errorf("longitude parameter can't be empty"))
+	}
+	if s.Address == "" {
+		err = append(err, fmt.Errorf("address parameter can't be empty"))
+	}
+	if s.Title == "" {
+		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
 	if s.ReplyParameters != nil {
 		if er := s.ReplyParameters.Validate(); er != nil {
@@ -2245,13 +2382,13 @@ type SendContact struct {
 
 func (s SendContact) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(s.PhoneNumber) == "" {
+	if s.PhoneNumber == "" {
 		err = append(err, fmt.Errorf("phone_number parameter can't be empty"))
 	}
-	if strings.TrimSpace(s.FirstName) == "" {
+	if s.FirstName == "" {
 		err = append(err, fmt.Errorf("first_name parameter can't be empty"))
 	}
 	if s.ReplyParameters != nil {
@@ -2343,10 +2480,10 @@ type SendPoll struct {
 
 func (s SendPoll) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(s.Question) == "" {
+	if s.Question == "" {
 		err = append(err, fmt.Errorf("question parameter can't be empty"))
 	}
 	for _, opt := range s.Options {
@@ -2419,11 +2556,22 @@ type SendDice struct {
 
 func (s SendDice) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(s.Emoji) == "" {
+	if s.Emoji == "" {
 		err = append(err, fmt.Errorf("emoji parameter can't be empty"))
+	}
+	valid_emojis := map[string]struct{}{
+		"🎲": {},
+		"🎯": {},
+		"🏀": {},
+		"⚽": {},
+		"🎳": {},
+		"🎰": {},
+	}
+	if _, ok := valid_emojis[s.Emoji]; !ok {
+		err = append(err, fmt.Errorf("unsupported emoji: %s", s.Emoji))
 	}
 	if s.ReplyParameters != nil {
 		if er := s.ReplyParameters.Validate(); er != nil {
@@ -2462,24 +2610,24 @@ type SendChatAction struct {
 	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 	ChatId string `json:"chat_id"`
 	// REQUIRED:
-	// Unique identifier for the target message thread; for supergroups only
-	Action string `json:"action"`
-
-	// Unique identifier of the business connection on behalf of which the action will be sent
-	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
 	//Type of action to broadcast. Choose one, depending on what the user is about to receive: 'typing' for text messages,
 	//'upload_photo' for photos, 'record_video' or 'upload_video' for videos, 'record_voice' or 'upload_voice' for voice notes,
 	//'upload_document' for general files, 'choose_sticker' for stickers, 'find_location' for location data,
 	//'record_video_note' or 'upload_video_note' for video notes.
+	Action string `json:"action"`
+
+	// Unique identifier of the business connection on behalf of which the action will be sent
+	BusinessConnectionId *string `json:"business_connection_id,omitempty"`
+	// Unique identifier for the target message thread; for supergroups only
 	MessageThreadId *string `json:"message_thread_id,omitempty"`
 }
 
 func (s SendChatAction) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(s.Action) == "" {
+	if s.Action == "" {
 		err = append(err, fmt.Errorf("action parameter can't be empty"))
 	}
 	allowed := map[string]struct{}{
@@ -2540,7 +2688,7 @@ type SetMessageReaction struct {
 
 func (s SetMessageReaction) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if s.MessageId < 1 {
@@ -2549,6 +2697,7 @@ func (s SetMessageReaction) Validate() error {
 	for _, r := range *s.Reaction {
 		if er := r.Validate(); er != nil {
 			err = append(err, er)
+			break
 		}
 	}
 	if len(err) > 0 {
@@ -2664,7 +2813,7 @@ type GetFile struct {
 
 func (g GetFile) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(g.FileId) == "" {
+	if g.FileId == "" {
 		err = append(err, fmt.Errorf("file_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -2709,7 +2858,7 @@ type BanChatMember struct {
 
 func (b BanChatMember) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(b.ChatId) == "" {
+	if b.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if b.UserId < 1 {
@@ -2753,7 +2902,7 @@ type UnbanChatMember struct {
 
 func (b UnbanChatMember) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(b.ChatId) == "" {
+	if b.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if b.UserId < 1 {
@@ -2804,7 +2953,7 @@ type RestrictChatMember struct {
 
 func (r RestrictChatMember) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(r.ChatId) == "" {
+	if r.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if r.UserId < 1 {
@@ -2878,7 +3027,7 @@ type PromoteChatMember struct {
 
 func (p PromoteChatMember) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if p.UserId < 1 {
@@ -2918,7 +3067,7 @@ type SetChatAdministratorCustomTitle struct {
 
 func (s SetChatAdministratorCustomTitle) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if s.UserId < 1 {
@@ -2933,6 +3082,7 @@ func (s SetChatAdministratorCustomTitle) Validate() error {
 			(r >= 0x1F680 && r <= 0x1F6FF) || // Transport and Map Symbols
 			(r >= 0x1F700 && r <= 0x1F77F) { // Alchemical Symbols
 			err = append(err, fmt.Errorf("invalid custom_title parameter: emojis are not allowed"))
+			break
 		}
 	}
 	if len(err) > 0 {
@@ -2968,7 +3118,7 @@ type BanChatSenderChat struct {
 
 func (b BanChatSenderChat) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(b.ChatId) == "" {
+	if b.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if b.SenderChatId < 1 {
@@ -3006,7 +3156,7 @@ type UnbanChatSenderChat struct {
 
 func (b UnbanChatSenderChat) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(b.ChatId) == "" {
+	if b.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if b.SenderChatId < 1 {
@@ -3051,7 +3201,7 @@ type SetChatPermissions struct {
 
 func (s SetChatPermissions) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3087,7 +3237,7 @@ type ExportChatInviteLink struct {
 
 func (e ExportChatInviteLink) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3129,7 +3279,7 @@ type CreateInviteLink struct {
 
 func (c CreateInviteLink) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(c.ChatId) == "" {
+	if c.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if c.Name != nil {
@@ -3183,7 +3333,7 @@ type EditChatInviteLink struct {
 
 func (c EditChatInviteLink) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(c.ChatId) == "" {
+	if c.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if c.Name != nil {
@@ -3235,7 +3385,7 @@ type CreateChatSubscriptionInviteLink struct {
 
 func (c CreateChatSubscriptionInviteLink) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(c.ChatId) == "" {
+	if c.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if c.SubscriptionPeriod != 2592000 {
@@ -3284,10 +3434,10 @@ type EditChatSubscriptionInviteLink struct {
 
 func (c EditChatSubscriptionInviteLink) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(c.ChatId) == "" {
+	if c.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(c.InviteLink) == "" {
+	if c.InviteLink == "" {
 		err = append(err, fmt.Errorf("invite_link parameter can't be empty"))
 	}
 	if c.Name != nil {
@@ -3328,10 +3478,10 @@ type RevokeInviteLink struct {
 
 func (c RevokeInviteLink) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(c.ChatId) == "" {
+	if c.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(c.InviteLink) == "" {
+	if c.InviteLink == "" {
 		err = append(err, fmt.Errorf("invite_link parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3366,7 +3516,7 @@ type ApproveChatJoinRequest struct {
 
 func (s ApproveChatJoinRequest) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if s.UserId < 1 {
@@ -3404,7 +3554,7 @@ type DeclineChatJoinRequest struct {
 
 func (s DeclineChatJoinRequest) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if s.UserId < 1 {
@@ -3444,7 +3594,7 @@ type SetChatPhoto struct {
 
 func (s SetChatPhoto) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if er := s.Photo.Validate(); er != nil {
@@ -3501,7 +3651,7 @@ type DeleteChatPhoto struct {
 
 func (d DeleteChatPhoto) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(d.ChatId) == "" {
+	if d.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3536,7 +3686,7 @@ type SetChatTitle struct {
 
 func (s SetChatTitle) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(s.Title) < 1 || len(s.Title) > 128 {
@@ -3574,7 +3724,7 @@ type SetChatDescription struct {
 
 func (s SetChatDescription) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.ChatId) == "" {
+	if s.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(s.Description) > 255 {
@@ -3619,7 +3769,7 @@ type PinChatMessage struct {
 
 func (p PinChatMessage) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if p.MessageId < 1 {
@@ -3661,7 +3811,7 @@ type UnpinChatMessage struct {
 
 func (p UnpinChatMessage) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if p.MessageId != nil {
@@ -3711,7 +3861,7 @@ func (s UnpinAllChatMessages) ContentType() string {
 
 func (p UnpinAllChatMessages) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3730,7 +3880,7 @@ type LeaveChat struct {
 
 func (p LeaveChat) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3761,7 +3911,7 @@ type GetChat struct {
 
 func (p GetChat) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3792,7 +3942,7 @@ type GetChatAdministrators struct {
 
 func (p GetChatAdministrators) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3823,7 +3973,7 @@ type GetChatMemberCount struct {
 
 func (p GetChatMemberCount) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3858,7 +4008,7 @@ type GetChatMember struct {
 
 func (p GetChatMember) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if p.UserId < 1 {
@@ -3897,10 +4047,10 @@ type SetChatStickerSet struct {
 
 func (p SetChatStickerSet) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(p.StickerSetName) == "" {
+	if p.StickerSetName == "" {
 		err = append(err, fmt.Errorf("sticker_set_name parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3933,7 +4083,7 @@ type DeleteChatStickerSet struct {
 
 func (p DeleteChatStickerSet) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(p.ChatId) == "" {
+	if p.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -3994,7 +4144,7 @@ type CreateForumTopic struct {
 
 func (c CreateForumTopic) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(c.ChatId) == "" {
+	if c.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(c.Name) < 1 || len(c.Name) > 128 {
@@ -4053,10 +4203,10 @@ type EditForumTopic struct {
 
 func (e EditForumTopic) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(e.MessageThreadId) == "" {
+	if e.MessageThreadId == "" {
 		err = append(err, fmt.Errorf("message_thread_id parameter can't be empty"))
 	}
 	if e.Name != nil {
@@ -4096,10 +4246,10 @@ type CloseForumTopic struct {
 
 func (e CloseForumTopic) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(e.MessageThreadId) == "" {
+	if e.MessageThreadId == "" {
 		err = append(err, fmt.Errorf("message_thread_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4135,10 +4285,10 @@ type ReopenForumTopic struct {
 
 func (e ReopenForumTopic) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(e.MessageThreadId) == "" {
+	if e.MessageThreadId == "" {
 		err = append(err, fmt.Errorf("message_thread_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4173,10 +4323,10 @@ type DeleteForumTopic struct {
 
 func (e DeleteForumTopic) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(e.MessageThreadId) == "" {
+	if e.MessageThreadId == "" {
 		err = append(err, fmt.Errorf("message_thread_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4212,10 +4362,10 @@ type UnpinAllForumTopicMessages struct {
 
 func (e UnpinAllForumTopicMessages) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(e.MessageThreadId) == "" {
+	if e.MessageThreadId == "" {
 		err = append(err, fmt.Errorf("message_thread_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4250,10 +4400,10 @@ type EditGeneralForumTopic struct {
 
 func (e EditGeneralForumTopic) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
-	if strings.TrimSpace(e.Name) == "" {
+	if e.Name == "" {
 		err = append(err, fmt.Errorf("name parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4286,7 +4436,7 @@ type CloseGeneralForumTopic struct {
 
 func (e CloseGeneralForumTopic) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4319,7 +4469,7 @@ type ReopenGeneralForumTopic struct {
 
 func (e ReopenGeneralForumTopic) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4352,7 +4502,7 @@ type HideGeneralForumTopic struct {
 
 func (e HideGeneralForumTopic) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4384,7 +4534,7 @@ type UnhideGeneralForumTopic struct {
 
 func (e UnhideGeneralForumTopic) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4417,7 +4567,7 @@ type UnpinAllGeneralForumTopicMessages struct {
 
 func (e UnpinAllGeneralForumTopicMessages) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(e.ChatId) == "" {
+	if e.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4467,7 +4617,7 @@ type AnswerCallbackQuery struct {
 
 func (a AnswerCallbackQuery) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(a.CallbackQueryId) == "" {
+	if a.CallbackQueryId == "" {
 		err = append(err, fmt.Errorf("callback_query_id parameter can't be empty"))
 	}
 	if a.Text != nil {
@@ -4507,7 +4657,7 @@ type GetUserChatBoosts struct {
 
 func (g GetUserChatBoosts) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(g.ChatId) == "" {
+	if g.ChatId == "" {
 		err = append(err, fmt.Errorf("chat_id parameter can't be empty"))
 	}
 	if g.UserId < 1 {
@@ -4541,7 +4691,7 @@ type GetBusinessConnection struct {
 
 func (g GetBusinessConnection) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(g.BusinessConnectionId) == "" {
+	if g.BusinessConnectionId == "" {
 		err = append(err, fmt.Errorf("business_connection_id parameter can't be empty"))
 	}
 	if len(err) > 0 {
@@ -4858,7 +5008,7 @@ type SetChatMenuButton struct {
 func (s SetChatMenuButton) Validate() error {
 	var err gotely.ErrFailedValidation
 	if s.ChatId != nil {
-		if strings.TrimSpace(*s.ChatId) == "" {
+		if *s.ChatId == "" {
 			err = append(err, fmt.Errorf("chat_id parameter can't be empty if specified"))
 		}
 	}

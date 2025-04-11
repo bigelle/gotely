@@ -41,7 +41,7 @@ func (l *LongPollingBot) Start() {
 	}
 
 	l.logger.Info("initializing...")
-	l.chUpdate = make(chan objects.Update)
+	l.chUpdate = make(chan objects.Update, l.workingPool)
 	l.ctx, l.cancel = context.WithCancel(context.Background())
 
 	l.logger.Info("launching goroutines...")
@@ -199,7 +199,7 @@ func (l LongPollingBot) poll() {
 				&upds,
 				gotely.WithClient(l.Bot.Client()),
 				gotely.WithContext(l.ctx),
-				gotely.WithUrl(l.Bot.ApiUrl()),
+				gotely.WithUrl(l.Bot.ApiURLTemplate()),
 			)
 			if err != nil {
 				l.logger.Error("error while requesting for new updates;",

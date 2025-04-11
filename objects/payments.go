@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/bigelle/gotely"
 )
@@ -23,7 +22,7 @@ type LabeledPrice struct {
 
 func (l LabeledPrice) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(l.Label) == "" {
+	if l.Label == "" {
 		err = append(err, fmt.Errorf("label parameter can't be empty"))
 	}
 	if l.Amount < 0 {
@@ -92,10 +91,10 @@ type ShippingOption struct {
 
 func (s ShippingOption) Validate() error {
 	var err gotely.ErrFailedValidation
-	if strings.TrimSpace(s.Id) == "" {
+	if s.Id == "" {
 		err = append(err, fmt.Errorf("id parameter can't be empty"))
 	}
-	if strings.TrimSpace(s.Title) == "" {
+	if s.Title == "" {
 		err = append(err, fmt.Errorf("title parameter can't be empty"))
 	}
 	for _, price := range s.Prices {
