@@ -1,5 +1,6 @@
 # Gotely
 Gotely is a Go module that provides a convenient way to interact with the Telegram Bot API, allowing you to set up a Long Polling bot or a Webhook server.
+Currently supports **Telegram Bot API version 8.3.**
 
 ---
 
@@ -14,17 +15,6 @@ go get -u github.com/bigelle/gotely@latest
 ## Dependencies
 
 Nope.
-
----
-
-## Last Changes in v1.1.0
-
-### Telegram Bot API Version 8.3
-### Added:
-- documentation for every package
-### Changes:
-- quick refactor: moving api/objects and api/methods to the root directory
-- swapped token and destination in SendRequest and SendRequestWith
 
 --- 
 
