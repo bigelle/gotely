@@ -199,7 +199,7 @@ func (l LongPollingBot) poll() {
 				&upds,
 				gotely.WithClient(l.Bot.Client()),
 				gotely.WithContext(l.ctx),
-				gotely.WithUrl(l.Bot.ApiUrl()),
+				gotely.WithUrl(l.Bot.ApiURLTemplate()),
 			)
 			if err != nil {
 				l.logger.Error("error while requesting for new updates;",
