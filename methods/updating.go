@@ -590,3 +590,344 @@ func (s DeleteMessages) Reader() io.Reader {
 func (s DeleteMessages) ContentType() string {
 	return "application/json"
 }
+
+// Sends a gift to the given user or channel chat.
+// The gift can't be converted to Telegram Stars by the receiver.
+// Returns True on success.
+type SendGift struct {
+	// REQUIRED:
+	// Identifier of the gift
+	GiftId string `json:"gift_id"`
+
+	// Text that will be shown along with the gift; 0-128 characters
+	Text *string `json:"text"`
+	// Required if chat_id is not specified. Unique identifier of the target user who will receive the gift.
+	UserId *int `json:"user_id"`
+	// Required if user_id is not specified.
+	// Unique identifier for the chat or username of the channel (in the format @channelusername) that will receive the gift.
+	ChatId *string `json:"chat_id,omitempty,"`
+	// Pass True to pay for the gift upgrade from the bot's balance,
+	// thereby making the upgrade free for the receiver
+	PayForUpgrade *bool `json:"pay_for_upgrade,omitempty"`
+	// Mode for parsing entities in the text. See formatting options for more details.
+	// Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored.
+	TextParseMode *string `json:"text_parse_mode,omitempty,"`
+	// A JSON-serialized list of special entities that appear in the gift text.
+	// It can be specified instead of text_parse_mode.
+	// Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored.
+	TextEntities *[]objects.MessageEntity `json:"text_entities,omitempty,"`
+}
+
+func (s SendGift) Validate() error {
+	var err gotely.ErrFailedValidation
+	if s.UserId != nil {
+		if *s.UserId < 1 {
+			err = append(err, fmt.Errorf("user_id parameter can't be empty"))
+		}
+	}
+	if s.ChatId != nil {
+		if *s.ChatId == "" {
+			err = append(err, fmt.Errorf("user_id parameter can't be empty"))
+		}
+	}
+	if s.GiftId == "" {
+		err = append(err, fmt.Errorf("gift_id parameter can't be empty"))
+	}
+	if s.Text != nil {
+		if len(*s.Text) > 255 {
+			err = append(err, fmt.Errorf("text parameter must not be longer than 255 characters"))
+		}
+	}
+	if s.TextParseMode != nil && s.TextEntities != nil {
+		err = append(err, fmt.Errorf("parse_mode can't be used if entities are provided"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s SendGift) Endpoint() string {
+	return "sendGift"
+}
+
+func (s SendGift) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s SendGift) ContentType() string {
+	return "application/json"
+}
+
+// Verifies a user on behalf of the organization which is represented by the bot.
+// Returns True on success.
+type VerifyUser struct {
+	// REQUIRED:
+	// Unique identifier of the target user
+	UserId int `json:"user_id"`
+	// Custom description for the verification; 0-70 characters.
+	// Must be empty if the organization isn't allowed to provide a custom verification description.
+	CustomDescription *string `json:"custom_description,omitempty"`
+}
+
+func (v VerifyUser) Validate() error {
+	var err gotely.ErrFailedValidation
+	if v.UserId <= 0 {
+		err = append(err, fmt.Errorf("user_id can't be empty or negative"))
+	}
+	if v.CustomDescription != nil {
+		if len(*v.CustomDescription) > 70 {
+			err = append(err, fmt.Errorf("custom_description must be between 0 and 70 characters"))
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s VerifyUser) Endpoint() string {
+	return "verifyUser"
+}
+
+func (s VerifyUser) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s VerifyUser) ContentType() string {
+	return "application/json"
+}
+
+// Verifies a chat on behalf of the organization which is represented by the bot.
+// Returns True on success.
+type VerifyChat struct {
+	// REQUIRED:
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+
+	// Custom description for the verification; 0-70 characters.
+	// Must be empty if the organization isn't allowed to provide a custom verification description.
+	CustomDescription *string `json:"custom_description,omitempty"`
+}
+
+func (v VerifyChat) Validate() error {
+	var err gotely.ErrFailedValidation
+	if v.ChatId == "" {
+		err = append(err, fmt.Errorf("user_id can't be empty or negative"))
+	}
+	if v.CustomDescription != nil {
+		if len(*v.CustomDescription) > 70 {
+			err = append(err, fmt.Errorf("custom_description must be between 0 and 70 characters"))
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s VerifyChat) Endpoint() string {
+	return "verifyChat"
+}
+
+func (s VerifyChat) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s VerifyChat) ContentType() string {
+	return "application/json"
+}
+
+// Removes verification from a user who is currently verified on behalf of the organization represented by the bot.
+// Returns True on success.
+type RemoveUserVerification struct {
+	// REQUIRED:
+	// Unique identifier of the target user
+	UserId int `json:"user_id"`
+}
+
+func (r RemoveUserVerification) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.UserId <= 0 {
+		err = append(err, fmt.Errorf("user_id can't be empty or negative"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s RemoveUserVerification) Endpoint() string {
+	return "removeUserVerification"
+}
+
+func (s RemoveUserVerification) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s RemoveUserVerification) ContentType() string {
+	return "application/json"
+}
+
+// Removes verification from a chat that is currently verified on behalf of the organization represented by the bot.
+// Returns True on success.
+type RemoveChatVerification struct {
+	// REQUIRED:
+	// Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+	ChatId string `json:"chat_id"`
+}
+
+func (r RemoveChatVerification) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.ChatId == "" {
+		err = append(err, fmt.Errorf("chat_id can't be empty or negative"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s RemoveChatVerification) Endpoint() string {
+	return "removeChatVerification"
+}
+
+func (s RemoveChatVerification) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s RemoveChatVerification) ContentType() string {
+	return "application/json"
+}
+
+// Marks incoming message as read on behalf of a business account.
+// Requires the can_read_messages business bot right.
+// Returns True on success.
+type ReadBusinessMessage struct {
+	// REQUIRED:
+	// Unique identifier of the business connection on behalf of which to read the message
+	BusinessConnectionId string `json:"business_connection_id"`
+	// REQUIRED:
+	// Unique identifier of the chat in which the message was received.
+	// The chat must have been active in the last 24 hours.
+	ChatId int `json:"chat_id"`
+	// REQUIRED:
+	// Unique identifier of the message to mark as read
+	MessageId int `json:"message_id"`
+}
+
+func (r ReadBusinessMessage) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if r.ChatId == 0 {
+		err = append(err, fmt.Errorf("chat_id can't be empty"))
+	}
+	if r.MessageId == 0 {
+		err = append(err, fmt.Errorf("message_id can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s ReadBusinessMessage) Endpoint() string {
+	return "readBusinessMessage"
+}
+
+func (s ReadBusinessMessage) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s ReadBusinessMessage) ContentType() string {
+	return "application/json"
+}
+
+// Delete messages on behalf of a business account.
+// Requires the can_delete_outgoing_messages business bot right to delete messages sent by the bot itself,
+// or the can_delete_all_messages business bot right to delete any message.
+// Returns True on success.
+type DeleteBusinessMessage struct {
+	// REQUIRED:
+	// Unique identifier of the business connection on behalf of which to delete the messages
+	BusinessConnectionId string `json:"business_connection_id"`
+	// REQUIRED:
+	// A JSON-serialized list of 1-100 identifiers of messages to delete.
+	// All messages must be from the same chat.
+	// See deleteMessage for limitations on which messages can be deleted
+	MessageIds []int `json:"message_ids"`
+}
+
+func (r DeleteBusinessMessage) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if len(r.MessageIds) < 1 || len(r.MessageIds) > 100 {
+		err = append(err, fmt.Errorf("message_ids accepts only 1-100 IDs"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s DeleteBusinessMessage) Endpoint() string {
+	return "deleteBusinessMessage"
+}
+
+func (s DeleteBusinessMessage) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s DeleteBusinessMessage) ContentType() string {
+	return "application/json"
+}
+
+// Changes the first and last name of a managed business account.
+// Requires the can_change_name business bot right.
+// Returns True on success.
+type SetBusinessAccountName struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+	// REQUIRED:
+	// The new value of the first name for the business account; 1-64 characters
+	FirstName string `json:"first_name"`
+
+	// The new value of the last name for the business account; 0-64 characters
+	LastName *string `json:"last_name,omitempty"`
+}
+
+func (r SetBusinessAccountName) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if len(r.FirstName) < 1 || len(r.FirstName) > 64 {
+		err = append(err, fmt.Errorf("first_name accepts only 1-64 characters"))
+	}
+	if r.LastName != nil {
+		if len(*r.LastName) < 1 || len(*r.LastName) > 64 {
+			err = append(err, fmt.Errorf("last_name accepts only 0-64 characters if specified"))
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s SetBusinessAccountName) Endpoint() string {
+	return "setBusinessAccountName"
+}
+
+func (s SetBusinessAccountName) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s SetBusinessAccountName) ContentType() string {
+	return "application/json"
+}
