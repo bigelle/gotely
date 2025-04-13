@@ -910,7 +910,7 @@ func (r SetBusinessAccountName) Validate() error {
 		err = append(err, fmt.Errorf("first_name accepts only 1-64 characters"))
 	}
 	if r.LastName != nil {
-		if len(*r.LastName) < 1 || len(*r.LastName) > 64 {
+		if len(*r.LastName) < 0 || len(*r.LastName) > 64 {
 			err = append(err, fmt.Errorf("last_name accepts only 0-64 characters if specified"))
 		}
 	}
@@ -929,5 +929,354 @@ func (s SetBusinessAccountName) Reader() io.Reader {
 }
 
 func (s SetBusinessAccountName) ContentType() string {
+	return "application/json"
+}
+
+// Changes the username of a managed business account.
+// Requires the can_change_username business bot right.
+// Returns True on success.
+type SetBusinessAccountUsername struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+
+	// The new value of the username for the business account; 0-32 characters
+	Username *string `json:"username,omitempty"`
+}
+
+func (r SetBusinessAccountUsername) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if r.Username != nil {
+		if len(*r.Username) < 0 || len(*r.Username) > 32 {
+			err = append(err, fmt.Errorf("username accepts only 0-32 characters if specified"))
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s SetBusinessAccountUsername) Endpoint() string {
+	return "setBusinessAccountUsername"
+}
+
+func (s SetBusinessAccountUsername) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s SetBusinessAccountUsername) ContentType() string {
+	return "application/json"
+}
+
+// Changes the bio of a managed business account.
+// Requires the can_change_bio business bot right.
+// Returns True on success.
+type SetBusinessAccountBio struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+
+	// The new value of the bio for the business account; 0-140 characters
+	Bio *string `json:"bio,omitempty"`
+}
+
+func (r SetBusinessAccountBio) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if r.Bio != nil {
+		if len(*r.Bio) < 0 || len(*r.Bio) > 140 {
+			err = append(err, fmt.Errorf("bio accepts only 0-140 characters if specified"))
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s SetBusinessAccountBio) Endpoint() string {
+	return "setBusinessAccountBi"
+}
+
+func (s SetBusinessAccountBio) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s SetBusinessAccountBio) ContentType() string {
+	return "application/json"
+}
+
+// Changes the profile photo of a managed business account.
+// Requires the can_edit_profile_photo business bot right.
+// Returns True on success.
+type SetBusinessAccountProfilePhoto struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+	// The new profile photo to set
+	Photo objects.InputProfilePhoto `json:"photo"`
+
+	// Pass True to set the public photo, which will be visible even if the main photo is hidden by the business account's privacy settings.
+	// An account can have only one public photo.
+	IsPublic *bool `json:"is_public,omitempty"`
+
+	contentType string
+}
+
+func (r SetBusinessAccountProfilePhoto) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if e := r.Photo.Validate(); e != nil {
+		err = append(err, e)
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s SetBusinessAccountProfilePhoto) Endpoint() string {
+	return "setBusinessAccountProfilePhoto"
+}
+
+func (s *SetBusinessAccountProfilePhoto) Reader() io.Reader {
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
+
+	go func() {
+		defer pw.Close()
+		defer mw.Close()
+
+		if err := mw.WriteField("business_connection_id", s.BusinessConnectionId); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if s.IsPublic != nil {
+			if err := mw.WriteField("is_public", fmt.Sprint(*s.IsPublic)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if err := s.Photo.WriteTo(mw); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+	}()
+
+	return pr
+}
+
+func (s SetBusinessAccountProfilePhoto) ContentType() string {
+	if s.contentType == "" {
+		return "multipart/form-data"
+	}
+	return s.contentType
+}
+
+// Removes the current profile photo of a managed business account.
+// Requires the can_edit_profile_photo business bot right.
+// Returns True on success.
+type RemoveBusinessAccountProfilePhoto struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+
+	// Pass True to remove the public photo, which is visible even if the main photo is hidden by the business account's privacy settings.
+	// After the main photo is removed, the previous profile photo (if present) becomes the main photo.
+	IsPublic *bool `json:"is_public,omitempty"`
+}
+
+func (r RemoveBusinessAccountProfilePhoto) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s RemoveBusinessAccountProfilePhoto) Endpoint() string {
+	return "removeBusinessAccountProfilePhoto"
+}
+
+func (s RemoveBusinessAccountProfilePhoto) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s RemoveBusinessAccountProfilePhoto) ContentType() string {
+	return "application/json"
+}
+
+// Changes the privacy settings pertaining to incoming gifts in a managed business account.
+// Requires the can_change_gift_settings business bot right.
+// Returns True on success.
+type SetBusinessAccountGiftSettings struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+	// REQUIRED:
+	// Pass True, if a button for sending a gift to the user or by the business account must always be shown in the input field
+	ShowGiftButton bool `json:"show_gift_button"`
+	// REQUIRED:
+	// Types of gifts accepted by the business account
+	AcceptedGiftTypes objects.AcceptedGiftTypes `json:"accepted_gift_types"`
+}
+
+func (r SetBusinessAccountGiftSettings) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s SetBusinessAccountGiftSettings) Endpoint() string {
+	return "setBusinessAccountGiftSettings"
+}
+
+func (s SetBusinessAccountGiftSettings) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s SetBusinessAccountGiftSettings) ContentType() string {
+	return "application/json"
+}
+
+// Returns the amount of Telegram Stars owned by a managed business account.
+// Requires the can_view_gifts_and_stars business bot right.
+// Returns [objects.StarAmount] on success.
+type GetBusinessAccountStarBalance struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+}
+
+func (r GetBusinessAccountStarBalance) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s GetBusinessAccountStarBalance) Endpoint() string {
+	return "getBusinessAccountStarBalance"
+}
+
+func (s GetBusinessAccountStarBalance) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s GetBusinessAccountStarBalance) ContentType() string {
+	return "application/json"
+}
+
+// Transfers Telegram Stars from the business account balance to the bot's balance.
+// Requires the can_transfer_stars business bot right.
+// Returns True on success.
+type TransferBusinessAccountStars struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+	// Number of Telegram Stars to transfer; 1-10000
+	StarCount int `json:"star_count"`
+}
+
+func (r TransferBusinessAccountStars) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if r.StarCount < 1 || r.StarCount > 10_000 {
+		err = append(err, fmt.Errorf("star_count must be between 1 and 10 000"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s TransferBusinessAccountStars) Endpoint() string {
+	return "transferBusinessAccountStar"
+}
+
+func (s TransferBusinessAccountStars) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s TransferBusinessAccountStars) ContentType() string {
+	return "application/json"
+}
+
+// Returns the gifts received and owned by a managed business account.
+// Requires the can_view_gifts_and_stars business bot right.
+// Returns [objects.OwnedGifts] on success.
+type GetBusinessAccountGifts struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+
+	// Pass True to exclude gifts that aren't saved to the account's profile page
+	ExcludeUnsaved *bool `json:"exclude_unsaved,omitempty"`
+	// Pass True to exclude gifts that are saved to the account's profile page
+	ExcludeSaved *bool `json:"exclude_saved,omitempty"`
+	// Pass True to exclude gifts that can be purchased an unlimited number of times
+	ExcludeUnlimited *bool `json:"exclude_unlimited,omitempty"`
+	// Pass True to exclude gifts that can be purchased a limited number of times
+	ExcludeLimited *bool `json:"exclude_limited,omitempty"`
+	// Pass True to exclude unique gifts
+	ExcludeUnique *bool `json:"exclude_unique,omitempty"`
+	// Pass True to sort results by gift price instead of send date.
+	// Sorting is applied before pagination.
+	SortByPrice *bool `json:"sort_by_price,omitempty"`
+	// Offset of the first entry to return as received from the previous request;
+	// use empty string to get the first chunk of results
+	Offset *string `json:"offset,omitempty"`
+	// The maximum number of gifts to be returned; 1-100. Defaults to 100
+	Limit *int `json:"limit,omitempty"`
+}
+
+func (r GetBusinessAccountGifts) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if r.Limit != nil {
+		if *r.Limit < 1 || *r.Limit > 100 {
+			err = append(err, fmt.Errorf("limit must be between 1 and 100"))
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s GetBusinessAccountGifts) Endpoint() string {
+	return "getBusinessAccountGifts"
+}
+
+func (s GetBusinessAccountGifts) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s GetBusinessAccountGifts) ContentType() string {
 	return "application/json"
 }

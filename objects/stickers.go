@@ -166,25 +166,3 @@ func (i InputSticker) WriteTo(mw *multipart.Writer) error {
 	}
 	return nil
 }
-
-// This object represents a gift that can be sent by the bot.
-type Gift struct {
-	// Unique identifier of the gift
-	Id string `json:"id"`
-	// The sticker that represents the gift
-	Sticker Sticker `json:"sticker"`
-	// The number of Telegram Stars that must be paid to send the sticker
-	StarCount int `json:"star_count"`
-	// Optional. The number of Telegram Stars that must be paid to upgrade the gift to a unique one
-	UpgradeStarCount *int `json:"upgrade_star_count,omitempty"`
-	// Optional. The total number of the gifts of this type that can be sent; for limited gifts only
-	TotalCount *int `json:"total_count,omitempty,"`
-	// Optional. The number of remaining gifts of this type that can be sent; for limited gifts only
-	RemainingCount *int `json:"remaining_count,omitempty,"`
-}
-
-// This object represent a list of gifts.
-type Gifts struct {
-	// The list of gifts
-	Gifts []Gift
-}

@@ -2765,6 +2765,158 @@ type ForumTopic struct {
 	IconCustomEmojiId string `json:"icon_custom_emoji_id"`
 }
 
+// This object represents a gift that can be sent by the bot.
+type Gift struct {
+	// Unique identifier of the gift
+	Id string `json:"id"`
+	// The sticker that represents the gift
+	Sticker Sticker `json:"sticker"`
+	// The number of Telegram Stars that must be paid to send the sticker
+	StarCount int `json:"star_count"`
+	// Optional. The number of Telegram Stars that must be paid to upgrade the gift to a unique one
+	UpgradeStarCount *int `json:"upgrade_star_count,omitempty"`
+	// Optional. The total number of the gifts of this type that can be sent; for limited gifts only
+	TotalCount *int `json:"total_count,omitempty,"`
+	// Optional. The number of remaining gifts of this type that can be sent; for limited gifts only
+	RemainingCount *int `json:"remaining_count,omitempty,"`
+}
+
+// This object represent a list of gifts.
+type Gifts struct {
+	// The list of gifts
+	Gifts []Gift `json:"gifts"`
+}
+
+type UniqueGift struct {
+	// TODO
+}
+
+// This object describes a gift received and owned by a user or a chat. Currently, it can be one of
+//
+//   - OwnedGiftRegular
+//   - OwnedGiftUnique
+type OwnedGift struct {
+	// Type of the gift
+	Type    string `json:"type"`
+	Regular *OwnedGiftRegular
+	Unique  *OwnedGiftUnique
+}
+
+func (g *OwnedGift) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
+	var typ string
+	if err := gotely.DecodeExactField(br, "source", &typ); err != nil {
+		return err
+	}
+	r.Seek(0, io.SeekStart)
+	br.Reset(r)
+
+	switch typ {
+	case "regular":
+		var result OwnedGiftRegular
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		g.Regular = &result
+
+	case "unique":
+		var result OwnedGiftUnique
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		g.Unique = &result
+
+	default:
+		return fmt.Errorf("unknown owned gift type: %s", typ)
+	}
+	g.Type = typ
+	return nil
+}
+
+// Describes a regular gift owned by a user or a chat.
+type OwnedGiftRegular struct {
+	// Type of the gift, always “regular”
+	Type string `json:"type"`
+	// Information about the regular gift
+	Gift Gift `json:"gift"`
+	// Date the gift was sent in Unix time
+	SendDate int `json:"send_date"`
+	// Optional. Unique identifier of the gift for the bot;
+	// for gifts received on behalf of business accounts only
+	OwnedGiftId *string `json:"owned_gift_id,omitempty"`
+	// Optional. Sender of the gift if it is a known user
+	SenderUser *User `json:"sender_user,omitempty"`
+	// Optional. Text of the message that was added to the gift
+	Text *string `json:"text,omitempty"`
+	// Optional. Special entities that appear in the text
+	Entities *[]MessageEntity `json:"entities,omitempty"`
+	// Optional. True, if the sender and gift text are shown only to the gift receiver;
+	// otherwise, everyone will be able to see them
+	IsPrivate *bool `json:"is_private,omitempty"`
+	// Optional. True, if the gift is displayed on the account's profile page;
+	// for gifts received on behalf of business accounts only
+	IsSaved *bool `json:"is_saved,omitempty"`
+	// Optional. True, if the gift can be upgraded to a unique gift;
+	// for gifts received on behalf of business accounts only
+	CanBeUpgraded *bool `json:"can_be_upgraded,omitempty"`
+	// Optional. True, if the gift was refunded and isn't available anymore
+	WasRefunded *bool `json:"was_refunded,omitempty"`
+	// Optional. Number of Telegram Stars that can be claimed by the receiver instead of the gift;
+	// omitted if the gift cannot be converted to Telegram Stars
+	ConvertStarCount *int `json:"convert_star_count,omitempty"`
+	// Optional. Number of Telegram Stars that were paid by the sender for the ability to upgrade the gift
+	PrepaidUpgradeStarCount *int `json:"prepaid_upgrade_star_count,omitempty"`
+}
+
+// Describes a unique gift received and owned by a user or a chat.
+type OwnedGiftUnique struct {
+	// Type of the gift, always “unique”
+	Type string `json:"type"`
+	// Information about the unique gift
+	Gift UniqueGift `json:"gift"`
+	// Date the gift was sent in Unix time
+	SenderDate int `json:"sender_date"`
+	// Optional. Unique identifier of the received gift for the bot;
+	// for gifts received on behalf of business accounts only
+	OwnedGiftId *string `json:"owned_gift_id,omitempty"`
+	// Optional. Sender of the gift if it is a known user
+	SenderUser *User `json:"sender_user,omitempty"`
+	// Optional. True, if the gift is displayed on the account's profile page;
+	// for gifts received on behalf of business accounts only
+	IsSaved *bool `json:"is_saved,omitempty"`
+	// Optional. True, if the gift can be transferred to another owner;
+	// for gifts received on behalf of business accounts only
+	CanBeTransferred *bool `json:"can_be_transferred,omitempty"`
+	// Optional. Number of Telegram Stars that must be paid to transfer the gift;
+	// omitted if the bot cannot transfer the gift
+	TransferStarCount *int `json:"transfer_star_count,omitempty"`
+}
+
+// Contains the list of gifts received and owned by a user or a chat.
+type OwnedGifts struct {
+	// The total number of gifts owned by the user or the chat
+	TotalCount int `json:"total_count"`
+	// The list of gifts
+	Gifts []OwnedGift `json:"gifts"`
+	// Optional. Offset for the next request. If empty, then there are no more results
+	NextOffset *string `json:"next_offset.omitempty"`
+}
+
+// Describes an amount of Telegram Stars.
+type StarAmount struct {
+	// Integer amount of Telegram Stars, rounded to 0; can be negative
+	Amount int `json:"amount"`
+	// Optional. The number of 1/1000000000 shares of Telegram Stars;
+	// from -999999999 to 999999999;
+	// can be negative if and only if amount is non-positive
+	NanostarAmount *int `json:"nanostar_amount,omitempty"`
+}
+
+type AcceptedGiftTypes struct {
+	// TODO
+}
+
 // This object represents a bot command.
 type BotCommand struct {
 	// Text of the command; 1-32 characters. Can contain only lowercase English letters, digits and underscores.
@@ -3115,7 +3267,8 @@ func (m MenuButtonDefault) GetMenuButtonType() string {
 //
 //   - [ChatBoostSourceGiveaway]
 type ChatBoostSource struct {
-	Source            string  `json:"source"`
+	Source string `json:"source"`
+	// FIXME custom unmarshaling
 	User              *User   `json:"user,omitempty"`
 	GiveawayMessageId *string `json:"giveaway_message_id,omitempty"`
 	PrizeStarCount    *int    `json:"prize_star_count,omitempty"`
@@ -4291,6 +4444,129 @@ func (i InputPaidMediaVideo) WriteTo(mw *multipart.Writer) error {
 			return err
 		}
 		if _, err := io.Copy(part, i.coverReader); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// This object describes a profile photo to set. Currently, it can be one of
+//
+//   - InputProfilePhotoStatic
+//   - InputProfilePhotoAnimated
+//
+// It's important to use SetPhoto method to ensure properly set fields.
+type InputProfilePhoto interface {
+	SetPhoto(photo string, r io.Reader)
+	WriteTo(mw *multipart.Writer) error
+	Validate() error
+}
+
+// A static profile photo in the .JPG format.
+type InputProfilePhotoStatic struct {
+	// The static profile photo.
+	// Profile photos can't be reused and can only be uploaded as a new file,
+	// so you can pass “attach://<file_attach_name>” if the photo was uploaded using multipart/form-data under <file_attach_name>.
+	// More information on Sending Files https://core.telegram.org/bots/api#sending-files
+	Photo string `json:"photo"`
+
+	photoName   string
+	photoReader io.Reader
+}
+
+func (p *InputProfilePhotoStatic) SetPhoto(photo string, r io.Reader) {
+	p.photoName = photo
+	p.photoReader = r
+	p.Photo = "attach://" + photo
+}
+
+func (p InputProfilePhotoStatic) Validate() error {
+	var err gotely.ErrFailedValidation
+	if p.Photo == "" {
+		err = append(err, fmt.Errorf("photo can't be empty"))
+	}
+	if p.photoReader == nil {
+		err = append(err, fmt.Errorf("can't use remote files, should upload a new one"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (p InputProfilePhotoStatic) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", "static"); err != nil {
+		return err
+	}
+	if err := mw.WriteField("photo", p.Photo); err != nil {
+		return err
+	}
+
+	if p.photoReader != nil {
+		part, err := mw.CreateFormFile(p.photoName, p.photoName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, p.photoReader); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// A static profile photo in the .JPG format.
+type InputProfilePhotoAnimated struct {
+	// The animated profile photo.
+	// Profile photos can't be reused and can only be uploaded as a new file,
+	// so you can pass “attach://<file_attach_name>” if the photo was uploaded using multipart/form-data under <file_attach_name>.
+	// More information on Sending Files https://core.telegram.org/bots/api#sending-files
+	Animation string `json:"animation"`
+	// Optional. Timestamp in seconds of the frame that will be used as the static profile photo. Defaults to 0.0.
+	MainFrameTimeStamp *float64 `json:"main_frame_time_stamp,omitempty"`
+
+	animationName   string
+	animationReader io.Reader
+}
+
+func (p *InputProfilePhotoAnimated) SetPhoto(photo string, r io.Reader) {
+	p.animationName = photo
+	p.animationReader = r
+	p.Animation = "attach://" + photo
+}
+
+func (p InputProfilePhotoAnimated) Validate() error {
+	var err gotely.ErrFailedValidation
+	if p.Animation == "" {
+		err = append(err, fmt.Errorf("animation can't be empty"))
+	}
+	if p.animationReader == nil {
+		err = append(err, fmt.Errorf("can't use remote files, should upload a new one"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (p InputProfilePhotoAnimated) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", "animated"); err != nil {
+		return err
+	}
+	if err := mw.WriteField("animation", p.Animation); err != nil {
+		return err
+	}
+	if p.MainFrameTimeStamp != nil {
+		if err := mw.WriteField("main_frame_timestamp", fmt.Sprint(p.MainFrameTimeStamp)); err != nil {
+			return err
+		}
+	}
+
+	if p.animationReader != nil {
+		part, err := mw.CreateFormFile(p.animationName, p.animationName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, p.animationReader); err != nil {
 			return err
 		}
 	}
