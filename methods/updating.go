@@ -663,6 +663,69 @@ func (s SendGift) ContentType() string {
 	return "application/json"
 }
 
+// Gifts a Telegram Premium subscription to the given user.
+// Returns True on success.
+type GiftPremiumSubscription struct {
+	// Unique identifier of the target user who will receive a Telegram Premium subscription
+	UserId int `json:"user_id"`
+	// Number of months the Telegram Premium subscription will be active for the user; must be one of 3, 6, or 12
+	MonthCount int `json:"month_count"`
+	// Number of Telegram Stars to pay for the Telegram Premium subscription;
+	// must be 1000 for 3 months, 1500 for 6 months, and 2500 for 12 months
+	StarCount int `json:"star_count"`
+	// Text that will be shown along with the service message about the subscription; 0-128 characters
+	Text *string `json:"text,omitempty"`
+	// Mode for parsing entities in the text. See formatting options for more details.
+	// Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored.
+	TextParseMode *string `json:"text_parse_mode,omitempty"`
+	// A JSON-serialized list of special entities that appear in the gift text.
+	// It can be specified instead of text_parse_mode.
+	// Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored.
+	TextEntities *[]objects.MessageEntity `json:"text_entities,omitempty"`
+}
+
+func (g GiftPremiumSubscription) Validate() error {
+	var err gotely.ErrFailedValidation
+	if g.UserId == 0 {
+		err = append(err, fmt.Errorf("user_id can't be empty"))
+	}
+	if g.MonthCount != 3 && g.MonthCount != 6 && g.MonthCount != 12 {
+		err = append(err, fmt.Errorf("month_count must be one of 3, 6 or 12"))
+	}
+	if (g.MonthCount == 3 && g.StarCount != 1000) || (g.MonthCount == 6 && g.StarCount != 1500) || (g.MonthCount == 12 && g.StarCount != 2500) {
+		err = append(err, fmt.Errorf("star_count must be 1000 for 3 months, 1500 for 6 months, and 2500 for 12 months"))
+	}
+	if g.Text != nil {
+		if len(*g.Text) > 128 {
+			err = append(err, fmt.Errorf("text must be between 0 and 128 characters if specified"))
+		}
+	}
+	if g.TextEntities != nil {
+		for _, ent := range *g.TextEntities {
+			if e := ent.Validate(); e != nil {
+				err = append(err, e)
+				break
+			}
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (g GiftPremiumSubscription) Endpoint() string {
+	return "giftPremiumSubscription"
+}
+
+func (g GiftPremiumSubscription) Reader() io.Reader {
+	return gotely.EncodeJSON(g)
+}
+
+func (g GiftPremiumSubscription) ContentType() string {
+	return "application/json"
+}
+
 // Verifies a user on behalf of the organization which is represented by the bot.
 // Returns True on success.
 type VerifyUser struct {

@@ -384,6 +384,11 @@ func (t *TransactionPartner) UnmarshalJSON(data []byte) error {
 type TransactionPartnerUser struct {
 	// Type of the transaction partner, always “user”
 	Type string `json:"type"`
+	// Type of the transaction, currently one of “invoice_payment” for payments via invoices,
+	// “paid_media_payment” for payments for paid media, “gift_purchase” for gifts sent by the bot,
+	// “premium_purchase” for Telegram Premium subscriptions gifted by the bot,
+	// “business_account_transfer” for direct transfers from managed business accounts
+	TransactionType string `json:"transaction_type"`
 	// Information about the user
 	User User `json:"user"`
 	// Optional. Information about the affiliate that received a commission via this transaction
@@ -398,6 +403,9 @@ type TransactionPartnerUser struct {
 	PaidMediaPayload *string `json:"paid_media_payload,omitempty,"`
 	// Optional. The gift sent to the user by the bot
 	Gift *Gift `json:"gift,omitempty"`
+	// Optional. Number of months the gifted Telegram Premium subscription will be active for;
+	// for “premium_purchase” transactions only
+	PremiumSubscriptionPeriod *int `json:"premium_subscription_period"`
 }
 
 // Describes a transaction with a chat.

@@ -248,8 +248,8 @@ type ChatFullInfo struct {
 	PinnedMessage *Message `json:"pinned_message,omitempty,"`
 	// Optional. Default chat member permissions, for groups and supergroups
 	Permissions *ChatPermissions `json:"permissions,omitempty,"`
-	// Optional. True, if gifts can be sent to the chat
-	CanSendGift *bool `json:"can_send_gift,omitempty"`
+	// Information about types of gifts that are accepted by the chat or by the corresponding user for private chats
+	AcceptedGiftTypes AcceptedGiftTypes `json:"accepted_gift_types"`
 	// Optional. True, if paid media messages can be sent or forwarded to the channel chat. The field is available only for channel chats.
 	CanSendPaidMedia *bool `json:"can_send_paid_media,omitempty,"`
 	// Optional. For supergroups, the minimum allowed delay between consecutive messages sent by each unprivileged user; in seconds
@@ -341,6 +341,8 @@ type Message struct {
 	MediaGroupId *string `json:"media_group_id,omitempty"`
 	// Optional. Signature of the post author for messages in channels, or the custom title of an anonymous group administrator
 	AuthorSignature *string `json:"author_signature,omitempty"`
+	//Optional. The number of Telegram Stars that were paid by the sender of the message to send it
+	PaidStarCount *int `json:"paid_star_count,omitempty"`
 	// Optional. For text messages, the actual UTF-8 text of the message
 	Text *string `json:"text,omitempty"`
 	// Optional. For text messages, special entities like usernames, URLs, bot commands, etc. that appear in the text
@@ -437,6 +439,10 @@ type Message struct {
 	UsersShared *UsersShared `json:"users_shared,omitempty"`
 	// Optional. Service message: a chat was shared with the bot
 	ChatShared *ChatShared `json:"chat_shared,omitempty"`
+	// Optional. Service message: a regular gift was sent or received
+	Gift *GiftInfo `json:"gift,omitempty"`
+	// Optional. Service message: a unique gift was sent or received
+	UniqueGift *UniqueGiftInfo `json:"unique_gift,omitempty"`
 	// Optional. The domain name of the website on which the user has logged in.
 	// More about Telegram Login » https://core.telegram.org/widgets/login
 	ConnectedWebsite *string `json:"connected_website,omitempty"`
@@ -447,7 +453,6 @@ type Message struct {
 	PassportData *PassportData `json:"passport_data,omitempty"`
 	// Optional. Service message. A user in the chat triggered another user's proximity alert while sharing Live Location.
 	ProximityAlertTriggered *ProximityAlertTriggered `json:"proximity_alert_triggered,omitempty"`
-	ForwardFrom             *User                    `json:"forward_from,omitempty"`
 	// Optional. Service message: user boosted the chat
 	BoostAdded *ChatBoostAdded `json:"boost_added,omitempty"`
 	// Optional. Service message: chat background set
@@ -472,6 +477,8 @@ type Message struct {
 	GiveawayWinners *GiveawayWinners `json:"giveaway_winners,omitempty"`
 	// Optional. Service message: a giveaway without public winners was completed
 	GiveawayCompleted *GiveawayCompleted `json:"giveaway_completed,omitempty"`
+	//Optional. Service message: the price for paid messages has changed in the chat
+	PaidMessagePriceChanged *PaidMessagePriceChanged `json:"paid_message_price_changed,omitempty"`
 	// Optional. Service message: video chat scheduled
 	VideoChatScheduled *VideoChatScheduled `json:"video_chat_scheduled,omitempty"`
 	// Optional. Service message: video chat started
@@ -1574,6 +1581,12 @@ type VideoChatEnded struct {
 type VideoChatParticipantsInvited struct {
 	// New members that were invited to the video chat
 	Users []User `json:"users"`
+}
+
+// Describes a service message about a change in the price of paid messages within a chat.
+type PaidMessagePriceChanged struct {
+	//The new number of Telegram Stars that must be paid by non-administrator users of the supergroup chat for each sent message
+	PaidMessageStarCount int `json:"paid_message_star_count"`
 }
 
 // This object represents a service message about the creation of a scheduled giveaway.
@@ -2944,8 +2957,99 @@ type Gifts struct {
 	Gifts []Gift `json:"gifts"`
 }
 
+// This object describes the model of a unique gift.
+type UniqueGiftModel struct {
+	// Name of the model
+	Name string `json:"name"`
+	// The sticker that represents the unique gift
+	Sticker Sticker `json:"sticker"`
+	// The number of unique gifts that receive this model for every 1000 gifts upgraded
+	RarityPerMile int `json:"rarity_per_mile"`
+}
+
+// This object describes the symbol shown on the pattern of a unique gift.
+type UniqueGiftSymbol struct {
+	// Name of the model
+	Name string `json:"name"`
+	// The sticker that represents the unique gift
+	Sticker Sticker `json:"sticker"`
+	// The number of unique gifts that receive this model for every 1000 gifts upgraded
+	RarityPerMile int `json:"rarity_per_mile"`
+}
+
+// This object describes the colors of the backdrop of a unique gift.
+type UniqueGiftBackdropColors struct {
+	// The color in the center of the backdrop in RGB format
+	CenterColor int `json:"center_color"`
+	// The color on the edges of the backdrop in RGB format
+	EdgeColor int `json:"edge_color"`
+	// The color to be applied to the symbol in RGB format
+	SymbolColor int `json:"symbol_color"`
+	// The color for the text on the backdrop in RGB format
+	TextColor int `json:"text_color"`
+}
+
+// This object describes the backdrop of a unique gift.
+type UniqueGiftBackdrop struct {
+	// Name of the backdrop
+	Name string `json:"name"`
+	// Colors of the backdrop
+	Colors UniqueGiftBackdropColors `json:"colors"`
+	// The number of unique gifts that receive this backdrop for every 1000 gifts upgraded
+	RarityPerMile int `json:"rarity_per_mile"`
+}
+
+// This object describes a unique gift that was upgraded from a regular gift.
 type UniqueGift struct {
-	// TODO:
+	// Human-readable name of the regular gift from which this unique gift was upgraded
+	BaseName string `json:"base_name"`
+	// Unique name of the gift. This name can be used in https://t.me/nft/... links and story areas
+	Name string `json:"name"`
+	// Unique number of the upgraded gift among gifts upgraded from the same regular gift
+	Number int `json:"number"`
+	// Model of the gift
+	Model UniqueGiftModel `json:"model"`
+	// Symbol of the gift
+	Symbol UniqueGiftSymbol `json:"symbol"`
+	// Backdrop of the gift
+	Backdrop UniqueGiftBackdrop `json:"backdrop"`
+}
+
+// Describes a service message about a regular gift that was sent or received.
+type GiftInfo struct {
+	// Information about the gift
+	Gift Gift `json:"gift"`
+	// Optional. Unique identifier of the received gift for the bot;
+	// only present for gifts received on behalf of business accounts
+	OwnedGiftId *string `json:"owned_gift_id,omitempty"`
+	// Optional. Number of Telegram Stars that can be claimed by the receiver by converting the gift;
+	// omitted if conversion to Telegram Stars is impossible
+	ConvertStarCount *int `json:"convert_star_count,omitempty"`
+	// Optional. Number of Telegram Stars that were prepaid by the sender for the ability to upgrade the gift
+	PrepaidUpgradeStarCount *int `json:"prepaid_upgrade_star_count,omitempty"`
+	// Optional. True, if the gift can be upgraded to a unique gift
+	CanBeUpgraded *bool `json:"can_be_upgraded,omitempty"`
+	// Optional. Text of the message that was added to the gift
+	Text *string `json:"text,omitempty"`
+	// Optional. Special entities that appear in the text
+	Entities *[]MessageEntity `json:"entities,omitempty"`
+	// 	Optional. True, if the sender and gift text are shown only to the gift receiver;
+	// otherwise, everyone will be able to see them
+	IsPrivate *bool `json:"is_private,omitempty"`
+}
+
+// Describes a service message about a unique gift that was sent or received.
+type UniqueGiftInfo struct {
+	// Information about the gift
+	Gift UniqueGift `json:"gift"`
+	// Origin of the gift. Currently, either “upgrade” or “transfer”
+	Origin string `json:"origin"`
+	// Optional. Unique identifier of the received gift for the bot;
+	// only present for gifts received on behalf of business accounts
+	OwnedGiftId *string `json:"owned_gift_id,omitempty"`
+	// Optional. Number of Telegram Stars that must be paid to transfer the gift;
+	// omitted if the bot cannot transfer the gift
+	TransferStarCount *int `json:"transfer_star_count,omitempty"`
 }
 
 // This object describes a gift received and owned by a user or a chat. Currently, it can be one of
@@ -3070,8 +3174,16 @@ type StarAmount struct {
 	NanostarAmount *int `json:"nanostar_amount,omitempty"`
 }
 
+// This object describes the types of gifts that can be gifted to a user or a chat.
 type AcceptedGiftTypes struct {
-	// TODO:
+	// True, if unlimited regular gifts are accepted
+	UnlimitedGifts bool `json:"unlimited_gifts"`
+	// True, if limited regular gifts are accepted
+	LimitedGifts bool `json:"limited_gifts"`
+	// True, if unique gifts or gifts that can be upgraded to unique for free are accepted
+	UniqueGifts bool `json:"unique_gifts"`
+	// True, if a Telegram Premium subscription is accepted
+	PremiumSubscription bool `json:"premium_subscription"`
 }
 
 // This object represents a bot command.
