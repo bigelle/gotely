@@ -229,6 +229,10 @@ func (s *EditMessageMedia) Reader() io.Reader {
 		defer pw.Close()
 		defer mw.Close()
 
+		if err := gotely.WriteJSONToForm(mw, "media", s.Media); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
 		if err := s.Media.WriteTo(mw); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -1066,6 +1070,10 @@ func (s *SetBusinessAccountProfilePhoto) Reader() io.Reader {
 				return
 			}
 		}
+		if err := gotely.WriteJSONToForm(mw, "photo", s.Photo); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
 		if err := s.Photo.WriteTo(mw); err != nil {
 			pw.CloseWithError(err)
 			return
@@ -1278,5 +1286,422 @@ func (s GetBusinessAccountGifts) Reader() io.Reader {
 }
 
 func (s GetBusinessAccountGifts) ContentType() string {
+	return "application/json"
+}
+
+// Converts a given regular gift to Telegram Stars.
+// Requires the can_convert_gifts_to_stars business bot right.
+// Returns True on success.
+type ConvertGiftToStarts struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+	// REQUIRED:
+	// Unique identifier of the regular gift that should be converted to Telegram Stars
+	OwnedGiftId string `json:"owned_gift_id"`
+}
+
+func (r ConvertGiftToStarts) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if r.OwnedGiftId == "" {
+		err = append(err, fmt.Errorf("owned_gift_id can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s ConvertGiftToStarts) Endpoint() string {
+	return "convertGiftToStarts"
+}
+
+func (s ConvertGiftToStarts) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s ConvertGiftToStarts) ContentType() string {
+	return "application/json"
+}
+
+// Upgrades a given regular gift to a unique gift.
+// Requires the can_transfer_and_upgrade_gifts business bot right.
+// Additionally requires the can_transfer_stars business bot right if the upgrade is paid.
+// Returns True on success.
+type UpgradeGift struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+	// REQUIRED:
+	// Unique identifier of the regular gift that should be upgraded to a unique one
+	OwnedGiftId string `json:"owned_gift_id"`
+
+	// Pass True to keep the original gift text, sender and receiver in the upgraded gift
+	KeepOriginalDetails *bool `json:"keep_original_details,omitempty"`
+	// The amount of Telegram Stars that will be paid for the upgrade from the business account balance.
+	// If gift.prepaid_upgrade_star_count > 0, then pass 0, otherwise,
+	// the can_transfer_stars business bot right is required and gift.upgrade_star_count must be passed.
+	StartCount *int `json:"star_count,omitempty"`
+}
+
+func (r UpgradeGift) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if r.OwnedGiftId == "" {
+		err = append(err, fmt.Errorf("owned_gift_id can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s UpgradeGift) Endpoint() string {
+	return "upgradeGift"
+}
+
+func (s UpgradeGift) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s UpgradeGift) ContentType() string {
+	return "application/json"
+}
+
+// Transfers an owned unique gift to another user.
+// Requires the can_transfer_and_upgrade_gifts business bot right.
+// Requires can_transfer_stars business bot right if the transfer is paid.
+// Returns True on success.
+type TransferGift struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+	// REQUIRED:
+	// Unique identifier of the regular gift that should be transferred
+	OwnedGiftId string `json:"owned_gift_id"`
+	// REQUIRED:
+	// Unique identifier of the chat which will own the gift.
+	// The chat must be active in the last 24 hours.
+	NewOwnerChatId string `json:"new_owner_chat_id"`
+
+	// The amount of Telegram Stars that will be paid for the transfer from the business account balance.
+	// If positive, then the can_transfer_stars business bot right is required.
+	StarCount *int `json:"star_count,omitempty"`
+}
+
+func (r TransferGift) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if r.OwnedGiftId == "" {
+		err = append(err, fmt.Errorf("owned_gift_id can't be empty"))
+	}
+	if r.NewOwnerChatId == "" {
+		err = append(err, fmt.Errorf("new_owner_chat_id can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s TransferGift) Endpoint() string {
+	return "transferGift"
+}
+
+func (s TransferGift) Reader() io.Reader {
+	return gotely.EncodeJSON(s)
+}
+
+func (s TransferGift) ContentType() string {
+	return "application/json"
+}
+
+// Posts a story on behalf of a managed business account.
+// Requires the can_manage_stories business bot right.
+// Returns [objects.Story] on success.
+type PostStory struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+	// REQUIRED:
+	// Content of the story
+	Content objects.InputStoryContent `json:"content"`
+	// REQUIRED:
+	// Period after which the story is moved to the archive, in seconds;
+	// must be one of 6 * 3600, 12 * 3600, 86400, or 2 * 86400
+	ActivePeriod int `json:"active_period"`
+
+	// Caption of the story, 0-2048 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	// Mode for parsing entities in the story caption.
+	// See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	// A JSON-serialized list of special entities that appear in the caption,
+	// which can be specified instead of parse_mode
+	CaptionEntities *[]objects.MessageEntity `json:"caption_entities,omitempty"`
+	// A JSON-serialized list of clickable areas to be shown on the story
+	Areas *[]objects.StoryArea `json:"areas,omitempty"`
+	// Pass True to keep the story accessible after it expires
+	PostToChatPage *bool `json:"post_to_chat_page,omitempty"`
+	// Pass True if the content of the story must be protected from forwarding and screenshotting
+	ProtectContent *bool `json:"protect_content,omitempty"`
+
+	contentType string
+}
+
+func (r PostStory) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if e := r.Content.Validate(); e != nil {
+		err = append(err, e)
+	}
+	if r.ActivePeriod != 6*3600 && r.ActivePeriod != 12*3600 && r.ActivePeriod != 86400 && r.ActivePeriod != 2*86400 {
+		err = append(err, fmt.Errorf("active_period must be one of 6 *3600, 12 * 3600, 86400, or 2 * 86400"))
+	}
+	if r.CaptionEntities != nil {
+		for _, ent := range *r.CaptionEntities {
+			if e := ent.Validate(); e != nil {
+				err = append(err, e)
+				break
+			}
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s PostStory) Endpoint() string {
+	return "postStory"
+}
+
+func (s *PostStory) Reader() io.Reader {
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
+
+	go func() {
+		defer pw.Close()
+		defer mw.Close()
+
+		if err := mw.WriteField("business_connection_id", s.BusinessConnectionId); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := gotely.WriteJSONToForm(mw, "content", s.Content); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := s.Content.WriteTo(mw); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := mw.WriteField("active_period", fmt.Sprint(s.ActivePeriod)); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if s.Caption != nil {
+			if err := mw.WriteField("caption", *s.Caption); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ParseMode != nil {
+			if err := mw.WriteField("parse_mode", *s.ParseMode); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.CaptionEntities != nil {
+			if err := gotely.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.Areas != nil {
+			if err := gotely.WriteJSONToForm(mw, "areas", *s.Areas); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.PostToChatPage != nil {
+			if err := mw.WriteField("post_to_charge", fmt.Sprint(&s.PostToChatPage)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ProtectContent != nil {
+			if err := mw.WriteField("protect_content", fmt.Sprint(&s.ProtectContent)); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+	}()
+	return pr
+}
+
+func (s PostStory) ContentType() string {
+	if s.contentType == "" {
+		return "multipart/form-data"
+	}
+	return s.contentType
+}
+
+// Edits a story previously posted by the bot on behalf of a managed business account.
+// Requires the can_manage_stories business bot right.
+// Returns [objects.Story] on success.
+type EditStory struct {
+	// REQUIRED:
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+	// REQUIRED:
+	// Content of the story
+	Content objects.InputStoryContent `json:"content"`
+	// Unique identifier of the story to edit
+	StoryId int `json:"story_id"`
+
+	// Caption of the story, 0-2048 characters after entities parsing
+	Caption *string `json:"caption,omitempty"`
+	// Mode for parsing entities in the story caption.
+	// See https://core.telegram.org/bots/api#formatting-options for more details.
+	ParseMode *string `json:"parse_mode,omitempty"`
+	// A JSON-serialized list of special entities that appear in the caption,
+	// which can be specified instead of parse_mode
+	CaptionEntities *[]objects.MessageEntity `json:"caption_entities,omitempty"`
+	// A JSON-serialized list of clickable areas to be shown on the story
+	Areas *[]objects.StoryArea `json:"areas,omitempty"`
+
+	contentType string
+}
+
+func (r EditStory) Validate() error {
+	var err gotely.ErrFailedValidation
+	if r.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if e := r.Content.Validate(); e != nil {
+		err = append(err, e)
+	}
+	if r.CaptionEntities != nil {
+		for _, ent := range *r.CaptionEntities {
+			if e := ent.Validate(); e != nil {
+				err = append(err, e)
+				break
+			}
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (s EditStory) Endpoint() string {
+	return "editStory"
+}
+
+func (s *EditStory) Reader() io.Reader {
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	s.contentType = mw.FormDataContentType()
+
+	go func() {
+		defer pw.Close()
+		defer mw.Close()
+
+		if err := mw.WriteField("business_connection_id", s.BusinessConnectionId); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := gotely.WriteJSONToForm(mw, "content", s.Content); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := s.Content.WriteTo(mw); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if err := mw.WriteField("story_id", fmt.Sprint(s.StoryId)); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if s.Caption != nil {
+			if err := mw.WriteField("caption", *s.Caption); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.ParseMode != nil {
+			if err := mw.WriteField("parse_mode", *s.ParseMode); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.CaptionEntities != nil {
+			if err := gotely.WriteJSONToForm(mw, "caption_entities", *s.CaptionEntities); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if s.Areas != nil {
+			if err := gotely.WriteJSONToForm(mw, "areas", *s.Areas); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+	}()
+	return pr
+}
+
+func (s EditStory) ContentType() string {
+	if s.contentType == "" {
+		return "multipart/form-data"
+	}
+	return s.contentType
+}
+
+// Deletes a story previously posted by the bot on behalf of a managed business account.
+// Requires the can_manage_stories business bot right.
+// Returns True on success.
+type DeleteStory struct {
+	// Unique identifier of the business connection
+	BusinessConnectionId string `json:"business_connection_id"`
+	// Unique identifier of the story to delete
+	StoryId int `json:"story_id"`
+}
+
+func (d DeleteStory) Validate() error {
+	var err gotely.ErrFailedValidation
+	if d.BusinessConnectionId == "" {
+		err = append(err, fmt.Errorf("business_connection_id can't be empty"))
+	}
+	if d.StoryId == 0 {
+		err = append(err, fmt.Errorf("story_id can't be empty"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (d DeleteStory) Endpoint() string {
+	return "deleteStory"
+}
+
+func (d DeleteStory) Reader() io.Reader {
+	return gotely.EncodeJSON(d)
+}
+
+func (d DeleteStory) ContentType() string {
 	return "application/json"
 }

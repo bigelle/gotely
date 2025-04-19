@@ -2391,6 +2391,7 @@ func (c *ChatMember) UnmarshalJSON(data []byte) error {
 	default:
 		return fmt.Errorf("unknown chat member status: %s", status)
 	}
+	c.Status = status
 	return nil
 }
 
@@ -2616,6 +2617,162 @@ type BusinessOpeningHours struct {
 	OpeningHours []BusinessOpeningHoursInterval `json:"opening_hours"`
 }
 
+// Describes the position of a clickable area within a story.
+type StoryAreaPosition struct {
+	// The abscissa of the area's center, as a percentage of the media width
+	XPercentage float64 `json:"x_percentage"`
+	// The ordinate of the area's center, as a percentage of the media height
+	YPercentage float64 `json:"y_percentage"`
+	// The width of the area's rectangle, as a percentage of the media width
+	WidthPercentage float64 `json:"width_percentage"`
+	// The height of the area's rectangle, as a percentage of the media height
+	HeightPercentage float64 `json:"height_percentage"`
+	// The clockwise rotation angle of the rectangle, in degrees; 0-360
+	RotationAngle float64 `json:"rotation_angle"`
+	// The radius of the rectangle corner rounding, as a percentage of the media width
+	CornerRadiusPercentage float64 `json:"corner_radius_percentage"`
+}
+
+// Describes the physical address of a location.
+type LocationAddress struct {
+	// The two-letter ISO 3166-1 alpha-2 country code of the country where the location is located
+	CountryCode string `json:"country_code"`
+	// Optional. State of the location
+	State *string `json:"state,omitempty"`
+	// Optional. City of the location
+	City *string `json:"city,omitempty"`
+	// Optional. Street address of the location
+	Street *string `json:"street,omitempty"`
+}
+
+// Describes the type of a clickable area on a story. Currently, it can be one of
+//
+//   - StoryAreaTypeLocation
+//   - StoryAreaTypeSuggestedReaction
+//   - StoryAreaTypeLink
+//   - StoryAreaTypeWeather
+//   - StoryAreaTypeUniqueGift
+type StoryAreaType struct {
+	Type              string
+	Location          *StoryAreaTypeLocation
+	SuggestedReaction *StoryAreaTypeSuggestedReaction
+	Link              *StoryAreaTypeLink
+	Weather           *StoryAreaTypeWeather
+	UniqueGift        *StoryAreaTypeUniqueGift
+}
+
+func (s *StoryAreaType) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
+	var typ string
+	if err := gotely.DecodeExactField(br, "status", &typ); err != nil {
+		return err
+	}
+	r.Seek(0, io.SeekStart)
+	br.Reset(r)
+
+	switch typ {
+	case "location":
+		var result StoryAreaTypeLocation
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		s.Location = &result
+
+	case "suggested_reaction":
+		var result StoryAreaTypeSuggestedReaction
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		s.SuggestedReaction = &result
+
+	case "link":
+		var result StoryAreaTypeLink
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		s.Link = &result
+
+	case "weather":
+		var result StoryAreaTypeWeather
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		s.Weather = &result
+
+	case "unique_gift":
+		var result StoryAreaTypeUniqueGift
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		s.UniqueGift = &result
+
+	default:
+		return fmt.Errorf("unknown story area type: %s", typ)
+	}
+	return nil
+}
+
+// Describes a story area pointing to a location. Currently, a story can have up to 10 location areas.
+type StoryAreaTypeLocation struct {
+	// Type of the area, always “location”
+	Type string `json:"type"`
+	// Location latitude in degrees
+	Latitude *float64 `json:"latitude"`
+	// Location longitude in degrees
+	Longtitude *float64 `json:"longtitude"`
+	// Optional. Address of the location
+	Address *LocationAddress `json:"address,omitempty"`
+}
+
+// Describes a story area pointing to a suggested reaction. Currently, a story can have up to 5 suggested reaction areas.
+type StoryAreaTypeSuggestedReaction struct {
+	// Type of the area, always “suggested_reaction”
+	Type string `json:"type"`
+	// Type of the reaction
+	ReactionType ReactionType `json:"reaction_type"`
+	// Optional. Pass True if the reaction area has a dark background
+	IsDark *bool `json:"is_dark,omitempty"`
+	// Optional. Pass True if reaction area corner is flipped
+	IsFlipped *bool `json:"is_flipped,omitempty"`
+}
+
+// Describes a story area pointing to an HTTP or tg:// link. Currently, a story can have up to 3 link areas.
+type StoryAreaTypeLink struct {
+	// Type of the area, always “link”
+	Type string `json:"type"`
+	// HTTP or tg:// URL to be opened when the area is clicked
+	Url string `json:"url"`
+}
+
+// Describes a story area containing weather information. Currently, a story can have up to 3 weather areas.
+type StoryAreaTypeWeather struct {
+	// Type of the area, always “weather”
+	Type string `json:"type"`
+	// Temperature, in degree Celsius
+	Temperatue float64 `json:"temperatue"`
+	// Emoji representing the weather
+	Emoji string `json:"emoji"`
+	// A color of the area background in the ARGB format
+	BackgroundColor int `json:"background_color"`
+}
+
+// Describes a story area pointing to a unique gift. Currently, a story can have at most 1 unique gift area.
+type StoryAreaTypeUniqueGift struct {
+	// Type of the area, always “unique_gift”
+	Type string `json:"type"`
+	// Unique name of the gift
+	Name string `json:"name"`
+}
+
+// Describes a clickable area on a story media.
+type StoryArea struct {
+	// Position of the area
+	Position StoryAreaPosition `json:"position"`
+	// Type of the area
+	Type StoryAreaType `json:"type"`
+}
+
 // Represents a location to which a chat is connected.
 type ChatLocation struct {
 	// The location to which the supergroup is connected. Can't be a live location.
@@ -2788,7 +2945,7 @@ type Gifts struct {
 }
 
 type UniqueGift struct {
-	// TODO
+	// TODO:
 }
 
 // This object describes a gift received and owned by a user or a chat. Currently, it can be one of
@@ -2914,7 +3071,7 @@ type StarAmount struct {
 }
 
 type AcceptedGiftTypes struct {
-	// TODO
+	// TODO:
 }
 
 // This object represents a bot command.
@@ -3268,7 +3425,7 @@ func (m MenuButtonDefault) GetMenuButtonType() string {
 //   - [ChatBoostSourceGiveaway]
 type ChatBoostSource struct {
 	Source string `json:"source"`
-	// FIXME custom unmarshaling
+	// FIXME: custom unmarshaling
 	User              *User   `json:"user,omitempty"`
 	GiveawayMessageId *string `json:"giveaway_message_id,omitempty"`
 	PrizeStarCount    *int    `json:"prize_star_count,omitempty"`
@@ -4567,6 +4724,144 @@ func (p InputProfilePhotoAnimated) WriteTo(mw *multipart.Writer) error {
 			return err
 		}
 		if _, err := io.Copy(part, p.animationReader); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// This object describes the content of a story to post. Currently, it can be one of
+//
+//   - InputStoryContentPhoto
+//   - InputStoryContentVideo
+type InputStoryContent interface {
+	Validate() error
+	SetStoryContent(content string, r io.Reader)
+	WriteTo(mw *multipart.Writer) error
+}
+
+// Describes a photo to post as a story.
+type InputStoryContentPhoto struct {
+	// The photo to post as a story.
+	// The photo must be of the size 1080x1920 and must not exceed 10 MB.
+	// The photo can't be reused and can only be uploaded as a new file,
+	// so you can pass “attach://<file_attach_name>” if the photo was uploaded using multipart/form-data under <file_attach_name>.
+	// More information on Sending Files https://core.telegram.org/bots/api#sending-files
+	Photo string `json:"photo"`
+
+	photoName   string
+	photoReader io.Reader
+}
+
+func (p *InputStoryContentPhoto) SetStoryContent(photo string, r io.Reader) {
+	p.photoName = photo
+	p.photoReader = r
+	p.Photo = "attach://" + photo
+}
+
+func (p InputStoryContentPhoto) Validate() error {
+	var err gotely.ErrFailedValidation
+	if p.Photo == "" {
+		err = append(err, fmt.Errorf("photo can't be empty"))
+	}
+	if p.photoReader == nil {
+		err = append(err, fmt.Errorf("can't use remote files, should upload a new one"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (p InputStoryContentPhoto) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", "photo"); err != nil {
+		return err
+	}
+	if err := mw.WriteField("photo", p.Photo); err != nil {
+		return err
+	}
+
+	if p.photoReader != nil {
+		part, err := mw.CreateFormFile(p.photoName, p.photoName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, p.photoReader); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Describes a video to post as a story.
+type InputStoryContentVideo struct {
+	// The video to post as a story.
+	// The video must be of the size 720x1280, streamable, encoded with H.265 codec,
+	// with key frames added each second in the MPEG4 format, and must not exceed 30 MB.
+	// The video can't be reused and can only be uploaded as a new file,
+	// so you can pass “attach://<file_attach_name>” if the photo was uploaded using multipart/form-data under <file_attach_name>.
+	// More information on Sending Files https://core.telegram.org/bots/api#sending-files
+	Video string `json:"photo"`
+	// Optional. Precise duration of the video in seconds; 0-60
+	Duration *float64 `json:"duration,omitempty"`
+	// Optional. Timestamp in seconds of the frame that will be used as the static cover for the story.
+	// Defaults to 0.0.
+	CoverFrameTimestamp *float64 `json:"cover_frame_timestamp,omitempty"`
+	// Optional. Pass True if the video has no sound
+	IsAnimation bool `json:"is_animation,omitempty"`
+
+	videoName   string
+	videoReader io.Reader
+}
+
+func (p *InputStoryContentVideo) SetStoryContent(video string, r io.Reader) {
+	p.videoName = video
+	p.videoReader = r
+	p.Video = "attach://" + video
+}
+
+func (p InputStoryContentVideo) Validate() error {
+	var err gotely.ErrFailedValidation
+	if p.Video == "" {
+		err = append(err, fmt.Errorf("photo can't be empty"))
+	}
+	if p.videoReader == nil {
+		err = append(err, fmt.Errorf("can't use remote files, should upload a new one"))
+	}
+	if p.Duration != nil {
+		if *p.Duration < 0 || *p.Duration > 60 {
+			err = append(err, fmt.Errorf("duration must be between 0 and 60 if specified"))
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (p InputStoryContentVideo) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", "video"); err != nil {
+		return err
+	}
+	if err := mw.WriteField("video", p.Video); err != nil {
+		return err
+	}
+	if err := mw.WriteField("duration", fmt.Sprint(*p.Duration)); err != nil {
+		return err
+	}
+	if err := mw.WriteField("cover_frame_timestamp", fmt.Sprint(*p.CoverFrameTimestamp)); err != nil {
+		return err
+	}
+	if err := mw.WriteField("is_animation", fmt.Sprint(*&p.IsAnimation)); err != nil {
+		return err
+	}
+
+	if p.videoReader != nil {
+		part, err := mw.CreateFormFile(p.videoName, p.videoName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, p.videoReader); err != nil {
 			return err
 		}
 	}
