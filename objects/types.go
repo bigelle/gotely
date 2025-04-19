@@ -248,8 +248,8 @@ type ChatFullInfo struct {
 	PinnedMessage *Message `json:"pinned_message,omitempty,"`
 	// Optional. Default chat member permissions, for groups and supergroups
 	Permissions *ChatPermissions `json:"permissions,omitempty,"`
-	// Optional. True, if gifts can be sent to the chat
-	CanSendGift *bool `json:"can_send_gift,omitempty"`
+	// Information about types of gifts that are accepted by the chat or by the corresponding user for private chats
+	AcceptedGiftTypes AcceptedGiftTypes `json:"accepted_gift_types"`
 	// Optional. True, if paid media messages can be sent or forwarded to the channel chat. The field is available only for channel chats.
 	CanSendPaidMedia *bool `json:"can_send_paid_media,omitempty,"`
 	// Optional. For supergroups, the minimum allowed delay between consecutive messages sent by each unprivileged user; in seconds
@@ -341,6 +341,8 @@ type Message struct {
 	MediaGroupId *string `json:"media_group_id,omitempty"`
 	// Optional. Signature of the post author for messages in channels, or the custom title of an anonymous group administrator
 	AuthorSignature *string `json:"author_signature,omitempty"`
+	//Optional. The number of Telegram Stars that were paid by the sender of the message to send it
+	PaidStarCount *int `json:"paid_star_count,omitempty"`
 	// Optional. For text messages, the actual UTF-8 text of the message
 	Text *string `json:"text,omitempty"`
 	// Optional. For text messages, special entities like usernames, URLs, bot commands, etc. that appear in the text
@@ -437,6 +439,10 @@ type Message struct {
 	UsersShared *UsersShared `json:"users_shared,omitempty"`
 	// Optional. Service message: a chat was shared with the bot
 	ChatShared *ChatShared `json:"chat_shared,omitempty"`
+	// Optional. Service message: a regular gift was sent or received
+	Gift *GiftInfo `json:"gift,omitempty"`
+	// Optional. Service message: a unique gift was sent or received
+	UniqueGift *UniqueGiftInfo `json:"unique_gift,omitempty"`
 	// Optional. The domain name of the website on which the user has logged in.
 	// More about Telegram Login » https://core.telegram.org/widgets/login
 	ConnectedWebsite *string `json:"connected_website,omitempty"`
@@ -447,7 +453,6 @@ type Message struct {
 	PassportData *PassportData `json:"passport_data,omitempty"`
 	// Optional. Service message. A user in the chat triggered another user's proximity alert while sharing Live Location.
 	ProximityAlertTriggered *ProximityAlertTriggered `json:"proximity_alert_triggered,omitempty"`
-	ForwardFrom             *User                    `json:"forward_from,omitempty"`
 	// Optional. Service message: user boosted the chat
 	BoostAdded *ChatBoostAdded `json:"boost_added,omitempty"`
 	// Optional. Service message: chat background set
@@ -472,6 +477,8 @@ type Message struct {
 	GiveawayWinners *GiveawayWinners `json:"giveaway_winners,omitempty"`
 	// Optional. Service message: a giveaway without public winners was completed
 	GiveawayCompleted *GiveawayCompleted `json:"giveaway_completed,omitempty"`
+	//Optional. Service message: the price for paid messages has changed in the chat
+	PaidMessagePriceChanged *PaidMessagePriceChanged `json:"paid_message_price_changed,omitempty"`
 	// Optional. Service message: video chat scheduled
 	VideoChatScheduled *VideoChatScheduled `json:"video_chat_scheduled,omitempty"`
 	// Optional. Service message: video chat started
@@ -1576,6 +1583,12 @@ type VideoChatParticipantsInvited struct {
 	Users []User `json:"users"`
 }
 
+// Describes a service message about a change in the price of paid messages within a chat.
+type PaidMessagePriceChanged struct {
+	//The new number of Telegram Stars that must be paid by non-administrator users of the supergroup chat for each sent message
+	PaidMessageStarCount int `json:"paid_message_star_count"`
+}
+
 // This object represents a service message about the creation of a scheduled giveaway.
 type GiveawayCreated struct {
 	PrizeStarCount *int `json:"prize_star_count,omitempty"`
@@ -2391,6 +2404,7 @@ func (c *ChatMember) UnmarshalJSON(data []byte) error {
 	default:
 		return fmt.Errorf("unknown chat member status: %s", status)
 	}
+	c.Status = status
 	return nil
 }
 
@@ -2616,6 +2630,162 @@ type BusinessOpeningHours struct {
 	OpeningHours []BusinessOpeningHoursInterval `json:"opening_hours"`
 }
 
+// Describes the position of a clickable area within a story.
+type StoryAreaPosition struct {
+	// The abscissa of the area's center, as a percentage of the media width
+	XPercentage float64 `json:"x_percentage"`
+	// The ordinate of the area's center, as a percentage of the media height
+	YPercentage float64 `json:"y_percentage"`
+	// The width of the area's rectangle, as a percentage of the media width
+	WidthPercentage float64 `json:"width_percentage"`
+	// The height of the area's rectangle, as a percentage of the media height
+	HeightPercentage float64 `json:"height_percentage"`
+	// The clockwise rotation angle of the rectangle, in degrees; 0-360
+	RotationAngle float64 `json:"rotation_angle"`
+	// The radius of the rectangle corner rounding, as a percentage of the media width
+	CornerRadiusPercentage float64 `json:"corner_radius_percentage"`
+}
+
+// Describes the physical address of a location.
+type LocationAddress struct {
+	// The two-letter ISO 3166-1 alpha-2 country code of the country where the location is located
+	CountryCode string `json:"country_code"`
+	// Optional. State of the location
+	State *string `json:"state,omitempty"`
+	// Optional. City of the location
+	City *string `json:"city,omitempty"`
+	// Optional. Street address of the location
+	Street *string `json:"street,omitempty"`
+}
+
+// Describes the type of a clickable area on a story. Currently, it can be one of
+//
+//   - StoryAreaTypeLocation
+//   - StoryAreaTypeSuggestedReaction
+//   - StoryAreaTypeLink
+//   - StoryAreaTypeWeather
+//   - StoryAreaTypeUniqueGift
+type StoryAreaType struct {
+	Type              string
+	Location          *StoryAreaTypeLocation
+	SuggestedReaction *StoryAreaTypeSuggestedReaction
+	Link              *StoryAreaTypeLink
+	Weather           *StoryAreaTypeWeather
+	UniqueGift        *StoryAreaTypeUniqueGift
+}
+
+func (s *StoryAreaType) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
+	var typ string
+	if err := gotely.DecodeExactField(br, "status", &typ); err != nil {
+		return err
+	}
+	r.Seek(0, io.SeekStart)
+	br.Reset(r)
+
+	switch typ {
+	case "location":
+		var result StoryAreaTypeLocation
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		s.Location = &result
+
+	case "suggested_reaction":
+		var result StoryAreaTypeSuggestedReaction
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		s.SuggestedReaction = &result
+
+	case "link":
+		var result StoryAreaTypeLink
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		s.Link = &result
+
+	case "weather":
+		var result StoryAreaTypeWeather
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		s.Weather = &result
+
+	case "unique_gift":
+		var result StoryAreaTypeUniqueGift
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		s.UniqueGift = &result
+
+	default:
+		return fmt.Errorf("unknown story area type: %s", typ)
+	}
+	return nil
+}
+
+// Describes a story area pointing to a location. Currently, a story can have up to 10 location areas.
+type StoryAreaTypeLocation struct {
+	// Type of the area, always “location”
+	Type string `json:"type"`
+	// Location latitude in degrees
+	Latitude *float64 `json:"latitude"`
+	// Location longitude in degrees
+	Longtitude *float64 `json:"longtitude"`
+	// Optional. Address of the location
+	Address *LocationAddress `json:"address,omitempty"`
+}
+
+// Describes a story area pointing to a suggested reaction. Currently, a story can have up to 5 suggested reaction areas.
+type StoryAreaTypeSuggestedReaction struct {
+	// Type of the area, always “suggested_reaction”
+	Type string `json:"type"`
+	// Type of the reaction
+	ReactionType ReactionType `json:"reaction_type"`
+	// Optional. Pass True if the reaction area has a dark background
+	IsDark *bool `json:"is_dark,omitempty"`
+	// Optional. Pass True if reaction area corner is flipped
+	IsFlipped *bool `json:"is_flipped,omitempty"`
+}
+
+// Describes a story area pointing to an HTTP or tg:// link. Currently, a story can have up to 3 link areas.
+type StoryAreaTypeLink struct {
+	// Type of the area, always “link”
+	Type string `json:"type"`
+	// HTTP or tg:// URL to be opened when the area is clicked
+	Url string `json:"url"`
+}
+
+// Describes a story area containing weather information. Currently, a story can have up to 3 weather areas.
+type StoryAreaTypeWeather struct {
+	// Type of the area, always “weather”
+	Type string `json:"type"`
+	// Temperature, in degree Celsius
+	Temperatue float64 `json:"temperatue"`
+	// Emoji representing the weather
+	Emoji string `json:"emoji"`
+	// A color of the area background in the ARGB format
+	BackgroundColor int `json:"background_color"`
+}
+
+// Describes a story area pointing to a unique gift. Currently, a story can have at most 1 unique gift area.
+type StoryAreaTypeUniqueGift struct {
+	// Type of the area, always “unique_gift”
+	Type string `json:"type"`
+	// Unique name of the gift
+	Name string `json:"name"`
+}
+
+// Describes a clickable area on a story media.
+type StoryArea struct {
+	// Position of the area
+	Position StoryAreaPosition `json:"position"`
+	// Type of the area
+	Type StoryAreaType `json:"type"`
+}
+
 // Represents a location to which a chat is connected.
 type ChatLocation struct {
 	// The location to which the supergroup is connected. Can't be a live location.
@@ -2763,6 +2933,257 @@ type ForumTopic struct {
 	IconColor int `json:"icon_color"`
 	// Optional. Unique identifier of the custom emoji shown as the topic icon
 	IconCustomEmojiId string `json:"icon_custom_emoji_id"`
+}
+
+// This object represents a gift that can be sent by the bot.
+type Gift struct {
+	// Unique identifier of the gift
+	Id string `json:"id"`
+	// The sticker that represents the gift
+	Sticker Sticker `json:"sticker"`
+	// The number of Telegram Stars that must be paid to send the sticker
+	StarCount int `json:"star_count"`
+	// Optional. The number of Telegram Stars that must be paid to upgrade the gift to a unique one
+	UpgradeStarCount *int `json:"upgrade_star_count,omitempty"`
+	// Optional. The total number of the gifts of this type that can be sent; for limited gifts only
+	TotalCount *int `json:"total_count,omitempty,"`
+	// Optional. The number of remaining gifts of this type that can be sent; for limited gifts only
+	RemainingCount *int `json:"remaining_count,omitempty,"`
+}
+
+// This object represent a list of gifts.
+type Gifts struct {
+	// The list of gifts
+	Gifts []Gift `json:"gifts"`
+}
+
+// This object describes the model of a unique gift.
+type UniqueGiftModel struct {
+	// Name of the model
+	Name string `json:"name"`
+	// The sticker that represents the unique gift
+	Sticker Sticker `json:"sticker"`
+	// The number of unique gifts that receive this model for every 1000 gifts upgraded
+	RarityPerMile int `json:"rarity_per_mile"`
+}
+
+// This object describes the symbol shown on the pattern of a unique gift.
+type UniqueGiftSymbol struct {
+	// Name of the model
+	Name string `json:"name"`
+	// The sticker that represents the unique gift
+	Sticker Sticker `json:"sticker"`
+	// The number of unique gifts that receive this model for every 1000 gifts upgraded
+	RarityPerMile int `json:"rarity_per_mile"`
+}
+
+// This object describes the colors of the backdrop of a unique gift.
+type UniqueGiftBackdropColors struct {
+	// The color in the center of the backdrop in RGB format
+	CenterColor int `json:"center_color"`
+	// The color on the edges of the backdrop in RGB format
+	EdgeColor int `json:"edge_color"`
+	// The color to be applied to the symbol in RGB format
+	SymbolColor int `json:"symbol_color"`
+	// The color for the text on the backdrop in RGB format
+	TextColor int `json:"text_color"`
+}
+
+// This object describes the backdrop of a unique gift.
+type UniqueGiftBackdrop struct {
+	// Name of the backdrop
+	Name string `json:"name"`
+	// Colors of the backdrop
+	Colors UniqueGiftBackdropColors `json:"colors"`
+	// The number of unique gifts that receive this backdrop for every 1000 gifts upgraded
+	RarityPerMile int `json:"rarity_per_mile"`
+}
+
+// This object describes a unique gift that was upgraded from a regular gift.
+type UniqueGift struct {
+	// Human-readable name of the regular gift from which this unique gift was upgraded
+	BaseName string `json:"base_name"`
+	// Unique name of the gift. This name can be used in https://t.me/nft/... links and story areas
+	Name string `json:"name"`
+	// Unique number of the upgraded gift among gifts upgraded from the same regular gift
+	Number int `json:"number"`
+	// Model of the gift
+	Model UniqueGiftModel `json:"model"`
+	// Symbol of the gift
+	Symbol UniqueGiftSymbol `json:"symbol"`
+	// Backdrop of the gift
+	Backdrop UniqueGiftBackdrop `json:"backdrop"`
+}
+
+// Describes a service message about a regular gift that was sent or received.
+type GiftInfo struct {
+	// Information about the gift
+	Gift Gift `json:"gift"`
+	// Optional. Unique identifier of the received gift for the bot;
+	// only present for gifts received on behalf of business accounts
+	OwnedGiftId *string `json:"owned_gift_id,omitempty"`
+	// Optional. Number of Telegram Stars that can be claimed by the receiver by converting the gift;
+	// omitted if conversion to Telegram Stars is impossible
+	ConvertStarCount *int `json:"convert_star_count,omitempty"`
+	// Optional. Number of Telegram Stars that were prepaid by the sender for the ability to upgrade the gift
+	PrepaidUpgradeStarCount *int `json:"prepaid_upgrade_star_count,omitempty"`
+	// Optional. True, if the gift can be upgraded to a unique gift
+	CanBeUpgraded *bool `json:"can_be_upgraded,omitempty"`
+	// Optional. Text of the message that was added to the gift
+	Text *string `json:"text,omitempty"`
+	// Optional. Special entities that appear in the text
+	Entities *[]MessageEntity `json:"entities,omitempty"`
+	// 	Optional. True, if the sender and gift text are shown only to the gift receiver;
+	// otherwise, everyone will be able to see them
+	IsPrivate *bool `json:"is_private,omitempty"`
+}
+
+// Describes a service message about a unique gift that was sent or received.
+type UniqueGiftInfo struct {
+	// Information about the gift
+	Gift UniqueGift `json:"gift"`
+	// Origin of the gift. Currently, either “upgrade” or “transfer”
+	Origin string `json:"origin"`
+	// Optional. Unique identifier of the received gift for the bot;
+	// only present for gifts received on behalf of business accounts
+	OwnedGiftId *string `json:"owned_gift_id,omitempty"`
+	// Optional. Number of Telegram Stars that must be paid to transfer the gift;
+	// omitted if the bot cannot transfer the gift
+	TransferStarCount *int `json:"transfer_star_count,omitempty"`
+}
+
+// This object describes a gift received and owned by a user or a chat. Currently, it can be one of
+//
+//   - OwnedGiftRegular
+//   - OwnedGiftUnique
+type OwnedGift struct {
+	// Type of the gift
+	Type    string `json:"type"`
+	Regular *OwnedGiftRegular
+	Unique  *OwnedGiftUnique
+}
+
+func (g *OwnedGift) UnmarshalJSON(data []byte) error {
+	r := bytes.NewReader(data)
+	br := bufio.NewReader(r)
+	var typ string
+	if err := gotely.DecodeExactField(br, "source", &typ); err != nil {
+		return err
+	}
+	r.Seek(0, io.SeekStart)
+	br.Reset(r)
+
+	switch typ {
+	case "regular":
+		var result OwnedGiftRegular
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		g.Regular = &result
+
+	case "unique":
+		var result OwnedGiftUnique
+		if err := gotely.DecodeJSON(br, &result); err != nil {
+			return err
+		}
+		g.Unique = &result
+
+	default:
+		return fmt.Errorf("unknown owned gift type: %s", typ)
+	}
+	g.Type = typ
+	return nil
+}
+
+// Describes a regular gift owned by a user or a chat.
+type OwnedGiftRegular struct {
+	// Type of the gift, always “regular”
+	Type string `json:"type"`
+	// Information about the regular gift
+	Gift Gift `json:"gift"`
+	// Date the gift was sent in Unix time
+	SendDate int `json:"send_date"`
+	// Optional. Unique identifier of the gift for the bot;
+	// for gifts received on behalf of business accounts only
+	OwnedGiftId *string `json:"owned_gift_id,omitempty"`
+	// Optional. Sender of the gift if it is a known user
+	SenderUser *User `json:"sender_user,omitempty"`
+	// Optional. Text of the message that was added to the gift
+	Text *string `json:"text,omitempty"`
+	// Optional. Special entities that appear in the text
+	Entities *[]MessageEntity `json:"entities,omitempty"`
+	// Optional. True, if the sender and gift text are shown only to the gift receiver;
+	// otherwise, everyone will be able to see them
+	IsPrivate *bool `json:"is_private,omitempty"`
+	// Optional. True, if the gift is displayed on the account's profile page;
+	// for gifts received on behalf of business accounts only
+	IsSaved *bool `json:"is_saved,omitempty"`
+	// Optional. True, if the gift can be upgraded to a unique gift;
+	// for gifts received on behalf of business accounts only
+	CanBeUpgraded *bool `json:"can_be_upgraded,omitempty"`
+	// Optional. True, if the gift was refunded and isn't available anymore
+	WasRefunded *bool `json:"was_refunded,omitempty"`
+	// Optional. Number of Telegram Stars that can be claimed by the receiver instead of the gift;
+	// omitted if the gift cannot be converted to Telegram Stars
+	ConvertStarCount *int `json:"convert_star_count,omitempty"`
+	// Optional. Number of Telegram Stars that were paid by the sender for the ability to upgrade the gift
+	PrepaidUpgradeStarCount *int `json:"prepaid_upgrade_star_count,omitempty"`
+}
+
+// Describes a unique gift received and owned by a user or a chat.
+type OwnedGiftUnique struct {
+	// Type of the gift, always “unique”
+	Type string `json:"type"`
+	// Information about the unique gift
+	Gift UniqueGift `json:"gift"`
+	// Date the gift was sent in Unix time
+	SenderDate int `json:"sender_date"`
+	// Optional. Unique identifier of the received gift for the bot;
+	// for gifts received on behalf of business accounts only
+	OwnedGiftId *string `json:"owned_gift_id,omitempty"`
+	// Optional. Sender of the gift if it is a known user
+	SenderUser *User `json:"sender_user,omitempty"`
+	// Optional. True, if the gift is displayed on the account's profile page;
+	// for gifts received on behalf of business accounts only
+	IsSaved *bool `json:"is_saved,omitempty"`
+	// Optional. True, if the gift can be transferred to another owner;
+	// for gifts received on behalf of business accounts only
+	CanBeTransferred *bool `json:"can_be_transferred,omitempty"`
+	// Optional. Number of Telegram Stars that must be paid to transfer the gift;
+	// omitted if the bot cannot transfer the gift
+	TransferStarCount *int `json:"transfer_star_count,omitempty"`
+}
+
+// Contains the list of gifts received and owned by a user or a chat.
+type OwnedGifts struct {
+	// The total number of gifts owned by the user or the chat
+	TotalCount int `json:"total_count"`
+	// The list of gifts
+	Gifts []OwnedGift `json:"gifts"`
+	// Optional. Offset for the next request. If empty, then there are no more results
+	NextOffset *string `json:"next_offset.omitempty"`
+}
+
+// Describes an amount of Telegram Stars.
+type StarAmount struct {
+	// Integer amount of Telegram Stars, rounded to 0; can be negative
+	Amount int `json:"amount"`
+	// Optional. The number of 1/1000000000 shares of Telegram Stars;
+	// from -999999999 to 999999999;
+	// can be negative if and only if amount is non-positive
+	NanostarAmount *int `json:"nanostar_amount,omitempty"`
+}
+
+// This object describes the types of gifts that can be gifted to a user or a chat.
+type AcceptedGiftTypes struct {
+	// True, if unlimited regular gifts are accepted
+	UnlimitedGifts bool `json:"unlimited_gifts"`
+	// True, if limited regular gifts are accepted
+	LimitedGifts bool `json:"limited_gifts"`
+	// True, if unique gifts or gifts that can be upgraded to unique for free are accepted
+	UniqueGifts bool `json:"unique_gifts"`
+	// True, if a Telegram Premium subscription is accepted
+	PremiumSubscription bool `json:"premium_subscription"`
 }
 
 // This object represents a bot command.
@@ -3115,7 +3536,8 @@ func (m MenuButtonDefault) GetMenuButtonType() string {
 //
 //   - [ChatBoostSourceGiveaway]
 type ChatBoostSource struct {
-	Source            string  `json:"source"`
+	Source string `json:"source"`
+	// FIXME: custom unmarshaling
 	User              *User   `json:"user,omitempty"`
 	GiveawayMessageId *string `json:"giveaway_message_id,omitempty"`
 	PrizeStarCount    *int    `json:"prize_star_count,omitempty"`
@@ -3193,6 +3615,39 @@ type UserChatBoosts struct {
 	Boosts []ChatBoost `json:"boosts"`
 }
 
+// Represents the rights of a business bot.
+type BusinessBotRights struct {
+	// Optional. True, if the bot can send and edit messages in the private chats that had incoming messages in the last 24 hours
+	CanReply *bool `json:"can_reply,omitempty"`
+	// Optional. True, if the bot can mark incoming private messages as read
+	CanReadMessages *bool `json:"can_read_messages,omitempty"`
+	// Optional. True, if the bot can delete messages sent by the bot
+	CanDeleteOutgoingMessages *bool `json:"can_delete_outgoing_messages,omitempty"`
+	// Optional. True, if the bot can delete all private messages in managed chats
+	CanDeleteAllMessages *bool `json:"can_delete_all_messages,omitempty"`
+	// Optional. True, if the bot can edit the first and last name of the business account
+	CanEditName *bool `json:"can_edit_name,omitempty"`
+	// Optional. True, if the bot can edit the bio of the business account
+	CanEditBio *bool `json:"can_edit_bio,omitempty"`
+	// Optional. True, if the bot can edit the profile photo of the business account
+	CanEditProfilePhoto *bool `json:"can_edit_profile_photo,omitempty"`
+	// Optional. True, if the bot can edit the username of the business account
+	CanEditUsername *bool `json:"can_edit_username,omitempty"`
+	// Optional. True, if the bot can change the privacy settings pertaining to gifts for the business account
+	CanChangeGiftSettings *bool `json:"can_change_gift_settings,omitempty"`
+	// Optional. True, if the bot can view gifts and the amount of Telegram Stars owned by the business account
+	CanViewGiftsAndStars *bool `json:"can_view_gifts_and_stars,omitempty"`
+	// Optional. True, if the bot can convert regular gifts owned by the business account to Telegram Stars
+	CanConvertGiftsGoStars *bool `json:"can_convert_gifts_go_stars,omitempty"`
+	// Optional. True, if the bot can transfer and upgrade gifts owned by the business account
+	CanTransferAndUpgradeGifts *bool `json:"can_transfer_and_upgrade_gifts,omitempty"`
+	// Optional. True, if the bot can transfer Telegram Stars received by the business account to its own account,
+	//  or use them to upgrade and transfer gifts
+	CanTransferStars *bool `json:"can_transfer_stars,omitempty"`
+	// Optional. True, if the bot can post, edit and delete stories on behalf of the business account
+	CanManageStories *bool `json:"can_manage_stories,omitempty"`
+}
+
 // Describes the connection of the bot with a business account.
 type BusinessConnection struct {
 	// Unique identifier of the business connection
@@ -3206,8 +3661,8 @@ type BusinessConnection struct {
 	UserChatId int `json:"user_chat_id"`
 	// Date the connection was established in Unix time
 	Date int `json:"date"`
-	// True, if the bot can act on behalf of the business account in chats that were active in the last 24 hours
-	CanReply bool `json:"can_reply"`
+	// Optional. Rights of the business bot
+	Rights *BusinessBotRights `json:"rights,omitempty"`
 	// True, if the connection is active
 	IsEnabled bool `json:"is_enabled"`
 }
@@ -4258,6 +4713,267 @@ func (i InputPaidMediaVideo) WriteTo(mw *multipart.Writer) error {
 			return err
 		}
 		if _, err := io.Copy(part, i.coverReader); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// This object describes a profile photo to set. Currently, it can be one of
+//
+//   - InputProfilePhotoStatic
+//   - InputProfilePhotoAnimated
+//
+// It's important to use SetPhoto method to ensure properly set fields.
+type InputProfilePhoto interface {
+	SetPhoto(photo string, r io.Reader)
+	WriteTo(mw *multipart.Writer) error
+	Validate() error
+}
+
+// A static profile photo in the .JPG format.
+type InputProfilePhotoStatic struct {
+	// The static profile photo.
+	// Profile photos can't be reused and can only be uploaded as a new file,
+	// so you can pass “attach://<file_attach_name>” if the photo was uploaded using multipart/form-data under <file_attach_name>.
+	// More information on Sending Files https://core.telegram.org/bots/api#sending-files
+	Photo string `json:"photo"`
+
+	photoName   string
+	photoReader io.Reader
+}
+
+func (p *InputProfilePhotoStatic) SetPhoto(photo string, r io.Reader) {
+	p.photoName = photo
+	p.photoReader = r
+	p.Photo = "attach://" + photo
+}
+
+func (p InputProfilePhotoStatic) Validate() error {
+	var err gotely.ErrFailedValidation
+	if p.Photo == "" {
+		err = append(err, fmt.Errorf("photo can't be empty"))
+	}
+	if p.photoReader == nil {
+		err = append(err, fmt.Errorf("can't use remote files, should upload a new one"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (p InputProfilePhotoStatic) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", "static"); err != nil {
+		return err
+	}
+	if err := mw.WriteField("photo", p.Photo); err != nil {
+		return err
+	}
+
+	if p.photoReader != nil {
+		part, err := mw.CreateFormFile(p.photoName, p.photoName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, p.photoReader); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// A static profile photo in the .JPG format.
+type InputProfilePhotoAnimated struct {
+	// The animated profile photo.
+	// Profile photos can't be reused and can only be uploaded as a new file,
+	// so you can pass “attach://<file_attach_name>” if the photo was uploaded using multipart/form-data under <file_attach_name>.
+	// More information on Sending Files https://core.telegram.org/bots/api#sending-files
+	Animation string `json:"animation"`
+	// Optional. Timestamp in seconds of the frame that will be used as the static profile photo. Defaults to 0.0.
+	MainFrameTimeStamp *float64 `json:"main_frame_time_stamp,omitempty"`
+
+	animationName   string
+	animationReader io.Reader
+}
+
+func (p *InputProfilePhotoAnimated) SetPhoto(photo string, r io.Reader) {
+	p.animationName = photo
+	p.animationReader = r
+	p.Animation = "attach://" + photo
+}
+
+func (p InputProfilePhotoAnimated) Validate() error {
+	var err gotely.ErrFailedValidation
+	if p.Animation == "" {
+		err = append(err, fmt.Errorf("animation can't be empty"))
+	}
+	if p.animationReader == nil {
+		err = append(err, fmt.Errorf("can't use remote files, should upload a new one"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (p InputProfilePhotoAnimated) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", "animated"); err != nil {
+		return err
+	}
+	if err := mw.WriteField("animation", p.Animation); err != nil {
+		return err
+	}
+	if p.MainFrameTimeStamp != nil {
+		if err := mw.WriteField("main_frame_timestamp", fmt.Sprint(p.MainFrameTimeStamp)); err != nil {
+			return err
+		}
+	}
+
+	if p.animationReader != nil {
+		part, err := mw.CreateFormFile(p.animationName, p.animationName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, p.animationReader); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// This object describes the content of a story to post. Currently, it can be one of
+//
+//   - InputStoryContentPhoto
+//   - InputStoryContentVideo
+type InputStoryContent interface {
+	Validate() error
+	SetStoryContent(content string, r io.Reader)
+	WriteTo(mw *multipart.Writer) error
+}
+
+// Describes a photo to post as a story.
+type InputStoryContentPhoto struct {
+	// The photo to post as a story.
+	// The photo must be of the size 1080x1920 and must not exceed 10 MB.
+	// The photo can't be reused and can only be uploaded as a new file,
+	// so you can pass “attach://<file_attach_name>” if the photo was uploaded using multipart/form-data under <file_attach_name>.
+	// More information on Sending Files https://core.telegram.org/bots/api#sending-files
+	Photo string `json:"photo"`
+
+	photoName   string
+	photoReader io.Reader
+}
+
+func (p *InputStoryContentPhoto) SetStoryContent(photo string, r io.Reader) {
+	p.photoName = photo
+	p.photoReader = r
+	p.Photo = "attach://" + photo
+}
+
+func (p InputStoryContentPhoto) Validate() error {
+	var err gotely.ErrFailedValidation
+	if p.Photo == "" {
+		err = append(err, fmt.Errorf("photo can't be empty"))
+	}
+	if p.photoReader == nil {
+		err = append(err, fmt.Errorf("can't use remote files, should upload a new one"))
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (p InputStoryContentPhoto) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", "photo"); err != nil {
+		return err
+	}
+	if err := mw.WriteField("photo", p.Photo); err != nil {
+		return err
+	}
+
+	if p.photoReader != nil {
+		part, err := mw.CreateFormFile(p.photoName, p.photoName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, p.photoReader); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Describes a video to post as a story.
+type InputStoryContentVideo struct {
+	// The video to post as a story.
+	// The video must be of the size 720x1280, streamable, encoded with H.265 codec,
+	// with key frames added each second in the MPEG4 format, and must not exceed 30 MB.
+	// The video can't be reused and can only be uploaded as a new file,
+	// so you can pass “attach://<file_attach_name>” if the photo was uploaded using multipart/form-data under <file_attach_name>.
+	// More information on Sending Files https://core.telegram.org/bots/api#sending-files
+	Video string `json:"photo"`
+	// Optional. Precise duration of the video in seconds; 0-60
+	Duration *float64 `json:"duration,omitempty"`
+	// Optional. Timestamp in seconds of the frame that will be used as the static cover for the story.
+	// Defaults to 0.0.
+	CoverFrameTimestamp *float64 `json:"cover_frame_timestamp,omitempty"`
+	// Optional. Pass True if the video has no sound
+	IsAnimation bool `json:"is_animation,omitempty"`
+
+	videoName   string
+	videoReader io.Reader
+}
+
+func (p *InputStoryContentVideo) SetStoryContent(video string, r io.Reader) {
+	p.videoName = video
+	p.videoReader = r
+	p.Video = "attach://" + video
+}
+
+func (p InputStoryContentVideo) Validate() error {
+	var err gotely.ErrFailedValidation
+	if p.Video == "" {
+		err = append(err, fmt.Errorf("photo can't be empty"))
+	}
+	if p.videoReader == nil {
+		err = append(err, fmt.Errorf("can't use remote files, should upload a new one"))
+	}
+	if p.Duration != nil {
+		if *p.Duration < 0 || *p.Duration > 60 {
+			err = append(err, fmt.Errorf("duration must be between 0 and 60 if specified"))
+		}
+	}
+	if len(err) > 0 {
+		return err
+	}
+	return nil
+}
+
+func (p InputStoryContentVideo) WriteTo(mw *multipart.Writer) error {
+	if err := mw.WriteField("type", "video"); err != nil {
+		return err
+	}
+	if err := mw.WriteField("video", p.Video); err != nil {
+		return err
+	}
+	if err := mw.WriteField("duration", fmt.Sprint(*p.Duration)); err != nil {
+		return err
+	}
+	if err := mw.WriteField("cover_frame_timestamp", fmt.Sprint(*p.CoverFrameTimestamp)); err != nil {
+		return err
+	}
+	if err := mw.WriteField("is_animation", fmt.Sprint(*&p.IsAnimation)); err != nil {
+		return err
+	}
+
+	if p.videoReader != nil {
+		part, err := mw.CreateFormFile(p.videoName, p.videoName)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(part, p.videoReader); err != nil {
 			return err
 		}
 	}

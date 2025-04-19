@@ -1,6 +1,12 @@
 # Changelog
 
-## [1.1.1] - 2025-04-11
+## [v1.2.0] - 2025-4-19
+### Telegram Bot API Version 9.0
+### Added: 
+- everything that was released in API v9.0
+- more details: https://core.telegram.org/bots/api#april-11-2025
+
+## [v1.1.1] - 2025-04-11
 ### Telegram Bot API Version 8.3
 ### Added:
 - an example inside of the documentation for SendRequest function
@@ -9,7 +15,7 @@
 - simplified validation for some of the structs
 - removed redundant imports
 
-## [1.1.0] - 2025-03-30
+## [v1.1.0] - 2025-03-30
 ### Telegram Bot API Version 8.3
 ### Added:
 - documentation for every package
@@ -17,6 +23,6 @@
 - quick refactor: moving api/objects and api/methods to the root directory
 - swapped token and destination in SendRequest and SendRequestWith
 
-## [1.0.0] - 2025-03-30
+## [v1.0.0] - 2025-03-30
 ### Telegram Bot API Version 8.3
 ### First release
